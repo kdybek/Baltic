@@ -1,14 +1,15 @@
 #pragma once
 
-#include "win_include.h"
-#include "baltic_except.h"
+#include "../auxiliary/win_include.h"
+#include "../baltic_except.h"
 
 namespace Baltic
 {
-    class DebugLayer
+
+    class DXDebugLayer
     {
     public:
-        ~DebugLayer()
+        ~DXDebugLayer()
 #ifdef BALTIC_DEBUG
         {
             OutputDebugStringW(L"--- DXGI living object report ---\n");
@@ -22,25 +23,22 @@ namespace Baltic
         = default;
 #endif // BALTIC_DEBUG
 
-        DebugLayer(const DebugLayer&) = delete;
+        DXDebugLayer(const DXDebugLayer&) = delete;
 
-        DebugLayer& operator=(const DebugLayer&) = delete;
+        DXDebugLayer& operator=(const DXDebugLayer&) = delete;
 
         inline static void Init()
         {
-            static DebugLayer instance;
+            static DXDebugLayer s_dxDebugLayer;
         }
 
     private:
-        DebugLayer()
+        DXDebugLayer()
 #ifdef BALTIC_DEBUG
-        : m_d3d12Debug(nullptr), m_dxgiDebug(nullptr)
         {
             if (D3D12GetDebugInterface(IID_PPV_ARGS(&m_d3d12Debug))) {
                 throw BalticException("D3D12GetDebugInterface");
             }
-
-            S_OK;
 
             m_d3d12Debug->EnableDebugLayer();
 
@@ -55,11 +53,12 @@ namespace Baltic
         = default;
 #endif // BALTIC_DEBUG
 
+    private:
 #ifdef BALTIC_DEBUG
-        Microsoft::WRL::ComPtr <ID3D12Debug3> m_d3d12Debug; // TODO: Update PC
+        Microsoft::WRL::ComPtr <ID3D12Debug3> m_d3d12Debug;
         Microsoft::WRL::ComPtr <IDXGIDebug1> m_dxgiDebug;
 #endif // BALTIC_DEBUG
 
-    }; // DebugLayer
+    };
 
 } // Baltic

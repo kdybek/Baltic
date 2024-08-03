@@ -7,9 +7,6 @@ namespace Baltic
 {
     class BalticException : public std::exception
     {
-    private:
-        std::string m_errorMessage;
-
     public:
         explicit BalticException(std::string message) : m_errorMessage(std::move(message))
         {
@@ -22,6 +19,9 @@ namespace Baltic
             return m_errorMessage.c_str();
         }
 
-    }; // BalticException
+    private:
+        std::string m_errorMessage;
+
+    };
 
 } // Baltic

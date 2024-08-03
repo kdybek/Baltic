@@ -1,10 +1,16 @@
 #include <iostream>
 
-#include "win_include.h"
+#include "auxiliary/win_include.h"
 #include "baltic_except.h"
-#include "debug_layer.h"
+#include "debug/dx_debug_layer.h"
+#include "d3d/dx_context.h"
 
 using namespace Baltic;
+
+void aux()
+{
+    DXContext::Get().GetDevice();
+}
 
 int main()
 {
@@ -15,8 +21,9 @@ int main()
             throw BalticException("RoInitialize");
         }
 
-        DebugLayer::Init();
+        DXDebugLayer::Init();
 
+        aux();
 
     } catch (const BalticException& e) {
         std::cout << e.what() << '\n';

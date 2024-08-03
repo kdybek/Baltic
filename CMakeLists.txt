@@ -10,9 +10,11 @@ set(CMAKE_CXX_STANDARD_REQUIRED True)
 
 set(SOURCES
         src/main.cpp
-        src/win_include.h
+        src/auxiliary/win_include.h
         src/baltic_except.h
-        src/debug_layer.h
+        src/debug/dx_debug_layer.h
+        src/d3d/dx_context.cpp
+        src/d3d/dx_context.h
 )
 
 add_executable(baltic ${SOURCES})
