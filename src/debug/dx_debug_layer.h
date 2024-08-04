@@ -1,11 +1,10 @@
 #pragma once
 
-#include "../auxiliary/win_include.h"
-#include "../baltic_except.h"
+#include "auxiliary/win_include.h"
+#include "auxiliary/baltic_except.h"
 
 namespace Baltic
 {
-
     class DXDebugLayer
     {
     public:

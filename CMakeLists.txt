@@ -8,13 +8,18 @@ endif()
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED True)
 
+include_directories(${CMAKE_SOURCE_DIR}/src)
+
 set(SOURCES
         src/main.cpp
         src/auxiliary/win_include.h
-        src/baltic_except.h
+        src/auxiliary/baltic_except.h
         src/debug/dx_debug_layer.h
         src/d3d/dx_context.cpp
         src/d3d/dx_context.h
+        src/auxiliary/constants.h
+        src/auxiliary/dx_window.cpp
+        src/auxiliary/dx_window.h
 )
 
 add_executable(baltic ${SOURCES})
