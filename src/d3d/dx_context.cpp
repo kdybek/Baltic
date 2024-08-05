@@ -6,6 +6,10 @@ namespace Baltic
 {
     DXContext::DXContext() : m_fenceValue(0), m_fenceEvent(nullptr)
     {
+        if (FAILED(CreateDXGIFactory2(0, IID_PPV_ARGS(&m_factory)))) {
+            throw BalticException("CreateDXGIFactory2");
+        }
+
         if (FAILED(D3D12CreateDevice(nullptr, D3D_FEATURE_LEVEL_11_0, IID_PPV_ARGS(&m_device)))) {
             throw BalticException("D3D12CreateDevice");
         }
@@ -82,9 +86,16 @@ namespace Baltic
             throw BalticException("m_cmdList->Close");
         }
 
-        ID3D12CommandList* lists[] = { m_cmdList.Get() };
+        ID3D12CommandList* lists[] = {m_cmdList.Get()};
         m_cmdQueue->ExecuteCommandLists(1, lists);
         SignalAndWait();
+    }
+
+    void DXContext::Flush(USHORT count)
+    {
+        for (USHORT i = 0; i < count; i++) {
+            SignalAndWait();
+        }
     }
 
 } // Baltic

@@ -3,6 +3,7 @@
 #include "auxiliary/win_include.h"
 #include "auxiliary/baltic_except.h"
 #include "auxiliary/dx_window.h"
+#include "auxiliary/constants.h"
 #include "debug/dx_debug_layer.h"
 #include "d3d/dx_context.h"
 
@@ -30,7 +31,11 @@ int main()
             const auto& cmdList = DXContext::Get().GetCmdList();
 
             DXContext::Get().ExecuteCmdList();
+
+            mainWindow.Present();
         }
+
+        DXContext::Get().Flush(FRAME_COUNT);
 
     } catch (const BalticException& e) {
         std::cout << e.what() << '\n';

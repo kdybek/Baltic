@@ -20,10 +20,17 @@ namespace Baltic
 
         void ExecuteCmdList();
 
+        void Flush(USHORT count);
+
         inline static DXContext& Get()
         {
             static DXContext s_dxContext;
             return s_dxContext;
+        }
+
+        inline const Microsoft::WRL::ComPtr<IDXGIFactory7>& GetFactory()
+        {
+            return m_factory;
         }
 
         inline const Microsoft::WRL::ComPtr<ID3D12Device8>& GetDevice()
@@ -45,6 +52,8 @@ namespace Baltic
         DXContext();
 
     private:
+        Microsoft::WRL::ComPtr<IDXGIFactory7> m_factory;
+
         Microsoft::WRL::ComPtr<ID3D12Device8> m_device;
         Microsoft::WRL::ComPtr<ID3D12CommandQueue> m_cmdQueue;
 

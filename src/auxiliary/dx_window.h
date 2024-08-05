@@ -1,6 +1,7 @@
 #pragma once
 
-#include "win_include.h"
+#include "auxiliary/win_include.h"
+#include "d3d/dx_context.h"
 
 namespace Baltic
 {
@@ -17,6 +18,8 @@ namespace Baltic
 
         void Update();
 
+        void Present();
+
         [[nodiscard]] bool ShouldClose() const;
 
     private:
@@ -25,6 +28,8 @@ namespace Baltic
     private:
         ATOM m_wndClass;
         HWND m_window;
+
+        Microsoft::WRL::ComPtr<IDXGISwapChain4> m_swapChain;
 
     };
 
