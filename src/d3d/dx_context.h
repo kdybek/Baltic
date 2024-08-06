@@ -20,7 +20,7 @@ namespace Baltic
 
         void ExecuteCmdList();
 
-        void Flush(USHORT count);
+        void Flush(UINT count);
 
         [[nodiscard]] inline static DXContext& Get()
         {
@@ -63,7 +63,6 @@ namespace Baltic
         Microsoft::WRL::ComPtr<ID3D12Fence1> m_fence;
         UINT64 m_fenceValue;
         HANDLE m_fenceEvent;
-
     };
 
 } // Baltic

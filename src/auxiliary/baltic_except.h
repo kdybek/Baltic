@@ -21,7 +21,6 @@ namespace Baltic
 
     private:
         std::string m_errorMessage;
-
     };
 
 } // Baltic

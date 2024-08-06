@@ -1,7 +1,6 @@
 #include "dx_window.h"
 
 #include "auxiliary/baltic_except.h"
-#include "auxiliary/constants.h"
 
 #define IDI_APPLICATION_W MAKEINTRESOURCEW(32512)
 #define IDC_ARROW_W MAKEINTRESOURCEW(32512)
@@ -63,7 +62,8 @@ namespace Baltic
               m_height(1080),
               m_shouldClose(FALSE),
               m_shouldResize(FALSE),
-              m_isFullscreen(FALSE)
+              m_isFullscreen(FALSE),
+              m_currentBufferIdx(0)
     {
         WNDCLASSEXW wcex{
                 .cbSize = sizeof(wcex),
@@ -135,6 +135,8 @@ namespace Baltic
         if (FAILED(swapChain1.As(&m_swapChain))) {
             throw BalticException("swapChain1.As");
         }
+
+        GetBuffers();
     }
 
     DXWindow::~DXWindow()
@@ -177,6 +179,8 @@ namespace Baltic
         m_width = clientRect.right - clientRect.left;
         m_height = clientRect.bottom - clientRect.top;
 
+        ReleaseBuffers();
+
         if (FAILED(m_swapChain->ResizeBuffers(
                 FRAME_COUNT,
                 m_width,
@@ -186,6 +190,8 @@ namespace Baltic
         ))) {
             throw BalticException("m_swapChain->ResizeBuffers");
         }
+
+        GetBuffers();
 
         m_shouldResize = FALSE;
     }
@@ -226,6 +232,56 @@ namespace Baltic
         }
         else {
             ShowWindow(m_window, SW_MAXIMIZE);
+        }
+    }
+
+    void DXWindow::BeginFrame(ID3D12GraphicsCommandList6* cmdList)
+    {
+        m_currentBufferIdx = m_swapChain->GetCurrentBackBufferIndex();
+
+        D3D12_RESOURCE_BARRIER resourceBarrier{
+                .Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION,
+                .Flags = D3D12_RESOURCE_BARRIER_FLAG_NONE,
+                .Transition = D3D12_RESOURCE_TRANSITION_BARRIER{
+                        .pResource = m_buffers[m_currentBufferIdx].Get(),
+                        .Subresource = 0,
+                        .StateBefore = D3D12_RESOURCE_STATE_PRESENT,
+                        .StateAfter = D3D12_RESOURCE_STATE_RENDER_TARGET
+                }
+        };
+
+        cmdList->ResourceBarrier(1, &resourceBarrier);
+    }
+
+    void DXWindow::EndFrame(ID3D12GraphicsCommandList6* cmdList)
+    {
+        D3D12_RESOURCE_BARRIER resourceBarrier{
+                .Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION,
+                .Flags = D3D12_RESOURCE_BARRIER_FLAG_NONE,
+                .Transition = D3D12_RESOURCE_TRANSITION_BARRIER{
+                        .pResource = m_buffers[m_currentBufferIdx].Get(),
+                        .Subresource = 0,
+                        .StateBefore = D3D12_RESOURCE_STATE_RENDER_TARGET,
+                        .StateAfter = D3D12_RESOURCE_STATE_PRESENT
+                }
+        };
+
+        cmdList->ResourceBarrier(1, &resourceBarrier);
+    }
+
+    void DXWindow::GetBuffers()
+    {
+        for (UINT i = 0; i < FRAME_COUNT; i++) {
+            if (FAILED(m_swapChain->GetBuffer(i, IID_PPV_ARGS(&m_buffers[i])))) {
+                throw BalticException("m_swapChain->GetBuffer");
+            }
+        }
+    }
+
+    void DXWindow::ReleaseBuffers()
+    {
+        for (auto& m_buffer: m_buffers) {
+            m_buffer.Reset();
         }
     }
 

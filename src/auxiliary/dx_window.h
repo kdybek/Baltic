@@ -1,6 +1,7 @@
 #pragma once
 
 #include "auxiliary/win_include.h"
+#include "auxiliary/constants.h"
 #include "d3d/dx_context.h"
 
 namespace Baltic
@@ -24,6 +25,10 @@ namespace Baltic
 
         void SetFullscreen(BOOL enable);
 
+        void BeginFrame(ID3D12GraphicsCommandList6* cmdList);
+
+        void EndFrame(ID3D12GraphicsCommandList6* cmdList);
+
         [[nodiscard]] inline BOOL ShouldClose() const
         {
             return m_shouldClose;
@@ -39,7 +44,12 @@ namespace Baltic
             return m_isFullscreen;
         }
 
+    private:
         friend LRESULT CALLBACK OnWindowMessage(HWND wnd, UINT msg, WPARAM wParam, LPARAM lParam);
+
+        void GetBuffers();
+
+        void ReleaseBuffers();
 
     private:
         ATOM m_wndClass;
@@ -51,7 +61,8 @@ namespace Baltic
         BOOL m_isFullscreen;
 
         Microsoft::WRL::ComPtr<IDXGISwapChain4> m_swapChain;
-
+        Microsoft::WRL::ComPtr<ID3D12Resource2> m_buffers[FRAME_COUNT];
+        UINT m_currentBufferIdx;
     };
 
 } // Baltic

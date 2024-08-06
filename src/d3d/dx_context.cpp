@@ -91,9 +91,9 @@ namespace Baltic
         SignalAndWait();
     }
 
-    void DXContext::Flush(USHORT count)
+    void DXContext::Flush(UINT count)
     {
-        for (USHORT i = 0; i < count; i++) {
+        for (UINT i = 0; i < count; i++) {
             SignalAndWait();
         }
     }

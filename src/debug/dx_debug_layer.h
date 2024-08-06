@@ -57,7 +57,6 @@ namespace Baltic
         Microsoft::WRL::ComPtr <ID3D12Debug3> m_d3d12Debug;
         Microsoft::WRL::ComPtr <IDXGIDebug1> m_dxgiDebug;
 #endif // BALTIC_DEBUG
-
     };
 
 } // Baltic

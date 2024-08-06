@@ -37,6 +37,10 @@ int main()
 
             const auto& cmdList = DXContext::Get().GetCmdList();
 
+            mainWindow.BeginFrame(cmdList.Get());
+            // Draw
+            mainWindow.EndFrame(cmdList.Get());
+
             DXContext::Get().ExecuteCmdList();
 
             mainWindow.Present();
