@@ -22,28 +22,28 @@ namespace Baltic
 
         void Flush(USHORT count);
 
-        inline static DXContext& Get()
+        [[nodiscard]] inline static DXContext& Get()
         {
             static DXContext s_dxContext;
             return s_dxContext;
         }
 
-        inline const Microsoft::WRL::ComPtr<IDXGIFactory7>& GetFactory()
+        [[nodiscard]] inline const Microsoft::WRL::ComPtr<IDXGIFactory7>& GetFactory() const
         {
             return m_factory;
         }
 
-        inline const Microsoft::WRL::ComPtr<ID3D12Device8>& GetDevice()
+        [[nodiscard]] inline const Microsoft::WRL::ComPtr<ID3D12Device8>& GetDevice() const
         {
             return m_device;
         }
 
-        inline const Microsoft::WRL::ComPtr<ID3D12CommandQueue>& GetCmdQueue()
+        [[nodiscard]] inline const Microsoft::WRL::ComPtr<ID3D12CommandQueue>& GetCmdQueue() const
         {
             return m_cmdQueue;
         }
 
-        inline const Microsoft::WRL::ComPtr<ID3D12GraphicsCommandList6>& GetCmdList()
+        [[nodiscard]] inline const Microsoft::WRL::ComPtr<ID3D12GraphicsCommandList6>& GetCmdList() const
         {
             return m_cmdList;
         }

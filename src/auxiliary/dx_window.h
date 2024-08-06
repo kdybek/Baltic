@@ -20,14 +20,35 @@ namespace Baltic
 
         void Present();
 
-        [[nodiscard]] bool ShouldClose() const;
+        void ResizeSwapChain();
 
-    private:
-        static LRESULT CALLBACK OnWindowMessage(HWND wnd, UINT msg, WPARAM wParam, LPARAM lParam);
+        void SetFullscreen(BOOL enable);
+
+        [[nodiscard]] inline BOOL ShouldClose() const
+        {
+            return m_shouldClose;
+        }
+
+        [[nodiscard]] inline BOOL ShouldResize() const
+        {
+            return m_shouldResize;
+        }
+
+        [[nodiscard]] inline BOOL isFullscreen() const
+        {
+            return m_isFullscreen;
+        }
+
+        friend LRESULT CALLBACK OnWindowMessage(HWND wnd, UINT msg, WPARAM wParam, LPARAM lParam);
 
     private:
         ATOM m_wndClass;
         HWND m_window;
+        UINT m_width;
+        UINT m_height;
+        BOOL m_shouldClose;
+        BOOL m_shouldResize;
+        BOOL m_isFullscreen;
 
         Microsoft::WRL::ComPtr<IDXGISwapChain4> m_swapChain;
 

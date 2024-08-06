@@ -22,9 +22,16 @@ int main()
 
         DXWindow mainWindow;
 
+        mainWindow.SetFullscreen(TRUE);
+
         while (!mainWindow.ShouldClose()) {
 
             mainWindow.Update();
+
+            if (mainWindow.ShouldResize()) {
+                DXContext::Get().Flush(FRAME_COUNT);
+                mainWindow.ResizeSwapChain();
+            }
 
             DXContext::Get().ResetCmdList();
 

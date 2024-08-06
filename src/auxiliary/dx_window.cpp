@@ -8,12 +8,67 @@
 
 namespace Baltic
 {
-    DXWindow::DXWindow() : m_wndClass(0), m_window(nullptr)
+    LRESULT OnWindowMessage(HWND wnd, UINT msg, WPARAM wParam, LPARAM lParam)
+    {
+        if (msg == WM_SIZE) {
+            DXWindow* windowPtr;
+            if (!(windowPtr = reinterpret_cast<DXWindow*>(GetWindowLongPtrW(wnd, GWLP_USERDATA)))) {
+                throw BalticException("GetWindowLongPtrW");
+            }
+
+            if (LOWORD(lParam) && HIWORD(lParam) &&
+                (LOWORD(lParam) != windowPtr->m_width || HIWORD(lParam) != windowPtr->m_height)) {
+                windowPtr->m_shouldResize = TRUE;
+            }
+
+            return DefWindowProcW(wnd, msg, wParam, lParam);
+        }
+        else if (msg == WM_KEYDOWN) {
+            DXWindow* windowPtr;
+            if (!(windowPtr = reinterpret_cast<DXWindow*>(GetWindowLongPtrW(wnd, GWLP_USERDATA)))) {
+                throw BalticException("GetWindowLongPtrW");
+            }
+
+            if (wParam == VK_F11) {
+                windowPtr->SetFullscreen(!windowPtr->isFullscreen());
+            }
+
+            return DefWindowProcW(wnd, msg, wParam, lParam);
+        }
+        else if (msg == WM_CLOSE) {
+            DXWindow* windowPtr;
+            if (!(windowPtr = reinterpret_cast<DXWindow*>(GetWindowLongPtrW(wnd, GWLP_USERDATA)))) {
+                throw BalticException("GetWindowLongPtrW");
+            }
+            windowPtr->m_shouldClose = TRUE;
+
+            return 0;
+        }
+        else if (msg == WM_NCCREATE) {
+            auto* createPtr = reinterpret_cast<CREATESTRUCT*>(lParam);
+            auto* windowPtr = reinterpret_cast<DXWindow*>(createPtr->lpCreateParams);
+            SetWindowLongPtrW(wnd, GWLP_USERDATA, reinterpret_cast<LONG_PTR>(windowPtr));
+
+            return DefWindowProcW(wnd, msg, wParam, lParam);
+        }
+        else {
+            return DefWindowProcW(wnd, msg, wParam, lParam);
+        }
+    }
+
+    DXWindow::DXWindow()
+            : m_wndClass(0),
+              m_window(nullptr),
+              m_width(1920),
+              m_height(1080),
+              m_shouldClose(FALSE),
+              m_shouldResize(FALSE),
+              m_isFullscreen(FALSE)
     {
         WNDCLASSEXW wcex{
                 .cbSize = sizeof(wcex),
                 .style = CS_OWNDC,
-                .lpfnWndProc = &DXWindow::OnWindowMessage,
+                .lpfnWndProc = &OnWindowMessage,
                 .cbClsExtra = 0,
                 .cbWndExtra = sizeof(LONG_PTR),
                 .hInstance = GetModuleHandleW(nullptr),
@@ -41,7 +96,7 @@ namespace Baltic
                 nullptr,
                 nullptr,
                 wcex.hInstance,
-                nullptr
+                this
         ))) {
             throw BalticException("CreateWindowExW");
         }
@@ -80,8 +135,6 @@ namespace Baltic
         if (FAILED(swapChain1.As(&m_swapChain))) {
             throw BalticException("swapChain1.As");
         }
-
-        SetWindowLongPtr(m_window, GWLP_USERDATA, static_cast<LONG_PTR>(FALSE));
     }
 
     DXWindow::~DXWindow()
@@ -114,20 +167,66 @@ namespace Baltic
         }
     }
 
-    bool DXWindow::ShouldClose() const
+    void DXWindow::ResizeSwapChain()
     {
-        return static_cast<BOOL>(GetWindowLongPtrW(m_window, GWLP_USERDATA));
-    }
-
-    LRESULT DXWindow::OnWindowMessage(HWND wnd, UINT msg, WPARAM wParam, LPARAM lParam)
-    {
-        switch (msg) {
-            case WM_CLOSE:
-                SetWindowLongPtrW(wnd, GWLP_USERDATA, static_cast<LONG_PTR>(TRUE));
-                return 0;
+        RECT clientRect;
+        if (!GetClientRect(m_window, &clientRect)) {
+            throw BalticException("GetClientRect");
         }
 
-        return DefWindowProcW(wnd, msg, wParam, lParam);
+        m_width = clientRect.right - clientRect.left;
+        m_height = clientRect.bottom - clientRect.top;
+
+        if (FAILED(m_swapChain->ResizeBuffers(
+                FRAME_COUNT,
+                m_width,
+                m_height,
+                DXGI_FORMAT_UNKNOWN,
+                DXGI_SWAP_CHAIN_FLAG_ALLOW_MODE_SWITCH | DXGI_SWAP_CHAIN_FLAG_ALLOW_TEARING
+        ))) {
+            throw BalticException("m_swapChain->ResizeBuffers");
+        }
+
+        m_shouldResize = FALSE;
+    }
+
+    void DXWindow::SetFullscreen(BOOL enable)
+    {
+        DWORD style = WS_OVERLAPPEDWINDOW | WS_VISIBLE;
+        DWORD exStyle = WS_EX_OVERLAPPEDWINDOW | WS_EX_APPWINDOW;
+
+        if (enable) {
+            style = WS_POPUP | WS_VISIBLE;
+            exStyle = WS_EX_APPWINDOW;
+        }
+
+        SetWindowLongPtrW(m_window, GWL_STYLE, style);
+        SetWindowLongPtrW(m_window, GWL_EXSTYLE, exStyle);
+
+        m_isFullscreen = enable;
+
+        if (enable) {
+            HMONITOR monitor = MonitorFromWindow(m_window, MONITOR_DEFAULTTONEAREST);
+            MONITORINFO monitorInfo{.cbSize = sizeof(monitorInfo)};
+            if (!GetMonitorInfoW(monitor, &monitorInfo)) {
+                throw BalticException("GetMonitorInfoW");
+            }
+
+            if (!SetWindowPos(
+                    m_window,
+                    nullptr,
+                    monitorInfo.rcMonitor.left,
+                    monitorInfo.rcMonitor.top,
+                    monitorInfo.rcMonitor.right - monitorInfo.rcMonitor.left,
+                    monitorInfo.rcMonitor.bottom - monitorInfo.rcMonitor.top,
+                    SWP_NOZORDER
+            )) {
+                throw BalticException("SetWindowPos");
+            }
+        }
+        else {
+            ShowWindow(m_window, SW_MAXIMIZE);
+        }
     }
 
 } // Baltic
