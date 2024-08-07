@@ -136,6 +136,28 @@ namespace Baltic
             throw BalticException("swapChain1.As");
         }
 
+        D3D12_DESCRIPTOR_HEAP_DESC descriptorHeapDesc{
+                .Type = D3D12_DESCRIPTOR_HEAP_TYPE_RTV,
+                .NumDescriptors = FRAME_COUNT,
+                .Flags = D3D12_DESCRIPTOR_HEAP_FLAG_NONE,
+                .NodeMask = 0
+        };
+
+        if (FAILED(DXContext::Get().GetDevice()->CreateDescriptorHeap(
+                &descriptorHeapDesc,
+                IID_PPV_ARGS(&m_rtvDescHeap)
+        ))) {
+            throw BalticException("DXContext::Get().GetDevice()->CreateDescriptorHeap");
+        }
+
+        D3D12_CPU_DESCRIPTOR_HANDLE firstHandle = m_rtvDescHeap->GetCPUDescriptorHandleForHeapStart();
+        UINT handleInc = DXContext::Get().GetDevice()->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
+
+        for (UINT i = 0; i < FRAME_COUNT; i++) {
+            m_rtvHandles[i] = firstHandle;
+            m_rtvHandles[i].ptr += handleInc * i;
+        }
+
         GetBuffers();
     }
 
@@ -251,6 +273,11 @@ namespace Baltic
         };
 
         cmdList->ResourceBarrier(1, &resourceBarrier);
+
+        FLOAT clearColor[] = {.4f, .4f, .8f, 1.f};
+        cmdList->ClearRenderTargetView(m_rtvHandles[m_currentBufferIdx], clearColor, 0, nullptr);
+
+        cmdList->OMSetRenderTargets(1, &m_rtvHandles[m_currentBufferIdx], FALSE, nullptr);
     }
 
     void DXWindow::EndFrame(ID3D12GraphicsCommandList6* cmdList)
@@ -275,6 +302,17 @@ namespace Baltic
             if (FAILED(m_swapChain->GetBuffer(i, IID_PPV_ARGS(&m_buffers[i])))) {
                 throw BalticException("m_swapChain->GetBuffer");
             }
+
+            D3D12_RENDER_TARGET_VIEW_DESC rtvDesc{
+                    .Format = DXGI_FORMAT_R8G8B8A8_UNORM,
+                    .ViewDimension = D3D12_RTV_DIMENSION_TEXTURE2D,
+                    .Texture2D{
+                            .MipSlice = 0,
+                            .PlaneSlice = 0
+                    }
+            };
+
+            DXContext::Get().GetDevice()->CreateRenderTargetView(m_buffers[i].Get(), &rtvDesc, m_rtvHandles[i]);
         }
     }
 

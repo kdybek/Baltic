@@ -63,6 +63,9 @@ namespace Baltic
         Microsoft::WRL::ComPtr<IDXGISwapChain4> m_swapChain;
         Microsoft::WRL::ComPtr<ID3D12Resource2> m_buffers[FRAME_COUNT];
         UINT m_currentBufferIdx;
+
+        Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> m_rtvDescHeap;
+        D3D12_CPU_DESCRIPTOR_HANDLE m_rtvHandles[FRAME_COUNT];
     };
 
 } // Baltic
