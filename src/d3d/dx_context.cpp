@@ -1,5 +1,6 @@
 #include "dx_context.h"
 
+#include "auxiliary/baltic_except.h"
 #include "auxiliary/constants.h"
 
 namespace Baltic
@@ -10,22 +11,28 @@ namespace Baltic
             throw BalticException("CreateDXGIFactory2");
         }
 
-        if (FAILED(D3D12CreateDevice(nullptr, D3D_FEATURE_LEVEL_11_0, IID_PPV_ARGS(&m_device)))) {
+        if (FAILED(D3D12CreateDevice(
+                nullptr, D3D_FEATURE_LEVEL_11_0, IID_PPV_ARGS(&m_device)
+            ))) {
             throw BalticException("D3D12CreateDevice");
         }
 
         D3D12_COMMAND_QUEUE_DESC cmdQueueDesc{
-                .Type = D3D12_COMMAND_LIST_TYPE_DIRECT,
-                .Priority = D3D12_COMMAND_QUEUE_PRIORITY_HIGH,
-                .Flags = D3D12_COMMAND_QUEUE_FLAG_NONE,
-                .NodeMask = 0
+            .Type = D3D12_COMMAND_LIST_TYPE_DIRECT,
+            .Priority = D3D12_COMMAND_QUEUE_PRIORITY_HIGH,
+            .Flags = D3D12_COMMAND_QUEUE_FLAG_NONE,
+            .NodeMask = 0
         };
 
-        if (FAILED(m_device->CreateCommandQueue(&cmdQueueDesc, IID_PPV_ARGS(&m_cmdQueue)))) {
+        if (FAILED(m_device->CreateCommandQueue(
+                &cmdQueueDesc, IID_PPV_ARGS(&m_cmdQueue)
+            ))) {
             throw BalticException("m_device->CreateCommandQueue");
         }
 
-        if (FAILED(m_device->CreateFence(m_fenceValue, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(&m_fence)))) {
+        if (FAILED(m_device->CreateFence(
+                m_fenceValue, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(&m_fence)
+            ))) {
             throw BalticException("m_device->CreateFence");
         }
 
@@ -33,16 +40,16 @@ namespace Baltic
             throw BalticException("CreateEvent");
         }
 
-        if (FAILED(m_device->CreateCommandAllocator(D3D12_COMMAND_LIST_TYPE_DIRECT, IID_PPV_ARGS(&m_cmdAllocator)))) {
+        if (FAILED(m_device->CreateCommandAllocator(
+                D3D12_COMMAND_LIST_TYPE_DIRECT, IID_PPV_ARGS(&m_cmdAllocator)
+            ))) {
             throw BalticException("m_device->CreateCommandAllocator");
         }
 
         if (FAILED(m_device->CreateCommandList1(
-                0,
-                D3D12_COMMAND_LIST_TYPE_DIRECT,
-                D3D12_COMMAND_LIST_FLAG_NONE,
+                0, D3D12_COMMAND_LIST_TYPE_DIRECT, D3D12_COMMAND_LIST_FLAG_NONE,
                 IID_PPV_ARGS(&m_cmdList)
-        ))) {
+            ))) {
             throw BalticException("m_device->CreateCommandList1");
         }
     }
@@ -98,4 +105,4 @@ namespace Baltic
         }
     }
 
-} // Baltic
+}  // namespace Baltic

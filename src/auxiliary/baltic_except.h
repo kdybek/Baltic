@@ -8,7 +8,8 @@ namespace Baltic
     class BalticException : public std::exception
     {
     public:
-        explicit BalticException(std::string message) : m_errorMessage(std::move(message))
+        explicit BalticException(std::string message)
+            : m_errorMessage(std::move(message))
         {
         }
 
@@ -23,4 +24,4 @@ namespace Baltic
         std::string m_errorMessage;
     };
 
-} // Baltic
+}  // namespace Baltic

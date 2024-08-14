@@ -1,7 +1,7 @@
 #pragma once
 
-#include "auxiliary/win_include.h"
 #include "auxiliary/baltic_except.h"
+#include "auxiliary/win_include.h"
 
 namespace Baltic
 {
@@ -13,23 +13,22 @@ namespace Baltic
         {
             OutputDebugStringW(L"--- DXGI living object report ---\n");
             m_dxgiDebug->ReportLiveObjects(
-                    DXGI_DEBUG_ALL,
-                    DXGI_DEBUG_RLO_FLAGS(DXGI_DEBUG_RLO_DETAIL | DXGI_DEBUG_RLO_IGNORE_INTERNAL)
+                DXGI_DEBUG_ALL,
+                DXGI_DEBUG_RLO_FLAGS(
+                    DXGI_DEBUG_RLO_DETAIL | DXGI_DEBUG_RLO_IGNORE_INTERNAL
+                )
             );
         }
 
 #else
-        = default;
-#endif // BALTIC_DEBUG
+            = default;
+#endif
 
         DXDebugLayer(const DXDebugLayer&) = delete;
 
         DXDebugLayer& operator=(const DXDebugLayer&) = delete;
 
-        inline static void Init()
-        {
-            static DXDebugLayer s_dxDebugLayer;
-        }
+        inline static void Init() { static DXDebugLayer s_dxDebugLayer; }
 
     private:
         DXDebugLayer()
@@ -49,14 +48,14 @@ namespace Baltic
         }
 
 #else
-        = default;
-#endif // BALTIC_DEBUG
+            = default;
+#endif
 
     private:
 #ifdef BALTIC_DEBUG
-        Microsoft::WRL::ComPtr <ID3D12Debug3> m_d3d12Debug;
-        Microsoft::WRL::ComPtr <IDXGIDebug1> m_dxgiDebug;
-#endif // BALTIC_DEBUG
+        Microsoft::WRL::ComPtr<ID3D12Debug3> m_d3d12Debug;
+        Microsoft::WRL::ComPtr<IDXGIDebug1> m_dxgiDebug;
+#endif
     };
 
-} // Baltic
+}  // namespace Baltic

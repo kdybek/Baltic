@@ -1,8 +1,6 @@
 #pragma once
 
-#include "auxiliary/win_include.h"
 #include "auxiliary/constants.h"
-#include "d3d/dx_context.h"
 
 namespace Baltic
 {
@@ -29,10 +27,7 @@ namespace Baltic
 
         void EndFrame(ID3D12GraphicsCommandList6* cmdList);
 
-        [[nodiscard]] inline BOOL ShouldClose() const
-        {
-            return m_shouldClose;
-        }
+        [[nodiscard]] inline BOOL ShouldClose() const { return m_shouldClose; }
 
         [[nodiscard]] inline BOOL ShouldResize() const
         {
@@ -45,7 +40,8 @@ namespace Baltic
         }
 
     private:
-        friend LRESULT CALLBACK OnWindowMessage(HWND wnd, UINT msg, WPARAM wParam, LPARAM lParam);
+        friend LRESULT CALLBACK
+        OnWindowMessage(HWND wnd, UINT msg, WPARAM wParam, LPARAM lParam);
 
         void GetBuffers();
 
@@ -68,4 +64,4 @@ namespace Baltic
         D3D12_CPU_DESCRIPTOR_HANDLE m_rtvHandles[FRAME_COUNT];
     };
 
-} // Baltic
+}  // namespace Baltic
