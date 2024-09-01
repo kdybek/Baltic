@@ -282,7 +282,7 @@ namespace Baltic
 
         cmdList->ResourceBarrier(1, &resourceBarrier);
 
-        FLOAT clearColor[] = {.4f, .4f, .8f, 1.f};
+        FLOAT clearColor[] = {.1f, .1f, .1f, 1.f};
         cmdList->ClearRenderTargetView(
             m_rtvHandles[m_currentBufferIdx], clearColor, 0, nullptr
         );

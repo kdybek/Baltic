@@ -8,6 +8,8 @@ endif()
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED True)
 
+set(CMAKE_CONFIGURATION_TYPES "Debug;Release" CACHE STRING "Configurations" FORCE)
+
 include_directories(${CMAKE_SOURCE_DIR}/src)
 
 set(SOURCES
