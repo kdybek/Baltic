@@ -1,13 +1,14 @@
 #pragma once
 
 #include "auxiliary/constants.h"
+#include "d3d/dx_context.h"
 
 namespace Baltic
 {
     class DXWindow
     {
     public:
-        DXWindow();
+        DXWindow(const DXContext& dxContext, UINT width, UINT height);
 
         ~DXWindow();
 
@@ -55,6 +56,8 @@ namespace Baltic
         BOOL m_shouldClose;
         BOOL m_shouldResize;
         BOOL m_isFullscreen;
+
+        const DXContext& m_dxContext;
 
         Microsoft::WRL::ComPtr<IDXGISwapChain4> m_swapChain;
         Microsoft::WRL::ComPtr<ID3D12Resource2> m_buffers[FRAME_COUNT];

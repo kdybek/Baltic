@@ -17,7 +17,7 @@ int main()
             throw BalticException("RoInitialize");
         }
 
-        DXDebugLayer::Init();
+        DXDebugLayer dxDebugLayer;
 
         const char* str = "abcdefg";
 
@@ -52,23 +52,25 @@ int main()
 
         Microsoft::WRL::ComPtr<ID3D12Resource2> uploadBuffer, vertexBuffer;
 
-        if (FAILED(DXContext::Get().GetDevice()->CreateCommittedResource(
+        DXContext dxContext;
+
+        if (FAILED(dxContext.GetDevice()->CreateCommittedResource(
                 &heapPropertiesUpload, D3D12_HEAP_FLAG_NONE, &resourceDesc,
                 D3D12_RESOURCE_STATE_GENERIC_READ, nullptr,
                 IID_PPV_ARGS(&uploadBuffer)
             ))) {
             throw BalticException(
-                "DXContext::Get().GetDevice()->CreateCommittedResource"
+                "dxContext.GetDevice()->CreateCommittedResource"
             );
         }
 
-        if (FAILED(DXContext::Get().GetDevice()->CreateCommittedResource(
+        if (FAILED(dxContext.GetDevice()->CreateCommittedResource(
                 &heapPropertiesDefault, D3D12_HEAP_FLAG_NONE, &resourceDesc,
                 D3D12_RESOURCE_STATE_COMMON, nullptr,
                 IID_PPV_ARGS(&vertexBuffer)
             ))) {
             throw BalticException(
-                "DXContext::Get().GetDevice()->CreateCommittedResource"
+                "dxContext.GetDevice()->CreateCommittedResource"
             );
         }
 
@@ -81,39 +83,39 @@ int main()
         memcpy(uploadBufferAddr, str, strlen(str));
         uploadBuffer->Unmap(0, &uploadRange);
 
-        DXContext::Get().ResetCmdList();
+        dxContext.ResetCmdList();
 
-        const auto& cmdList = DXContext::Get().GetCmdList();
+        const auto& cmdList = dxContext.GetCmdList();
         cmdList->CopyBufferRegion(
             vertexBuffer.Get(), 0, uploadBuffer.Get(), 0, 1024
         );
-        DXContext::Get().ExecuteCmdList();
+        dxContext.ExecuteCmdList();
 
-        DXWindow mainWindow;
+        DXWindow mainWindow(dxContext, 1920, 1080);
         mainWindow.SetFullscreen(TRUE);
 
         while (!mainWindow.ShouldClose()) {
             mainWindow.Update();
 
             if (mainWindow.ShouldResize()) {
-                DXContext::Get().Flush(FRAME_COUNT);
+                dxContext.Flush(FRAME_COUNT);
                 mainWindow.ResizeSwapChain();
             }
 
-            DXContext::Get().ResetCmdList();
+            dxContext.ResetCmdList();
 
-            const auto& cmdList1 = DXContext::Get().GetCmdList();
+            const auto& cmdList1 = dxContext.GetCmdList();
 
             mainWindow.BeginFrame(cmdList1.Get());
             // Draw
             mainWindow.EndFrame(cmdList1.Get());
 
-            DXContext::Get().ExecuteCmdList();
+            dxContext.ExecuteCmdList();
 
             mainWindow.Present();
         }
 
-        DXContext::Get().Flush(FRAME_COUNT);
+        dxContext.Flush(FRAME_COUNT);
     }
     catch (const BalticException& e) {
         std::cout << e.what() << '\n';

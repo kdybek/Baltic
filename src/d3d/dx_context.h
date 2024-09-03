@@ -7,6 +7,8 @@ namespace Baltic
     class DXContext
     {
     public:
+        DXContext();
+
         ~DXContext();
 
         DXContext(const DXContext&) = delete;
@@ -20,12 +22,6 @@ namespace Baltic
         void ExecuteCmdList();
 
         void Flush(UINT count);
-
-        [[nodiscard]] inline static DXContext& Get()
-        {
-            static DXContext s_dxContext;
-            return s_dxContext;
-        }
 
         [[nodiscard]] inline const Microsoft::WRL::ComPtr<IDXGIFactory7>&
         GetFactory() const
@@ -51,9 +47,6 @@ namespace Baltic
         {
             return m_cmdList;
         }
-
-    private:
-        DXContext();
 
     private:
         Microsoft::WRL::ComPtr<IDXGIFactory7> m_factory;

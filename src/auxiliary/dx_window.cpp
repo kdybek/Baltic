@@ -66,14 +66,15 @@ namespace Baltic
         }
     }
 
-    DXWindow::DXWindow()
+    DXWindow::DXWindow(const DXContext& dxContext, UINT width, UINT height)
         : m_wndClass(0),
           m_window(nullptr),
-          m_width(1920),
-          m_height(1080),
+          m_width(width),
+          m_height(height),
           m_shouldClose(FALSE),
           m_shouldResize(FALSE),
           m_isFullscreen(FALSE),
+          m_dxContext(dxContext),
           m_currentBufferIdx(0)
     {
         WNDCLASSEXW wcex{
@@ -104,7 +105,7 @@ namespace Baltic
             throw BalticException("CreateWindowExW");
         }
 
-        const auto& factory = DXContext::Get().GetFactory();
+        const auto& factory = m_dxContext.GetFactory();
 
         DXGI_SWAP_CHAIN_DESC1 swapChainDesc{
             .Width = 1920,
@@ -129,7 +130,7 @@ namespace Baltic
         Microsoft::WRL::ComPtr<IDXGISwapChain1> swapChain1;
 
         if (FAILED(factory->CreateSwapChainForHwnd(
-                DXContext::Get().GetCmdQueue().Get(), m_window, &swapChainDesc,
+                m_dxContext.GetCmdQueue().Get(), m_window, &swapChainDesc,
                 &swapChainFullscreenDesc, nullptr, &swapChain1
             ))) {
             throw BalticException("factory->CreateSwapChainForHwnd");
@@ -146,18 +147,18 @@ namespace Baltic
             .NodeMask = 0
         };
 
-        if (FAILED(DXContext::Get().GetDevice()->CreateDescriptorHeap(
+        if (FAILED(m_dxContext.GetDevice()->CreateDescriptorHeap(
                 &descriptorHeapDesc, IID_PPV_ARGS(&m_rtvDescHeap)
             ))) {
             throw BalticException(
-                "DXContext::Get().GetDevice()->CreateDescriptorHeap"
+                "m_dxContext.GetDevice()->CreateDescriptorHeap"
             );
         }
 
         D3D12_CPU_DESCRIPTOR_HANDLE firstHandle =
             m_rtvDescHeap->GetCPUDescriptorHandleForHeapStart();
         UINT handleInc =
-            DXContext::Get().GetDevice()->GetDescriptorHandleIncrementSize(
+            m_dxContext.GetDevice()->GetDescriptorHandleIncrementSize(
                 D3D12_DESCRIPTOR_HEAP_TYPE_RTV
             );
 
@@ -323,7 +324,7 @@ namespace Baltic
                 .Texture2D{.MipSlice = 0, .PlaneSlice = 0}
             };
 
-            DXContext::Get().GetDevice()->CreateRenderTargetView(
+            m_dxContext.GetDevice()->CreateRenderTargetView(
                 m_buffers[i].Get(), &rtvDesc, m_rtvHandles[i]
             );
         }

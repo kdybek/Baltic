@@ -8,6 +8,25 @@ namespace Baltic
     class DXDebugLayer
     {
     public:
+        DXDebugLayer()
+#ifdef BALTIC_DEBUG
+        {
+            if (D3D12GetDebugInterface(IID_PPV_ARGS(&m_d3d12Debug))) {
+                throw BalticException("D3D12GetDebugInterface");
+            }
+
+            m_d3d12Debug->EnableDebugLayer();
+
+            if (FAILED(DXGIGetDebugInterface1(0, IID_PPV_ARGS(&m_dxgiDebug)))) {
+                throw BalticException("DXGIGetDebugInterface1");
+            }
+
+            m_dxgiDebug->EnableLeakTrackingForThread();
+        }
+#else
+            = default;
+#endif
+
         ~DXDebugLayer()
 #ifdef BALTIC_DEBUG
         {
@@ -27,29 +46,6 @@ namespace Baltic
         DXDebugLayer(const DXDebugLayer&) = delete;
 
         DXDebugLayer& operator=(const DXDebugLayer&) = delete;
-
-        inline static void Init() { static DXDebugLayer s_dxDebugLayer; }
-
-    private:
-        DXDebugLayer()
-#ifdef BALTIC_DEBUG
-        {
-            if (D3D12GetDebugInterface(IID_PPV_ARGS(&m_d3d12Debug))) {
-                throw BalticException("D3D12GetDebugInterface");
-            }
-
-            m_d3d12Debug->EnableDebugLayer();
-
-            if (FAILED(DXGIGetDebugInterface1(0, IID_PPV_ARGS(&m_dxgiDebug)))) {
-                throw BalticException("DXGIGetDebugInterface1");
-            }
-
-            m_dxgiDebug->EnableLeakTrackingForThread();
-        }
-
-#else
-            = default;
-#endif
 
     private:
 #ifdef BALTIC_DEBUG
