@@ -1,3 +1,5 @@
+#include <directxmath.h>
+
 #include <iostream>
 
 #include "auxiliary/baltic_except.h"
@@ -19,8 +21,6 @@ int main()
 
         DXDebugLayer dxDebugLayer;
 
-        const char* str = "abcdefg";
-
         D3D12_HEAP_PROPERTIES heapPropertiesUpload{
             .Type = D3D12_HEAP_TYPE_UPLOAD,
             .CPUPageProperty = D3D12_CPU_PAGE_PROPERTY_UNKNOWN,
@@ -35,6 +35,15 @@ int main()
             .MemoryPoolPreference = D3D12_MEMORY_POOL_UNKNOWN,
             .CreationNodeMask = 0,
             .VisibleNodeMask = 0
+        };
+
+        DirectX::XMFLOAT2 vertices[3] = {{0.0f, 0.5f}, {0.5f, -0.5f}, {-0.5f, -0.5f}};
+
+        D3D12_INPUT_ELEMENT_DESC vertexLayout[] = {
+            {"Position", 0, DXGI_FORMAT_R32G32_FLOAT, 0, 0, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0},
+
+            {"Color", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, D3D12_APPEND_ALIGNED_ELEMENT,
+             D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0}
         };
 
         D3D12_RESOURCE_DESC resourceDesc{
@@ -55,24 +64,24 @@ int main()
         DXContext dxContext;
 
         if (FAILED(dxContext.GetDevice()->CreateCommittedResource(
-                &heapPropertiesUpload, D3D12_HEAP_FLAG_NONE, &resourceDesc,
-                D3D12_RESOURCE_STATE_GENERIC_READ, nullptr,
+                &heapPropertiesUpload, D3D12_HEAP_FLAG_NONE, &resourceDesc, D3D12_RESOURCE_STATE_GENERIC_READ, nullptr,
                 IID_PPV_ARGS(&uploadBuffer)
             ))) {
-            throw BalticException(
-                "dxContext.GetDevice()->CreateCommittedResource"
-            );
+            throw BalticException("dxContext.GetDevice()->CreateCommittedResource");
         }
 
         if (FAILED(dxContext.GetDevice()->CreateCommittedResource(
-                &heapPropertiesDefault, D3D12_HEAP_FLAG_NONE, &resourceDesc,
-                D3D12_RESOURCE_STATE_COMMON, nullptr,
+                &heapPropertiesDefault, D3D12_HEAP_FLAG_NONE, &resourceDesc, D3D12_RESOURCE_STATE_COMMON, nullptr,
                 IID_PPV_ARGS(&vertexBuffer)
             ))) {
-            throw BalticException(
-                "dxContext.GetDevice()->CreateCommittedResource"
-            );
+            throw BalticException("dxContext.GetDevice()->CreateCommittedResource");
         }
+
+        D3D12_VERTEX_BUFFER_VIEW vertexBufferView{
+            .BufferLocation = vertexBuffer->GetGPUVirtualAddress(),
+            .SizeInBytes = sizeof(DirectX::XMFLOAT2) * _countof(vertices),
+            .StrideInBytes = sizeof(DirectX::XMFLOAT2)
+        };
 
         void* uploadBufferAddr;
         D3D12_RANGE uploadRange{.Begin = 0, .End = 1023};
@@ -80,16 +89,22 @@ int main()
         if (FAILED(uploadBuffer->Map(0, &uploadRange, &uploadBufferAddr))) {
             throw BalticException("uploadBuffer->Map");
         }
-        memcpy(uploadBufferAddr, str, strlen(str));
+        memcpy(uploadBufferAddr, vertices, sizeof(vertices));
         uploadBuffer->Unmap(0, &uploadRange);
 
         dxContext.ResetCmdList();
 
         const auto& cmdList = dxContext.GetCmdList();
-        cmdList->CopyBufferRegion(
-            vertexBuffer.Get(), 0, uploadBuffer.Get(), 0, 1024
-        );
+        cmdList->CopyBufferRegion(vertexBuffer.Get(), 0, uploadBuffer.Get(), 0, 1024);
         dxContext.ExecuteCmdList();
+
+        D3D12_GRAPHICS_PIPELINE_STATE_DESC pipelineStateDesc{
+            .InputLayout{
+                .pInputElementDescs = vertexLayout,
+                .NumElements = _countof(vertexLayout),
+            },
+            .IBStripCutValue = D3D12_INDEX_BUFFER_STRIP_CUT_VALUE_DISABLED,
+        };
 
         DXWindow mainWindow(dxContext, 1920, 1080);
         mainWindow.SetFullscreen(TRUE);
@@ -107,7 +122,12 @@ int main()
             const auto& cmdList1 = dxContext.GetCmdList();
 
             mainWindow.BeginFrame(cmdList1.Get());
-            // Draw
+
+            cmdList1->IASetVertexBuffers(0, 1, &vertexBufferView);
+            cmdList1->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+
+            cmdList1->DrawInstanced(_countof(vertices), 1, 0, 0);
+
             mainWindow.EndFrame(cmdList1.Get());
 
             dxContext.ExecuteCmdList();

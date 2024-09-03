@@ -23,27 +23,16 @@ namespace Baltic
 
         void Flush(UINT count);
 
-        [[nodiscard]] inline const Microsoft::WRL::ComPtr<IDXGIFactory7>&
-        GetFactory() const
-        {
-            return m_factory;
-        }
+        [[nodiscard]] inline const Microsoft::WRL::ComPtr<IDXGIFactory7>& GetFactory() const { return m_factory; }
 
-        [[nodiscard]] inline const Microsoft::WRL::ComPtr<ID3D12Device8>&
-        GetDevice() const
-        {
-            return m_device;
-        }
+        [[nodiscard]] inline const Microsoft::WRL::ComPtr<ID3D12Device8>& GetDevice() const { return m_device; }
 
-        [[nodiscard]] inline const Microsoft::WRL::ComPtr<ID3D12CommandQueue>&
-        GetCmdQueue() const
+        [[nodiscard]] inline const Microsoft::WRL::ComPtr<ID3D12CommandQueue>& GetCmdQueue() const
         {
             return m_cmdQueue;
         }
 
-        [[nodiscard]] inline const Microsoft::WRL::ComPtr<
-            ID3D12GraphicsCommandList6>&
-        GetCmdList() const
+        [[nodiscard]] inline const Microsoft::WRL::ComPtr<ID3D12GraphicsCommandList6>& GetCmdList() const
         {
             return m_cmdList;
         }

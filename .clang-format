@@ -28,3 +28,4 @@ AlignAfterOpenBracket: BlockIndent
 DerivePointerAlignment: false
 PointerAlignment: Left
 ReferenceAlignment: Pointer
+ColumnLimit: 120

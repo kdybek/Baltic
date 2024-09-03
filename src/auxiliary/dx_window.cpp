@@ -12,15 +12,12 @@ namespace Baltic
     {
         if (msg == WM_SIZE) {
             DXWindow* windowPtr;
-            if (!(windowPtr = reinterpret_cast<DXWindow*>(
-                      GetWindowLongPtrW(wnd, GWLP_USERDATA)
-                  ))) {
+            if (!(windowPtr = reinterpret_cast<DXWindow*>(GetWindowLongPtrW(wnd, GWLP_USERDATA)))) {
                 throw BalticException("GetWindowLongPtrW");
             }
 
             if (LOWORD(lParam) && HIWORD(lParam) &&
-                (LOWORD(lParam) != windowPtr->m_width ||
-                 HIWORD(lParam) != windowPtr->m_height)) {
+                (LOWORD(lParam) != windowPtr->m_width || HIWORD(lParam) != windowPtr->m_height)) {
                 windowPtr->m_shouldResize = TRUE;
             }
 
@@ -28,9 +25,7 @@ namespace Baltic
         }
         else if (msg == WM_KEYDOWN) {
             DXWindow* windowPtr;
-            if (!(windowPtr = reinterpret_cast<DXWindow*>(
-                      GetWindowLongPtrW(wnd, GWLP_USERDATA)
-                  ))) {
+            if (!(windowPtr = reinterpret_cast<DXWindow*>(GetWindowLongPtrW(wnd, GWLP_USERDATA)))) {
                 throw BalticException("GetWindowLongPtrW");
             }
 
@@ -42,9 +37,7 @@ namespace Baltic
         }
         else if (msg == WM_CLOSE) {
             DXWindow* windowPtr;
-            if (!(windowPtr = reinterpret_cast<DXWindow*>(
-                      GetWindowLongPtrW(wnd, GWLP_USERDATA)
-                  ))) {
+            if (!(windowPtr = reinterpret_cast<DXWindow*>(GetWindowLongPtrW(wnd, GWLP_USERDATA)))) {
                 throw BalticException("GetWindowLongPtrW");
             }
             windowPtr->m_shouldClose = TRUE;
@@ -53,11 +46,8 @@ namespace Baltic
         }
         else if (msg == WM_NCCREATE) {
             auto* createPtr = reinterpret_cast<CREATESTRUCT*>(lParam);
-            auto* windowPtr =
-                reinterpret_cast<DXWindow*>(createPtr->lpCreateParams);
-            SetWindowLongPtrW(
-                wnd, GWLP_USERDATA, reinterpret_cast<LONG_PTR>(windowPtr)
-            );
+            auto* windowPtr = reinterpret_cast<DXWindow*>(createPtr->lpCreateParams);
+            SetWindowLongPtrW(wnd, GWLP_USERDATA, reinterpret_cast<LONG_PTR>(windowPtr));
 
             return DefWindowProcW(wnd, msg, wParam, lParam);
         }
@@ -97,10 +87,8 @@ namespace Baltic
         }
 
         if (!(m_window = CreateWindowExW(
-                  WS_EX_OVERLAPPEDWINDOW | WS_EX_APPWINDOW,
-                  reinterpret_cast<LPCWSTR>(m_wndClass), L"Baltic",
-                  WS_OVERLAPPEDWINDOW | WS_VISIBLE, 100, 100, 1920, 1080,
-                  nullptr, nullptr, wcex.hInstance, this
+                  WS_EX_OVERLAPPEDWINDOW | WS_EX_APPWINDOW, reinterpret_cast<LPCWSTR>(m_wndClass), L"Baltic",
+                  WS_OVERLAPPEDWINDOW | WS_VISIBLE, 100, 100, 1920, 1080, nullptr, nullptr, wcex.hInstance, this
               ))) {
             throw BalticException("CreateWindowExW");
         }
@@ -113,25 +101,21 @@ namespace Baltic
             .Format = DXGI_FORMAT_R8G8B8A8_UNORM,
             .Stereo = false,
             .SampleDesc{.Count = 1, .Quality = 0},
-            .BufferUsage =
-                DXGI_USAGE_BACK_BUFFER | DXGI_USAGE_RENDER_TARGET_OUTPUT,
+            .BufferUsage = DXGI_USAGE_BACK_BUFFER | DXGI_USAGE_RENDER_TARGET_OUTPUT,
             .BufferCount = FRAME_COUNT,
             .Scaling = DXGI_SCALING_STRETCH,
             .SwapEffect = DXGI_SWAP_EFFECT_FLIP_DISCARD,
             .AlphaMode = DXGI_ALPHA_MODE_IGNORE,
-            .Flags = DXGI_SWAP_CHAIN_FLAG_ALLOW_MODE_SWITCH |
-                     DXGI_SWAP_CHAIN_FLAG_ALLOW_TEARING
+            .Flags = DXGI_SWAP_CHAIN_FLAG_ALLOW_MODE_SWITCH | DXGI_SWAP_CHAIN_FLAG_ALLOW_TEARING
         };
 
-        DXGI_SWAP_CHAIN_FULLSCREEN_DESC swapChainFullscreenDesc{
-            .Windowed = true
-        };
+        DXGI_SWAP_CHAIN_FULLSCREEN_DESC swapChainFullscreenDesc{.Windowed = true};
 
         Microsoft::WRL::ComPtr<IDXGISwapChain1> swapChain1;
 
         if (FAILED(factory->CreateSwapChainForHwnd(
-                m_dxContext.GetCmdQueue().Get(), m_window, &swapChainDesc,
-                &swapChainFullscreenDesc, nullptr, &swapChain1
+                m_dxContext.GetCmdQueue().Get(), m_window, &swapChainDesc, &swapChainFullscreenDesc, nullptr,
+                &swapChain1
             ))) {
             throw BalticException("factory->CreateSwapChainForHwnd");
         }
@@ -147,20 +131,12 @@ namespace Baltic
             .NodeMask = 0
         };
 
-        if (FAILED(m_dxContext.GetDevice()->CreateDescriptorHeap(
-                &descriptorHeapDesc, IID_PPV_ARGS(&m_rtvDescHeap)
-            ))) {
-            throw BalticException(
-                "m_dxContext.GetDevice()->CreateDescriptorHeap"
-            );
+        if (FAILED(m_dxContext.GetDevice()->CreateDescriptorHeap(&descriptorHeapDesc, IID_PPV_ARGS(&m_rtvDescHeap)))) {
+            throw BalticException("m_dxContext.GetDevice()->CreateDescriptorHeap");
         }
 
-        D3D12_CPU_DESCRIPTOR_HANDLE firstHandle =
-            m_rtvDescHeap->GetCPUDescriptorHandleForHeapStart();
-        UINT handleInc =
-            m_dxContext.GetDevice()->GetDescriptorHandleIncrementSize(
-                D3D12_DESCRIPTOR_HEAP_TYPE_RTV
-            );
+        D3D12_CPU_DESCRIPTOR_HANDLE firstHandle = m_rtvDescHeap->GetCPUDescriptorHandleForHeapStart();
+        UINT handleInc = m_dxContext.GetDevice()->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
 
         for (UINT i = 0; i < FRAME_COUNT; i++) {
             m_rtvHandles[i] = firstHandle;
@@ -177,9 +153,7 @@ namespace Baltic
         }
 
         if (m_wndClass) {
-            UnregisterClassW(
-                reinterpret_cast<LPCWSTR>(m_wndClass), GetModuleHandleW(nullptr)
-            );
+            UnregisterClassW(reinterpret_cast<LPCWSTR>(m_wndClass), GetModuleHandleW(nullptr));
         }
     }
 
@@ -216,8 +190,7 @@ namespace Baltic
 
         if (FAILED(m_swapChain->ResizeBuffers(
                 FRAME_COUNT, m_width, m_height, DXGI_FORMAT_UNKNOWN,
-                DXGI_SWAP_CHAIN_FLAG_ALLOW_MODE_SWITCH |
-                    DXGI_SWAP_CHAIN_FLAG_ALLOW_TEARING
+                DXGI_SWAP_CHAIN_FLAG_ALLOW_MODE_SWITCH | DXGI_SWAP_CHAIN_FLAG_ALLOW_TEARING
             ))) {
             throw BalticException("m_swapChain->ResizeBuffers");
         }
@@ -243,19 +216,16 @@ namespace Baltic
         m_isFullscreen = enable;
 
         if (enable) {
-            HMONITOR monitor =
-                MonitorFromWindow(m_window, MONITOR_DEFAULTTONEAREST);
+            HMONITOR monitor = MonitorFromWindow(m_window, MONITOR_DEFAULTTONEAREST);
             MONITORINFO monitorInfo{.cbSize = sizeof(monitorInfo)};
             if (!GetMonitorInfoW(monitor, &monitorInfo)) {
                 throw BalticException("GetMonitorInfoW");
             }
 
             if (!SetWindowPos(
-                    m_window, nullptr, monitorInfo.rcMonitor.left,
-                    monitorInfo.rcMonitor.top,
+                    m_window, nullptr, monitorInfo.rcMonitor.left, monitorInfo.rcMonitor.top,
                     monitorInfo.rcMonitor.right - monitorInfo.rcMonitor.left,
-                    monitorInfo.rcMonitor.bottom - monitorInfo.rcMonitor.top,
-                    SWP_NOZORDER
+                    monitorInfo.rcMonitor.bottom - monitorInfo.rcMonitor.top, SWP_NOZORDER
                 )) {
                 throw BalticException("SetWindowPos");
             }
@@ -284,13 +254,9 @@ namespace Baltic
         cmdList->ResourceBarrier(1, &resourceBarrier);
 
         FLOAT clearColor[] = {.1f, .1f, .1f, 1.f};
-        cmdList->ClearRenderTargetView(
-            m_rtvHandles[m_currentBufferIdx], clearColor, 0, nullptr
-        );
+        cmdList->ClearRenderTargetView(m_rtvHandles[m_currentBufferIdx], clearColor, 0, nullptr);
 
-        cmdList->OMSetRenderTargets(
-            1, &m_rtvHandles[m_currentBufferIdx], FALSE, nullptr
-        );
+        cmdList->OMSetRenderTargets(1, &m_rtvHandles[m_currentBufferIdx], FALSE, nullptr);
     }
 
     void DXWindow::EndFrame(ID3D12GraphicsCommandList6* cmdList)
@@ -313,8 +279,7 @@ namespace Baltic
     void DXWindow::GetBuffers()
     {
         for (UINT i = 0; i < FRAME_COUNT; i++) {
-            if (FAILED(m_swapChain->GetBuffer(i, IID_PPV_ARGS(&m_buffers[i]))
-                )) {
+            if (FAILED(m_swapChain->GetBuffer(i, IID_PPV_ARGS(&m_buffers[i])))) {
                 throw BalticException("m_swapChain->GetBuffer");
             }
 
@@ -324,9 +289,7 @@ namespace Baltic
                 .Texture2D{.MipSlice = 0, .PlaneSlice = 0}
             };
 
-            m_dxContext.GetDevice()->CreateRenderTargetView(
-                m_buffers[i].Get(), &rtvDesc, m_rtvHandles[i]
-            );
+            m_dxContext.GetDevice()->CreateRenderTargetView(m_buffers[i].Get(), &rtvDesc, m_rtvHandles[i]);
         }
     }
 

@@ -30,19 +30,12 @@ namespace Baltic
 
         [[nodiscard]] inline BOOL ShouldClose() const { return m_shouldClose; }
 
-        [[nodiscard]] inline BOOL ShouldResize() const
-        {
-            return m_shouldResize;
-        }
+        [[nodiscard]] inline BOOL ShouldResize() const { return m_shouldResize; }
 
-        [[nodiscard]] inline BOOL isFullscreen() const
-        {
-            return m_isFullscreen;
-        }
+        [[nodiscard]] inline BOOL isFullscreen() const { return m_isFullscreen; }
 
     private:
-        friend LRESULT CALLBACK
-        OnWindowMessage(HWND wnd, UINT msg, WPARAM wParam, LPARAM lParam);
+        friend LRESULT CALLBACK OnWindowMessage(HWND wnd, UINT msg, WPARAM wParam, LPARAM lParam);
 
         void GetBuffers();
 
