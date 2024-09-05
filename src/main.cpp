@@ -6,6 +6,7 @@
 #include "auxiliary/constants.h"
 #include "auxiliary/dx_window.h"
 #include "auxiliary/shader.h"
+#include "auxiliary/types.h"
 #include "d3d/dx_context.h"
 #include "d3d/pipeline_state.h"
 #include "debug/dx_debug_layer.h"
@@ -59,7 +60,7 @@ int main()
                 .Flags = D3D12_RESOURCE_FLAG_NONE
             };
 
-            Microsoft::WRL::ComPtr<ID3D12Resource2> uploadBuffer, vertexBuffer;
+            D3D12Resource2ComPtr uploadBuffer, vertexBuffer;
 
             DXContext dxContext;
 
@@ -101,7 +102,7 @@ int main()
             Shader pixelShader("pixel_shader.cso");
             Shader rootSignatureShader("root_signature.cso");
 
-            Microsoft::WRL::ComPtr<ID3D12RootSignature> rootSignature;
+            D3D12RootSignatureComPtr rootSignature;
             dxContext.GetDevice()->CreateRootSignature(
                 0, rootSignatureShader.GetData(), rootSignatureShader.GetSize(), IID_PPV_ARGS(&rootSignature)
             );
