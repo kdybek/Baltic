@@ -34,4 +34,5 @@
 **/compile_commands.json
 build/
 .cache/
+.log/
 local-init.lua
