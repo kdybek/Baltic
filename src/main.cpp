@@ -109,7 +109,7 @@ int main()
 
             PipelineState pipelineState;
 
-            pipelineState.StageRootSignature(rootSignature);
+            pipelineState.StageRootSignature(rootSignature.Get());
             pipelineState.StageVertexShader(vertexShader);
             pipelineState.StagePixelShader(pixelShader);
             pipelineState.StageInputLayout({vertexLayout, _countof(vertexLayout)});

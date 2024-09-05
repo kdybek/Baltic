@@ -14,7 +14,7 @@ namespace Baltic
         PipelineState(const PipelineState&) = delete;
         PipelineState& operator=(const PipelineState&) = delete;
 
-        void StageRootSignature(const ComPtr<ID3D12RootSignature>& rootSignature);
+        void StageRootSignature(ID3D12RootSignature* rootSignature);
         void StageVertexShader(const Shader& vertexShader);
         void StagePixelShader(const Shader& pixelShader);
         void StageInputLayout(const D3D12_INPUT_LAYOUT_DESC& inputLayout);

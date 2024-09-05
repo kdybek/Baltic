@@ -84,9 +84,9 @@ namespace Baltic
 
     PipelineState::PipelineState() : m_desc(g_defaultPipelineStateDesc) {}
 
-    void PipelineState::StageRootSignature(const ComPtr<ID3D12RootSignature>& rootSignature)
+    void PipelineState::StageRootSignature(ID3D12RootSignature* rootSignature)
     {
-        m_desc.pRootSignature = rootSignature.Get();
+        m_desc.pRootSignature = rootSignature;
     }
 
     void PipelineState::StageVertexShader(const Shader& vertexShader)
