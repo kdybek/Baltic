@@ -5,9 +5,9 @@
 #include "auxiliary/baltic_except.h"
 #include "auxiliary/constants.h"
 #include "auxiliary/dx_window.h"
+#include "auxiliary/shader.h"
 #include "d3d/dx_context.h"
 #include "debug/dx_debug_layer.h"
-#include "auxiliary/shader.h"
 
 using namespace Baltic;
 
@@ -102,18 +102,9 @@ int main()
             Shader vertexShader("vertex_shader.cso"), pixelShader("pixel_shader.cso");
 
             D3D12_GRAPHICS_PIPELINE_STATE_DESC pipelineStateDesc{
-                .VS{
-                    .pShaderBytecode = vertexShader.GetData(),
-                    .BytecodeLength = vertexShader.GetSize()
-                },
-                .PS{
-                    .pShaderBytecode = pixelShader.GetData(),
-                    .BytecodeLength = pixelShader.GetSize()
-                },
-                .InputLayout{
-                    .pInputElementDescs = vertexLayout,
-                    .NumElements = _countof(vertexLayout)
-                },
+                .VS{.pShaderBytecode = vertexShader.GetData(), .BytecodeLength = vertexShader.GetSize()},
+                .PS{.pShaderBytecode = pixelShader.GetData(), .BytecodeLength = pixelShader.GetSize()},
+                .InputLayout{.pInputElementDescs = vertexLayout, .NumElements = _countof(vertexLayout)},
                 .IBStripCutValue = D3D12_INDEX_BUFFER_STRIP_CUT_VALUE_DISABLED,
             };
 

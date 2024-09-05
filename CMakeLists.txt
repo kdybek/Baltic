@@ -30,26 +30,40 @@ set(SOURCES
 
 set(SHADER_DIR src/shaders)
 
+set(VERTEX_SHADERS ${SHADER_DIR}/vertex_shader.hlsl)
+
+set(PIXEL_SHADERS ${SHADER_DIR}/pixel_shader.hlsl)
+
+set(ROOT_SIGNATURES ${SHADER_DIR}/root_signature.hlsli)
+
 set(SHADERS
-    ${SHADER_DIR}/vertex_shader.hlsl
-    ${SHADER_DIR}/pixel_shader.hlsl
+    ${VERTEX_SHADERS}
+    ${PIXEL_SHADERS}
+    ${ROOT_SIGNATURES}
 )
 
-set_source_files_properties(${SHADER_DIR}/vertex_shader.hlsl PROPERTIES SHADER_TYPE "vs")
-set_source_files_properties(${SHADER_DIR}/pixel_shader.hlsl PROPERTIES SHADER_TYPE "ps")
-set_source_files_properties(${SHADERS} PROPERTIES SHADER_MODEL "6_6")
+set_source_files_properties(${VERTEX_SHADERS} PROPERTIES SHADER_TYPE "vs")
+set_source_files_properties(${PIXEL_SHADERS} PROPERTIES SHADER_TYPE "ps")
+set_source_files_properties(${ROOT_SIGNATURES} PROPERTIES SHADER_TYPE "rootsig")
+
+set_source_files_properties(${VERTEX_SHADERS} ${PIXEL_SHADERS} PROPERTIES SHADER_MODEL "6_6")
+set_source_files_properties(${ROOT_SIGNATURES} PROPERTIES SHADER_MODEL "1_1")
+
+set_source_files_properties(${VERTEX_SHADERS} ${PIXEL_SHADERS} PROPERTIES SHADER_ENTRY "main")
+set_source_files_properties(${ROOT_SIGNATURES} PROPERTIES SHADER_ENTRY "ROOTSIG")
 
 foreach(SHADER ${SHADERS})
     get_filename_component(SHADER_NAME ${SHADER} NAME_WE)
     get_source_file_property(SHADER_TYPE ${SHADER} SHADER_TYPE)
     get_source_file_property(SHADER_MODEL ${SHADER} SHADER_MODEL)
+    get_source_file_property(SHADER_ENTRY ${SHADER} SHADER_ENTRY)
     set(COMPILED_SHADER ${SHADER_NAME}.cso)
 
     add_custom_command(
         OUTPUT ${COMPILED_SHADER}
-        COMMAND dxc -T ${SHADER_TYPE}_${SHADER_MODEL} -E main -Fo $<TARGET_FILE_DIR:baltic>/${COMPILED_SHADER} ${CMAKE_SOURCE_DIR}/${SHADER}
+        COMMAND dxc -T ${SHADER_TYPE}_${SHADER_MODEL} -E ${SHADER_ENTRY} -Fo $<TARGET_FILE_DIR:baltic>/${COMPILED_SHADER} ${CMAKE_SOURCE_DIR}/${SHADER}
         DEPENDS ${SHADER}
-        COMMENT "Compiling shader: ${SHADER_NAME}"
+        COMMENT "Compiling shader ${CMAKE_SOURCE_DIR}/${SHADER}"
     )
 
     list(APPEND COMPILED_SHADERS ${COMPILED_SHADER})
