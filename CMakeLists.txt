@@ -27,7 +27,6 @@ set(SOURCES
     ${SOURCE_DIR}/auxiliary/dx_window.h
     ${SOURCE_DIR}/auxiliary/shader.cpp
     ${SOURCE_DIR}/auxiliary/shader.h
-    ${SOURCE_DIR}/auxiliary/types.h
     ${SOURCE_DIR}/debug/dx_debug_layer.h
 )
 

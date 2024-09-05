@@ -1,15 +1,15 @@
 #pragma once
 
 #include "auxiliary/constants.h"
+#include "auxiliary/win_include.h"
 #include "d3d/dx_context.h"
-#include "auxiliary/types.h"
 
 namespace Baltic
 {
     class DXWindow
     {
     public:
-        DXWindow(UINT width, UINT height, const DXContext& dxContext);
+        DXWindow(UINT width, UINT height, DXContext& context);
 
         ~DXWindow();
 
@@ -21,7 +21,7 @@ namespace Baltic
 
         void Present();
 
-        void ResizeSwapChain();
+        void ResizeSwapChain(ID3D12Device8* device);
 
         void SetFullscreen(BOOL enable);
 
@@ -42,7 +42,7 @@ namespace Baltic
     private:
         friend LRESULT CALLBACK OnWindowMessage(HWND wnd, UINT msg, WPARAM wParam, LPARAM lParam);
 
-        void GetBuffers();
+        void GetBuffers(ID3D12Device8* device);
 
         void ReleaseBuffers();
 
@@ -55,14 +55,12 @@ namespace Baltic
         BOOL m_shouldResize;
         BOOL m_isFullscreen;
 
-        DXGISwapChain4ComPtr m_swapChain;
-        D3D12Resource2ComPtr m_buffers[FRAME_COUNT];
+        ComPtr<IDXGISwapChain4> m_swapChain;
+        ComPtr<ID3D12Resource2> m_buffers[FRAME_COUNT];
         UINT m_currentBufferIdx;
 
-        D3D12DescriptorHeapComPtr m_rtvDescHeap;
+        ComPtr<ID3D12DescriptorHeap> m_rtvDescHeap;
         D3D12_CPU_DESCRIPTOR_HANDLE m_rtvHandles[FRAME_COUNT];
-
-        const DXContext& m_dxContext;
     };
 
 }  // namespace Baltic

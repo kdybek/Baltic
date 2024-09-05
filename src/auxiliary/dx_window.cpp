@@ -56,7 +56,7 @@ namespace Baltic
         }
     }
 
-    DXWindow::DXWindow(UINT width, UINT height, const DXContext& dxContext)
+    DXWindow::DXWindow(UINT width, UINT height, DXContext& dxContext)
         : m_wndClass(0),
           m_window(nullptr),
           m_width(width),
@@ -64,8 +64,7 @@ namespace Baltic
           m_shouldClose(FALSE),
           m_shouldResize(FALSE),
           m_isFullscreen(FALSE),
-          m_currentBufferIdx(0),
-          m_dxContext(dxContext)
+          m_currentBufferIdx(0)
     {
         WNDCLASSEXW wcex{
             .cbSize = sizeof(wcex),
@@ -93,7 +92,7 @@ namespace Baltic
             throw BalticException("CreateWindowExW");
         }
 
-        const auto& factory = m_dxContext.GetFactory();
+        const auto& factory = dxContext.GetFactoryComPtr();
 
         DXGI_SWAP_CHAIN_DESC1 swapChainDesc{
             .Width = 1920,
@@ -111,10 +110,10 @@ namespace Baltic
 
         DXGI_SWAP_CHAIN_FULLSCREEN_DESC swapChainFullscreenDesc{.Windowed = true};
 
-        DXGISwapChain1ComPtr swapChain1;
+        ComPtr<IDXGISwapChain1> swapChain1;
 
         if (FAILED(factory->CreateSwapChainForHwnd(
-                m_dxContext.GetCmdQueue().Get(), m_window, &swapChainDesc, &swapChainFullscreenDesc, nullptr,
+                dxContext.GetCmdQueueComPtr().Get(), m_window, &swapChainDesc, &swapChainFullscreenDesc, nullptr,
                 &swapChain1
             ))) {
             throw BalticException("factory->CreateSwapChainForHwnd");
@@ -131,19 +130,20 @@ namespace Baltic
             .NodeMask = 0
         };
 
-        if (FAILED(m_dxContext.GetDevice()->CreateDescriptorHeap(&descriptorHeapDesc, IID_PPV_ARGS(&m_rtvDescHeap)))) {
-            throw BalticException("m_dxContext.GetDevice()->CreateDescriptorHeap");
+        if (FAILED(dxContext.GetDeviceComPtr()->CreateDescriptorHeap(&descriptorHeapDesc, IID_PPV_ARGS(&m_rtvDescHeap))
+            )) {
+            throw BalticException("dxContext.GetDevice()->CreateDescriptorHeap");
         }
 
         D3D12_CPU_DESCRIPTOR_HANDLE firstHandle = m_rtvDescHeap->GetCPUDescriptorHandleForHeapStart();
-        UINT handleInc = m_dxContext.GetDevice()->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
+        UINT handleInc = dxContext.GetDeviceComPtr()->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
 
         for (UINT i = 0; i < FRAME_COUNT; i++) {
             m_rtvHandles[i] = firstHandle;
             m_rtvHandles[i].ptr += handleInc * i;
         }
 
-        GetBuffers();
+        GetBuffers(dxContext.GetDeviceComPtr().Get());
     }
 
     DXWindow::~DXWindow()
@@ -176,7 +176,7 @@ namespace Baltic
         }
     }
 
-    void DXWindow::ResizeSwapChain()
+    void DXWindow::ResizeSwapChain(ID3D12Device8* device)
     {
         RECT clientRect;
         if (!GetClientRect(m_window, &clientRect)) {
@@ -195,7 +195,7 @@ namespace Baltic
             throw BalticException("m_swapChain->ResizeBuffers");
         }
 
-        GetBuffers();
+        GetBuffers(device);
 
         m_shouldResize = FALSE;
     }
@@ -276,7 +276,7 @@ namespace Baltic
         cmdList->ResourceBarrier(1, &resourceBarrier);
     }
 
-    void DXWindow::GetBuffers()
+    void DXWindow::GetBuffers(ID3D12Device8* device)
     {
         for (UINT i = 0; i < FRAME_COUNT; i++) {
             if (FAILED(m_swapChain->GetBuffer(i, IID_PPV_ARGS(&m_buffers[i])))) {
@@ -289,7 +289,7 @@ namespace Baltic
                 .Texture2D{.MipSlice = 0, .PlaneSlice = 0}
             };
 
-            m_dxContext.GetDevice()->CreateRenderTargetView(m_buffers[i].Get(), &rtvDesc, m_rtvHandles[i]);
+            device->CreateRenderTargetView(m_buffers[i].Get(), &rtvDesc, m_rtvHandles[i]);
         }
     }
 

@@ -11,3 +11,9 @@
 #include <d3d12sdklayers.h>
 #include <dxgidebug.h>
 #endif
+
+namespace Baltic
+{
+    using Microsoft::WRL::ComPtr;
+
+}  // namespace Baltic

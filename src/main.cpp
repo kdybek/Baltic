@@ -6,7 +6,7 @@
 #include "auxiliary/constants.h"
 #include "auxiliary/dx_window.h"
 #include "auxiliary/shader.h"
-#include "auxiliary/types.h"
+#include "auxiliary/win_include.h"
 #include "d3d/dx_context.h"
 #include "d3d/pipeline_state.h"
 #include "debug/dx_debug_layer.h"
@@ -60,18 +60,18 @@ int main()
                 .Flags = D3D12_RESOURCE_FLAG_NONE
             };
 
-            D3D12Resource2ComPtr uploadBuffer, vertexBuffer;
+            ComPtr<ID3D12Resource2> uploadBuffer, vertexBuffer;
 
             DXContext dxContext;
 
-            if (FAILED(dxContext.GetDevice()->CreateCommittedResource(
+            if (FAILED(dxContext.GetDeviceComPtr()->CreateCommittedResource(
                     &heapPropertiesUpload, D3D12_HEAP_FLAG_NONE, &resourceDesc, D3D12_RESOURCE_STATE_GENERIC_READ,
                     nullptr, IID_PPV_ARGS(&uploadBuffer)
                 ))) {
                 throw BalticException("dxContext.GetDevice()->CreateCommittedResource");
             }
 
-            if (FAILED(dxContext.GetDevice()->CreateCommittedResource(
+            if (FAILED(dxContext.GetDeviceComPtr()->CreateCommittedResource(
                     &heapPropertiesDefault, D3D12_HEAP_FLAG_NONE, &resourceDesc, D3D12_RESOURCE_STATE_COMMON, nullptr,
                     IID_PPV_ARGS(&vertexBuffer)
                 ))) {
@@ -95,25 +95,25 @@ int main()
 
             dxContext.ResetCmdList();
 
-            dxContext.GetCmdList()->CopyBufferRegion(vertexBuffer.Get(), 0, uploadBuffer.Get(), 0, 1024);
+            dxContext.GetCmdListComPtr()->CopyBufferRegion(vertexBuffer.Get(), 0, uploadBuffer.Get(), 0, 1024);
             dxContext.ExecuteCmdList();
 
             Shader vertexShader("vertex_shader.cso");
             Shader pixelShader("pixel_shader.cso");
             Shader rootSignatureShader("root_signature.cso");
 
-            D3D12RootSignatureComPtr rootSignature;
-            dxContext.GetDevice()->CreateRootSignature(
+            ComPtr<ID3D12RootSignature> rootSignature;
+            dxContext.GetDeviceComPtr()->CreateRootSignature(
                 0, rootSignatureShader.GetData(), rootSignatureShader.GetSize(), IID_PPV_ARGS(&rootSignature)
             );
 
-            PipelineState pipelineState(dxContext);
+            PipelineState pipelineState;
 
             pipelineState.StageRootSignature(rootSignature);
             pipelineState.StageVertexShader(vertexShader);
             pipelineState.StagePixelShader(pixelShader);
             pipelineState.StageInputLayout({vertexLayout, _countof(vertexLayout)});
-            pipelineState.Finalize();
+            pipelineState.Finalize(dxContext.GetDeviceComPtr().Get());
 
             DXWindow mainWindow(1920, 1080, dxContext);
             mainWindow.SetFullscreen(TRUE);
@@ -123,16 +123,16 @@ int main()
 
                 if (mainWindow.ShouldResize()) {
                     dxContext.Flush(FRAME_COUNT);
-                    mainWindow.ResizeSwapChain();
+                    mainWindow.ResizeSwapChain(dxContext.GetDeviceComPtr().Get());
                 }
 
                 dxContext.ResetCmdList();
 
-                const auto& cmdList = dxContext.GetCmdList();
+                const auto& cmdList = dxContext.GetCmdListComPtr();
 
                 mainWindow.BeginFrame(cmdList.Get());
 
-                cmdList->SetPipelineState(pipelineState.Get());
+                cmdList->SetPipelineState(pipelineState.GetComPtr().Get());
                 cmdList->SetGraphicsRootSignature(rootSignature.Get());
 
                 cmdList->IASetVertexBuffers(0, 1, &vertexBufferView);

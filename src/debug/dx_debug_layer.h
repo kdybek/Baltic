@@ -1,7 +1,7 @@
 #pragma once
 
 #include "auxiliary/baltic_except.h"
-#include "auxiliary/types.h"
+#include "auxiliary/win_include.h"
 
 namespace Baltic
 {
@@ -47,8 +47,8 @@ namespace Baltic
 
     private:
 #ifdef BALTIC_DEBUG
-        D3D12Debug3ComPtr m_d3d12Debug;
-        DXGIDebug1ComPtr m_dxgiDebug;
+        ComPtr<ID3D12Debug3> m_d3d12Debug;
+        ComPtr<IDXGIDebug1> m_dxgiDebug;
 #endif
     };
 
