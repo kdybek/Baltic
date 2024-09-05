@@ -29,4 +29,4 @@ namespace Baltic
         D3D12_GRAPHICS_PIPELINE_STATE_DESC m_desc;
     };
 
-}  // namespace Baltic
+} // namespace Baltic

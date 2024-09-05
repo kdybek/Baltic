@@ -16,4 +16,4 @@ namespace Baltic
 {
     using Microsoft::WRL::ComPtr;
 
-}  // namespace Baltic
+} // namespace Baltic

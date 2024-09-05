@@ -63,4 +63,4 @@ namespace Baltic
         D3D12_CPU_DESCRIPTOR_HANDLE m_rtvHandles[FRAME_COUNT];
     };
 
-}  // namespace Baltic
+} // namespace Baltic

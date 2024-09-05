@@ -52,4 +52,4 @@ namespace Baltic
 #endif
     };
 
-}  // namespace Baltic
+} // namespace Baltic

@@ -18,4 +18,4 @@ namespace Baltic
         size_t m_size;
     };
 
-}  // namespace Baltic
+} // namespace Baltic

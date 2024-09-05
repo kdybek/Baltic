@@ -7,4 +7,4 @@ namespace Baltic
     constexpr DWORD EVENT_TIMEOUT = 20000;
     constexpr UINT FRAME_COUNT = 2;
 
-}  // namespace Baltic
+} // namespace Baltic

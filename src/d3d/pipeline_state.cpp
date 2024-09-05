@@ -80,7 +80,7 @@ namespace Baltic
             .Flags = D3D12_PIPELINE_STATE_FLAG_NONE
         };
 
-    }  // namespace
+    } // namespace
 
     PipelineState::PipelineState() : m_desc(g_defaultPipelineStateDesc) {}
 
@@ -115,4 +115,4 @@ namespace Baltic
         m_desc = g_defaultPipelineStateDesc;
     }
 
-}  // namespace Baltic
+} // namespace Baltic

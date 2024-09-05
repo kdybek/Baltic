@@ -18,4 +18,4 @@ namespace Baltic
         std::string m_errorMessage;
     };
 
-}  // namespace Baltic
+} // namespace Baltic

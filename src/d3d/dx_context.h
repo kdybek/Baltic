@@ -45,4 +45,4 @@ namespace Baltic
         HANDLE m_fenceEvent;
     };
 
-}  // namespace Baltic
+} // namespace Baltic
