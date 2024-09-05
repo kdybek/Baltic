@@ -4,6 +4,7 @@
 #include <fstream>
 
 #include "auxiliary/baltic_except.h"
+#include "auxiliary/win_include.h"
 
 namespace Baltic
 {
@@ -12,8 +13,8 @@ namespace Baltic
         static std::filesystem::path s_shaderDir;
 
         if (s_shaderDir.empty()) {
-            wchar_t exePath[MAX_PATH];
-            if (!GetModuleFileNameW(nullptr, exePath, MAX_PATH)) {
+            wchar_t exePath[512];
+            if (!GetModuleFileNameW(nullptr, exePath, 512)) {
                 throw BalticException("GetModuleFileNameW");
             }
 

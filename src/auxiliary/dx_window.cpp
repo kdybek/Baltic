@@ -111,7 +111,7 @@ namespace Baltic
 
         DXGI_SWAP_CHAIN_FULLSCREEN_DESC swapChainFullscreenDesc{.Windowed = true};
 
-        DXSwapChain1ComPtr swapChain1;
+        DXGISwapChain1ComPtr swapChain1;
 
         if (FAILED(factory->CreateSwapChainForHwnd(
                 m_dxContext.GetCmdQueue().Get(), m_window, &swapChainDesc, &swapChainFullscreenDesc, nullptr,

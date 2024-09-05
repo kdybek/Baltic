@@ -2,8 +2,6 @@
 
 #include <string_view>
 
-#include "auxiliary/win_include.h"
-
 namespace Baltic
 {
     class Shader

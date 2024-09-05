@@ -55,11 +55,11 @@ namespace Baltic
         BOOL m_shouldResize;
         BOOL m_isFullscreen;
 
-        DXSwapChain4ComPtr m_swapChain;
-        DXResource2ComPtr m_buffers[FRAME_COUNT];
+        DXGISwapChain4ComPtr m_swapChain;
+        D3D12Resource2ComPtr m_buffers[FRAME_COUNT];
         UINT m_currentBufferIdx;
 
-        DXDescriptorHeapComPtr m_rtvDescHeap;
+        D3D12DescriptorHeapComPtr m_rtvDescHeap;
         D3D12_CPU_DESCRIPTOR_HANDLE m_rtvHandles[FRAME_COUNT];
 
         const DXContext& m_dxContext;

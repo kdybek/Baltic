@@ -82,7 +82,7 @@ namespace Baltic
     {
     }
 
-    void PipelineState::StageRootSignature(const DXRootSignatureComPtr& rootSignature)
+    void PipelineState::StageRootSignature(const D3D12RootSignatureComPtr& rootSignature)
     {
         m_desc.pRootSignature = rootSignature.Get();
     }

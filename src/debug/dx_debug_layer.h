@@ -1,7 +1,7 @@
 #pragma once
 
 #include "auxiliary/baltic_except.h"
-#include "auxiliary/win_include.h"
+#include "auxiliary/types.h"
 
 namespace Baltic
 {
