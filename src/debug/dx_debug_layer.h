@@ -47,8 +47,8 @@ namespace Baltic
 
     private:
 #ifdef BALTIC_DEBUG
-        Microsoft::WRL::ComPtr<ID3D12Debug3> m_d3d12Debug;
-        Microsoft::WRL::ComPtr<IDXGIDebug1> m_dxgiDebug;
+        D3D12Debug3ComPtr m_d3d12Debug;
+        DXGIDebug1ComPtr m_dxgiDebug;
 #endif
     };
 

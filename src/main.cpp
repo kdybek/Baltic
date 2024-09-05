@@ -7,6 +7,7 @@
 #include "auxiliary/dx_window.h"
 #include "auxiliary/shader.h"
 #include "d3d/dx_context.h"
+#include "d3d/pipeline_state.h"
 #include "debug/dx_debug_layer.h"
 
 using namespace Baltic;
@@ -42,9 +43,7 @@ int main()
             DirectX::XMFLOAT2 vertices[3] = {{0.0f, 0.5f}, {0.5f, -0.5f}, {-0.5f, -0.5f}};
 
             D3D12_INPUT_ELEMENT_DESC vertexLayout[] = {
-                {"Position", 0, DXGI_FORMAT_R32G32_FLOAT, 0, 0, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0},
-                {"Color", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, D3D12_APPEND_ALIGNED_ELEMENT,
-                 D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0}
+                {"Position", 0, DXGI_FORMAT_R32G32_FLOAT, 0, 0, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0}
             };
 
             D3D12_RESOURCE_DESC resourceDesc{
@@ -95,20 +94,27 @@ int main()
 
             dxContext.ResetCmdList();
 
-            const auto& cmdList = dxContext.GetCmdList();
-            cmdList->CopyBufferRegion(vertexBuffer.Get(), 0, uploadBuffer.Get(), 0, 1024);
+            dxContext.GetCmdList()->CopyBufferRegion(vertexBuffer.Get(), 0, uploadBuffer.Get(), 0, 1024);
             dxContext.ExecuteCmdList();
 
-            Shader vertexShader("vertex_shader.cso"), pixelShader("pixel_shader.cso");
+            Shader vertexShader("vertex_shader.cso");
+            Shader pixelShader("pixel_shader.cso");
+            Shader rootSignatureShader("root_signature.cso");
 
-            D3D12_GRAPHICS_PIPELINE_STATE_DESC pipelineStateDesc{
-                .VS{.pShaderBytecode = vertexShader.GetData(), .BytecodeLength = vertexShader.GetSize()},
-                .PS{.pShaderBytecode = pixelShader.GetData(), .BytecodeLength = pixelShader.GetSize()},
-                .InputLayout{.pInputElementDescs = vertexLayout, .NumElements = _countof(vertexLayout)},
-                .IBStripCutValue = D3D12_INDEX_BUFFER_STRIP_CUT_VALUE_DISABLED,
-            };
+            Microsoft::WRL::ComPtr<ID3D12RootSignature> rootSignature;
+            dxContext.GetDevice()->CreateRootSignature(
+                0, rootSignatureShader.GetData(), rootSignatureShader.GetSize(), IID_PPV_ARGS(&rootSignature)
+            );
 
-            DXWindow mainWindow(dxContext, 1920, 1080);
+            PipelineState pipelineState(dxContext);
+
+            pipelineState.StageRootSignature(rootSignature);
+            pipelineState.StageVertexShader(vertexShader);
+            pipelineState.StagePixelShader(pixelShader);
+            pipelineState.StageInputLayout({vertexLayout, _countof(vertexLayout)});
+            pipelineState.Finalize();
+
+            DXWindow mainWindow(1920, 1080, dxContext);
             mainWindow.SetFullscreen(TRUE);
 
             while (!mainWindow.ShouldClose()) {
@@ -121,16 +127,39 @@ int main()
 
                 dxContext.ResetCmdList();
 
-                const auto& cmdList1 = dxContext.GetCmdList();
+                const auto& cmdList = dxContext.GetCmdList();
 
-                mainWindow.BeginFrame(cmdList1.Get());
+                mainWindow.BeginFrame(cmdList.Get());
 
-                cmdList1->IASetVertexBuffers(0, 1, &vertexBufferView);
-                cmdList1->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+                cmdList->SetPipelineState(pipelineState.Get());
+                cmdList->SetGraphicsRootSignature(rootSignature.Get());
 
-                cmdList1->DrawInstanced(_countof(vertices), 1, 0, 0);
+                cmdList->IASetVertexBuffers(0, 1, &vertexBufferView);
+                cmdList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 
-                mainWindow.EndFrame(cmdList1.Get());
+                D3D12_VIEWPORT viewport{
+                    .TopLeftX = 0.f,
+                    .TopLeftY = 0.f,
+                    .Width = static_cast<FLOAT>(mainWindow.GetWidth()),
+                    .Height = static_cast<FLOAT>(mainWindow.GetHeight()),
+                    .MinDepth = 0.f,
+                    .MaxDepth = 1.f
+                };
+
+                cmdList->RSSetViewports(1, &viewport);
+
+                D3D12_RECT scissorRect{
+                    .left = 0,
+                    .top = 0,
+                    .right = static_cast<LONG>(mainWindow.GetWidth()),
+                    .bottom = static_cast<LONG>(mainWindow.GetHeight())
+                };
+
+                cmdList->RSSetScissorRects(1, &scissorRect);
+
+                cmdList->DrawInstanced(_countof(vertices), 1, 0, 0);
+
+                mainWindow.EndFrame(cmdList.Get());
 
                 dxContext.ExecuteCmdList();
 

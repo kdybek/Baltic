@@ -18,6 +18,8 @@ set(SOURCES
     ${SOURCE_DIR}/main.cpp
     ${SOURCE_DIR}/d3d/dx_context.cpp
     ${SOURCE_DIR}/d3d/dx_context.h
+    ${SOURCE_DIR}/d3d/pipeline_state.cpp
+    ${SOURCE_DIR}/d3d/pipeline_state.h
     ${SOURCE_DIR}/auxiliary/win_include.h
     ${SOURCE_DIR}/auxiliary/baltic_except.h
     ${SOURCE_DIR}/auxiliary/constants.h
@@ -25,6 +27,7 @@ set(SOURCES
     ${SOURCE_DIR}/auxiliary/dx_window.h
     ${SOURCE_DIR}/auxiliary/shader.cpp
     ${SOURCE_DIR}/auxiliary/shader.h
+    ${SOURCE_DIR}/auxiliary/types.h
     ${SOURCE_DIR}/debug/dx_debug_layer.h
 )
 
@@ -46,7 +49,7 @@ set_source_files_properties(${VERTEX_SHADERS} PROPERTIES SHADER_TYPE "vs")
 set_source_files_properties(${PIXEL_SHADERS} PROPERTIES SHADER_TYPE "ps")
 set_source_files_properties(${ROOT_SIGNATURES} PROPERTIES SHADER_TYPE "rootsig")
 
-set_source_files_properties(${VERTEX_SHADERS} ${PIXEL_SHADERS} PROPERTIES SHADER_MODEL "6_6")
+set_source_files_properties(${VERTEX_SHADERS} ${PIXEL_SHADERS} PROPERTIES SHADER_MODEL "6_5")
 set_source_files_properties(${ROOT_SIGNATURES} PROPERTIES SHADER_MODEL "1_1")
 
 set_source_files_properties(${VERTEX_SHADERS} ${PIXEL_SHADERS} PROPERTIES SHADER_ENTRY "main")
@@ -61,7 +64,7 @@ foreach(SHADER ${SHADERS})
 
     add_custom_command(
         OUTPUT ${COMPILED_SHADER}
-        COMMAND dxc -T ${SHADER_TYPE}_${SHADER_MODEL} -E ${SHADER_ENTRY} -Fo $<TARGET_FILE_DIR:baltic>/${COMPILED_SHADER} ${CMAKE_SOURCE_DIR}/${SHADER}
+        COMMAND dxc -T ${SHADER_TYPE}_${SHADER_MODEL} -E ${SHADER_ENTRY} -O3 -Fo $<TARGET_FILE_DIR:baltic>/${COMPILED_SHADER} ${CMAKE_SOURCE_DIR}/${SHADER}
         DEPENDS ${SHADER}
         COMMENT "Compiling shader ${CMAKE_SOURCE_DIR}/${SHADER}"
     )

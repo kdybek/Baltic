@@ -56,7 +56,7 @@ namespace Baltic
         }
     }
 
-    DXWindow::DXWindow(const DXContext& dxContext, UINT width, UINT height)
+    DXWindow::DXWindow(UINT width, UINT height, const DXContext& dxContext)
         : m_wndClass(0),
           m_window(nullptr),
           m_width(width),
@@ -64,8 +64,8 @@ namespace Baltic
           m_shouldClose(FALSE),
           m_shouldResize(FALSE),
           m_isFullscreen(FALSE),
-          m_dxContext(dxContext),
-          m_currentBufferIdx(0)
+          m_currentBufferIdx(0),
+          m_dxContext(dxContext)
     {
         WNDCLASSEXW wcex{
             .cbSize = sizeof(wcex),
@@ -111,7 +111,7 @@ namespace Baltic
 
         DXGI_SWAP_CHAIN_FULLSCREEN_DESC swapChainFullscreenDesc{.Windowed = true};
 
-        Microsoft::WRL::ComPtr<IDXGISwapChain1> swapChain1;
+        DXSwapChain1ComPtr swapChain1;
 
         if (FAILED(factory->CreateSwapChainForHwnd(
                 m_dxContext.GetCmdQueue().Get(), m_window, &swapChainDesc, &swapChainFullscreenDesc, nullptr,

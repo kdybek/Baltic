@@ -2,13 +2,14 @@
 
 #include "auxiliary/constants.h"
 #include "d3d/dx_context.h"
+#include "auxiliary/types.h"
 
 namespace Baltic
 {
     class DXWindow
     {
     public:
-        DXWindow(const DXContext& dxContext, UINT width, UINT height);
+        DXWindow(UINT width, UINT height, const DXContext& dxContext);
 
         ~DXWindow();
 
@@ -27,6 +28,10 @@ namespace Baltic
         void BeginFrame(ID3D12GraphicsCommandList6* cmdList);
 
         void EndFrame(ID3D12GraphicsCommandList6* cmdList);
+
+        [[nodiscard]] inline UINT GetWidth() const { return m_width; }
+
+        [[nodiscard]] inline UINT GetHeight() const { return m_height; }
 
         [[nodiscard]] inline BOOL ShouldClose() const { return m_shouldClose; }
 
@@ -50,14 +55,14 @@ namespace Baltic
         BOOL m_shouldResize;
         BOOL m_isFullscreen;
 
-        const DXContext& m_dxContext;
-
-        Microsoft::WRL::ComPtr<IDXGISwapChain4> m_swapChain;
-        Microsoft::WRL::ComPtr<ID3D12Resource2> m_buffers[FRAME_COUNT];
+        DXSwapChain4ComPtr m_swapChain;
+        DXResource2ComPtr m_buffers[FRAME_COUNT];
         UINT m_currentBufferIdx;
 
-        Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> m_rtvDescHeap;
+        DXDescriptorHeapComPtr m_rtvDescHeap;
         D3D12_CPU_DESCRIPTOR_HANDLE m_rtvHandles[FRAME_COUNT];
+
+        const DXContext& m_dxContext;
     };
 
 }  // namespace Baltic
