@@ -1,5 +1,3 @@
-#include <directxmath.h>
-
 #include <iostream>
 
 #include "auxiliary/baltic_except.h"
@@ -8,6 +6,7 @@
 #include "auxiliary/shader.h"
 #include "auxiliary/win_include.h"
 #include "d3d/dx_context.h"
+#include "d3d/input_layout.h"
 #include "d3d/pipeline_state.h"
 #include "debug/dx_debug_layer.h"
 
@@ -41,10 +40,8 @@ int main()
                 .VisibleNodeMask = 0
             };
 
-            DirectX::XMFLOAT2 vertices[3] = {{0.0f, 0.5f}, {0.5f, -0.5f}, {-0.5f, -0.5f}};
-
-            D3D12_INPUT_ELEMENT_DESC vertexLayout[] = {
-                {"Position", 0, DXGI_FORMAT_R32G32_FLOAT, 0, 0, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0}
+            VertexBufferElement vertices[3] = {
+                {.position = {0.0f, 0.5f}}, {.position = {0.5f, -0.5f}}, {.position = {-0.5f, -0.5f}}
             };
 
             D3D12_RESOURCE_DESC resourceDesc{
@@ -112,7 +109,7 @@ int main()
             pipelineState.StageRootSignature(rootSignature.Get());
             pipelineState.StageVertexShader(vertexShader);
             pipelineState.StagePixelShader(pixelShader);
-            pipelineState.StageInputLayout({vertexLayout, _countof(vertexLayout)});
+            pipelineState.StageInputLayout(g_vertexBufferLayout);
             pipelineState.Finalize(dxContext.GetDeviceComPtr().Get());
 
             DXWindow mainWindow(1920, 1080, dxContext);

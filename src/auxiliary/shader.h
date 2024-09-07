@@ -2,6 +2,8 @@
 
 #include <string_view>
 
+#include "auxiliary/win_include.h"
+
 namespace Baltic
 {
     class Shader
@@ -11,11 +13,11 @@ namespace Baltic
         ~Shader();
 
         inline const void* GetData() const { return m_data; }
-        inline size_t GetSize() const { return m_size; }
+        inline SIZE_T GetSize() const { return m_size; }
 
     private:
         void* m_data;
-        size_t m_size;
+        SIZE_T m_size;
     };
 
 } // namespace Baltic
