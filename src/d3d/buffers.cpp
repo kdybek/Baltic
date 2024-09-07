@@ -35,12 +35,12 @@ namespace Baltic
         }
     }
 
-    void VertexBuffer::Bind(const ComPtr<ID3D12GraphicsCommandList6>& commandList) const
+    void VertexBuffer::StageCmdBind(UINT size, UINT stride, ID3D12GraphicsCommandList6* commandList) const
     {
         D3D12_VERTEX_BUFFER_VIEW vertexBufferView = {
             .BufferLocation = m_vertexBuffer->GetGPUVirtualAddress(),
-            .SizeInBytes = static_cast<UINT>(m_vertexBuffer->GetDesc().Width),
-            .StrideInBytes = sizeof(VertexBufferElement)
+            .SizeInBytes = size,
+            .StrideInBytes = stride
         };
 
         commandList->IASetVertexBuffers(0, 1, &vertexBufferView);

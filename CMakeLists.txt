@@ -20,13 +20,16 @@ set(SOURCES
     ${SOURCE_DIR}/d3d/dx_context.h
     ${SOURCE_DIR}/d3d/pipeline_state.cpp
     ${SOURCE_DIR}/d3d/pipeline_state.h
+    ${SOURCE_DIR}/d3d/dx_window.cpp
+    ${SOURCE_DIR}/d3d/dx_window.h
+    ${SOURCE_DIR}/d3d/shader.cpp
+    ${SOURCE_DIR}/d3d/shader.h
+    ${SOURCE_DIR}/d3d/buffers.cpp
+    ${SOURCE_DIR}/d3d/buffers.h
+    ${SOURCE_DIR}/auxiliary/input_layouts.h
     ${SOURCE_DIR}/auxiliary/win_include.h
     ${SOURCE_DIR}/auxiliary/baltic_except.h
     ${SOURCE_DIR}/auxiliary/constants.h
-    ${SOURCE_DIR}/auxiliary/dx_window.cpp
-    ${SOURCE_DIR}/auxiliary/dx_window.h
-    ${SOURCE_DIR}/auxiliary/shader.cpp
-    ${SOURCE_DIR}/auxiliary/shader.h
     ${SOURCE_DIR}/debug/dx_debug_layer.h
 )
 

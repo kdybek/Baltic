@@ -2,12 +2,12 @@
 
 #include "auxiliary/baltic_except.h"
 #include "auxiliary/constants.h"
-#include "auxiliary/dx_window.h"
-#include "auxiliary/shader.h"
+#include "auxiliary/input_layouts.h"
 #include "auxiliary/win_include.h"
 #include "d3d/dx_context.h"
-#include "d3d/input_layout.h"
+#include "d3d/dx_window.h"
 #include "d3d/pipeline_state.h"
+#include "d3d/shader.h"
 #include "debug/dx_debug_layer.h"
 
 using namespace Baltic;

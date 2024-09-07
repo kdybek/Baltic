@@ -1,7 +1,7 @@
 #pragma once
 
-#include "auxiliary/shader.h"
 #include "auxiliary/win_include.h"
+#include "d3d/shader.h"
 
 namespace Baltic
 {
