@@ -25,9 +25,9 @@ namespace Baltic
 
         void SetFullscreen(BOOL enable);
 
-        void BeginFrame(ID3D12GraphicsCommandList6* cmdList);
+        void StageCmdBeginFrame(ID3D12GraphicsCommandList6* cmdList);
 
-        void EndFrame(ID3D12GraphicsCommandList6* cmdList);
+        void StageCmdEndFrame(ID3D12GraphicsCommandList6* cmdList);
 
         [[nodiscard]] inline UINT GetWidth() const { return m_width; }
 

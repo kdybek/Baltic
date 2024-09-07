@@ -235,7 +235,7 @@ namespace Baltic
         }
     }
 
-    void DXWindow::BeginFrame(ID3D12GraphicsCommandList6* cmdList)
+    void DXWindow::StageCmdBeginFrame(ID3D12GraphicsCommandList6* cmdList)
     {
         m_currentBufferIdx = m_swapChain->GetCurrentBackBufferIndex();
 
@@ -259,7 +259,7 @@ namespace Baltic
         cmdList->OMSetRenderTargets(1, &m_rtvHandles[m_currentBufferIdx], FALSE, nullptr);
     }
 
-    void DXWindow::EndFrame(ID3D12GraphicsCommandList6* cmdList)
+    void DXWindow::StageCmdEndFrame(ID3D12GraphicsCommandList6* cmdList)
     {
         D3D12_RESOURCE_BARRIER resourceBarrier = {
             .Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION,

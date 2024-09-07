@@ -4,6 +4,7 @@
 #include "auxiliary/constants.h"
 #include "auxiliary/input_layouts.h"
 #include "auxiliary/win_include.h"
+#include "d3d/buffers.h"
 #include "d3d/dx_context.h"
 #include "d3d/dx_window.h"
 #include "d3d/pipeline_state.h"
@@ -24,75 +25,22 @@ int main()
         DXDebugLayer dxDebugLayer;
 
         {
-            D3D12_HEAP_PROPERTIES heapPropertiesUpload{
-                .Type = D3D12_HEAP_TYPE_UPLOAD,
-                .CPUPageProperty = D3D12_CPU_PAGE_PROPERTY_UNKNOWN,
-                .MemoryPoolPreference = D3D12_MEMORY_POOL_UNKNOWN,
-                .CreationNodeMask = 0,
-                .VisibleNodeMask = 0
-            };
-
-            D3D12_HEAP_PROPERTIES heapPropertiesDefault{
-                .Type = D3D12_HEAP_TYPE_DEFAULT,
-                .CPUPageProperty = D3D12_CPU_PAGE_PROPERTY_UNKNOWN,
-                .MemoryPoolPreference = D3D12_MEMORY_POOL_UNKNOWN,
-                .CreationNodeMask = 0,
-                .VisibleNodeMask = 0
-            };
-
             VertexBufferElement vertices[3] = {
                 {.position = {0.0f, 0.5f}}, {.position = {0.5f, -0.5f}}, {.position = {-0.5f, -0.5f}}
             };
 
-            D3D12_RESOURCE_DESC resourceDesc{
-                .Dimension = D3D12_RESOURCE_DIMENSION_BUFFER,
-                .Alignment = D3D12_DEFAULT_RESOURCE_PLACEMENT_ALIGNMENT,
-                .Width = 1024,
-                .Height = 1,
-                .DepthOrArraySize = 1,
-                .MipLevels = 1,
-                .Format = DXGI_FORMAT_UNKNOWN,
-                .SampleDesc{.Count = 1, .Quality = 0},
-                .Layout = D3D12_TEXTURE_LAYOUT_ROW_MAJOR,
-                .Flags = D3D12_RESOURCE_FLAG_NONE
-            };
-
-            ComPtr<ID3D12Resource2> uploadBuffer, vertexBuffer;
-
             DXContext dxContext;
 
-            if (FAILED(dxContext.GetDeviceComPtr()->CreateCommittedResource(
-                    &heapPropertiesUpload, D3D12_HEAP_FLAG_NONE, &resourceDesc, D3D12_RESOURCE_STATE_GENERIC_READ,
-                    nullptr, IID_PPV_ARGS(&uploadBuffer)
-                ))) {
-                throw BalticException("dxContext.GetDevice()->CreateCommittedResource");
-            }
-
-            if (FAILED(dxContext.GetDeviceComPtr()->CreateCommittedResource(
-                    &heapPropertiesDefault, D3D12_HEAP_FLAG_NONE, &resourceDesc, D3D12_RESOURCE_STATE_COMMON, nullptr,
-                    IID_PPV_ARGS(&vertexBuffer)
-                ))) {
-                throw BalticException("dxContext.GetDevice()->CreateCommittedResource");
-            }
-
-            D3D12_VERTEX_BUFFER_VIEW vertexBufferView{
-                .BufferLocation = vertexBuffer->GetGPUVirtualAddress(),
-                .SizeInBytes = sizeof(DirectX::XMFLOAT2) * _countof(vertices),
-                .StrideInBytes = sizeof(DirectX::XMFLOAT2)
-            };
-
-            void* uploadBufferAddr;
-            D3D12_RANGE uploadRange{.Begin = 0, .End = 1023};
-
-            if (FAILED(uploadBuffer->Map(0, &uploadRange, &uploadBufferAddr))) {
-                throw BalticException("uploadBuffer->Map");
-            }
-            memcpy(uploadBufferAddr, vertices, sizeof(vertices));
-            uploadBuffer->Unmap(0, &uploadRange);
+            UploadBuffer uploadBuffer(1024, dxContext.GetDeviceComPtr().Get());
+            VertexBuffer vertexBuffer(1024, dxContext.GetDeviceComPtr().Get());
 
             dxContext.ResetCmdList();
 
-            dxContext.GetCmdListComPtr()->CopyBufferRegion(vertexBuffer.Get(), 0, uploadBuffer.Get(), 0, 1024);
+            uploadBuffer.CopyData(vertices, sizeof(vertices));
+            uploadBuffer.StageCmdUpload(
+                vertexBuffer.GetComPtr().Get(), sizeof(vertices), dxContext.GetCmdListComPtr().Get()
+            );
+            vertexBuffer.SetView(sizeof(vertices), sizeof(VertexBufferElement));
             dxContext.ExecuteCmdList();
 
             Shader vertexShader("vertex_shader.cso");
@@ -127,12 +75,12 @@ int main()
 
                 const auto& cmdList = dxContext.GetCmdListComPtr();
 
-                mainWindow.BeginFrame(cmdList.Get());
+                mainWindow.StageCmdBeginFrame(cmdList.Get());
 
                 cmdList->SetPipelineState(pipelineState.GetComPtr().Get());
                 cmdList->SetGraphicsRootSignature(rootSignature.Get());
 
-                cmdList->IASetVertexBuffers(0, 1, &vertexBufferView);
+                vertexBuffer.StageCmdBind(cmdList.Get());
                 cmdList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 
                 D3D12_VIEWPORT viewport{
@@ -157,7 +105,7 @@ int main()
 
                 cmdList->DrawInstanced(_countof(vertices), 1, 0, 0);
 
-                mainWindow.EndFrame(cmdList.Get());
+                mainWindow.StageCmdEndFrame(cmdList.Get());
 
                 dxContext.ExecuteCmdList();
 
