@@ -14,7 +14,7 @@ namespace Baltic
         UploadBuffer& operator=(const UploadBuffer&) = delete;
 
         void CopyData(const void* data, UINT size) const;
-        void StageCmdUpload(ID3D12Resource2* dest, UINT size, ID3D12GraphicsCommandList6* commandList) const;
+        void StageCmdUpload(ID3D12Resource2* dest, UINT size, ID3D12GraphicsCommandList6* cmdList) const;
 
         [[nodiscard]] inline const ComPtr<ID3D12Resource2>& GetComPtr() { return m_uploadBuffer; }
 

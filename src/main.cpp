@@ -1,6 +1,6 @@
 #include <iostream>
 
-#include "auxiliary/baltic_except.h"
+#include "auxiliary/baltic_exception.h"
 #include "auxiliary/constants.h"
 #include "auxiliary/input_layouts.h"
 #include "auxiliary/win_include.h"
@@ -18,9 +18,7 @@ int main()
     int ret = 0;
 
     try {
-        if (FAILED(RoInitialize(RO_INIT_SINGLETHREADED))) {
-            throw BalticException("RoInitialize");
-        }
+        ThrowIfFailed(RoInitialize(RO_INIT_SINGLETHREADED));
 
         DXDebugLayer dxDebugLayer;
 

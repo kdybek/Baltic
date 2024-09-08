@@ -1,6 +1,6 @@
 #pragma once
 
-#include "auxiliary/baltic_except.h"
+#include "auxiliary/baltic_exception.h"
 #include "auxiliary/win_include.h"
 
 namespace Baltic
@@ -11,15 +11,11 @@ namespace Baltic
         DXDebugLayer()
 #ifdef BALTIC_DEBUG
         {
-            if (D3D12GetDebugInterface(IID_PPV_ARGS(&m_d3d12Debug))) {
-                throw BalticException("D3D12GetDebugInterface");
-            }
+            ThrowIfFailed(D3D12GetDebugInterface(IID_PPV_ARGS(&m_d3d12Debug)));
 
             m_d3d12Debug->EnableDebugLayer();
 
-            if (FAILED(DXGIGetDebugInterface1(0, IID_PPV_ARGS(&m_dxgiDebug)))) {
-                throw BalticException("DXGIGetDebugInterface1");
-            }
+            ThrowIfFailed(DXGIGetDebugInterface1(0, IID_PPV_ARGS(&m_dxgiDebug)));
 
             m_dxgiDebug->EnableLeakTrackingForThread();
         }
@@ -37,11 +33,9 @@ namespace Baltic
         {
 #ifdef BALTIC_DEBUG
             OutputDebugStringW(L"--- DXGI living object report ---\n");
-            if (FAILED(m_dxgiDebug->ReportLiveObjects(
-                    DXGI_DEBUG_ALL, DXGI_DEBUG_RLO_FLAGS(DXGI_DEBUG_RLO_DETAIL | DXGI_DEBUG_RLO_IGNORE_INTERNAL)
-                ))) {
-                throw BalticException("m_dxgiDebug->ReportLiveObjects");
-            }
+            ThrowIfFailed(m_dxgiDebug->ReportLiveObjects(
+                DXGI_DEBUG_ALL, DXGI_DEBUG_RLO_FLAGS(DXGI_DEBUG_RLO_DETAIL | DXGI_DEBUG_RLO_IGNORE_INTERNAL)
+            ));
 #endif
         }
 

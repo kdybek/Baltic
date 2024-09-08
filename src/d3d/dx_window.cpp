@@ -1,6 +1,6 @@
 #include "dx_window.h"
 
-#include "auxiliary/baltic_except.h"
+#include "auxiliary/baltic_exception.h"
 #include "d3d/dx_context.h"
 
 #define IDI_APPLICATION_W MAKEINTRESOURCEW(32512)
@@ -112,16 +112,12 @@ namespace Baltic
 
         ComPtr<IDXGISwapChain1> swapChain1;
 
-        if (FAILED(factory->CreateSwapChainForHwnd(
-                dxContext.GetCmdQueueComPtr().Get(), m_window, &swapChainDesc, &swapChainFullscreenDesc, nullptr,
-                &swapChain1
-            ))) {
-            throw BalticException("factory->CreateSwapChainForHwnd");
-        }
+        ThrowIfFailed(factory->CreateSwapChainForHwnd(
+            dxContext.GetCmdQueueComPtr().Get(), m_window, &swapChainDesc, &swapChainFullscreenDesc, nullptr,
+            &swapChain1
+        ));
 
-        if (FAILED(swapChain1.As(&m_swapChain))) {
-            throw BalticException("swapChain1.As");
-        }
+        ThrowIfFailed(swapChain1.As(&m_swapChain));
 
         D3D12_DESCRIPTOR_HEAP_DESC descriptorHeapDesc{
             .Type = D3D12_DESCRIPTOR_HEAP_TYPE_RTV,
@@ -130,10 +126,9 @@ namespace Baltic
             .NodeMask = 0
         };
 
-        if (FAILED(dxContext.GetDeviceComPtr()->CreateDescriptorHeap(&descriptorHeapDesc, IID_PPV_ARGS(&m_rtvDescHeap))
-            )) {
-            throw BalticException("dxContext.GetDevice()->CreateDescriptorHeap");
-        }
+        ThrowIfFailed(
+            dxContext.GetDeviceComPtr()->CreateDescriptorHeap(&descriptorHeapDesc, IID_PPV_ARGS(&m_rtvDescHeap))
+        );
 
         D3D12_CPU_DESCRIPTOR_HANDLE firstHandle = m_rtvDescHeap->GetCPUDescriptorHandleForHeapStart();
         UINT handleInc = dxContext.GetDeviceComPtr()->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
@@ -163,18 +158,11 @@ namespace Baltic
         while (PeekMessageW(&msg, m_window, 0, 0, PM_REMOVE)) {
             TranslateMessage(&msg);
 
-            if (FAILED(DispatchMessageW(&msg))) {
-                throw BalticException("DispatchMessageW");
-            }
+            ThrowIfFailed(DispatchMessageW(&msg));
         }
     }
 
-    void DXWindow::Present()
-    {
-        if (FAILED(m_swapChain->Present(1, 0))) {
-            throw BalticException("m_swapChain->Present");
-        }
-    }
+    void DXWindow::Present() { ThrowIfFailed(m_swapChain->Present(1, 0)); }
 
     void DXWindow::ResizeSwapChain(ID3D12Device8* device)
     {
@@ -188,12 +176,10 @@ namespace Baltic
 
         ReleaseBuffers();
 
-        if (FAILED(m_swapChain->ResizeBuffers(
-                FRAME_COUNT, m_width, m_height, DXGI_FORMAT_UNKNOWN,
-                DXGI_SWAP_CHAIN_FLAG_ALLOW_MODE_SWITCH | DXGI_SWAP_CHAIN_FLAG_ALLOW_TEARING
-            ))) {
-            throw BalticException("m_swapChain->ResizeBuffers");
-        }
+        ThrowIfFailed(m_swapChain->ResizeBuffers(
+            FRAME_COUNT, m_width, m_height, DXGI_FORMAT_UNKNOWN,
+            DXGI_SWAP_CHAIN_FLAG_ALLOW_MODE_SWITCH | DXGI_SWAP_CHAIN_FLAG_ALLOW_TEARING
+        ));
 
         GetBuffers(device);
 
@@ -279,9 +265,7 @@ namespace Baltic
     void DXWindow::GetBuffers(ID3D12Device8* device)
     {
         for (UINT i = 0; i < FRAME_COUNT; i++) {
-            if (FAILED(m_swapChain->GetBuffer(i, IID_PPV_ARGS(&m_buffers[i])))) {
-                throw BalticException("m_swapChain->GetBuffer");
-            }
+            ThrowIfFailed(m_swapChain->GetBuffer(i, IID_PPV_ARGS(&m_buffers[i])));
 
             D3D12_RENDER_TARGET_VIEW_DESC rtvDesc{
                 .Format = DXGI_FORMAT_R8G8B8A8_UNORM,

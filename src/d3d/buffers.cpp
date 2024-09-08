@@ -1,6 +1,6 @@
 #include "d3d/buffers.h"
 
-#include "auxiliary/baltic_except.h"
+#include "auxiliary/baltic_exception.h"
 
 namespace Baltic
 {
@@ -27,29 +27,25 @@ namespace Baltic
             .Flags = D3D12_RESOURCE_FLAG_NONE
         };
 
-        if (FAILED(device->CreateCommittedResource(
-                &heapPropertiesUpload, D3D12_HEAP_FLAG_NONE, &resourceDesc, D3D12_RESOURCE_STATE_GENERIC_READ, nullptr,
-                IID_PPV_ARGS(&m_uploadBuffer)
-            ))) {
-            throw BalticException("CreateCommittedResource");
-        }
+        ThrowIfFailed(device->CreateCommittedResource(
+            &heapPropertiesUpload, D3D12_HEAP_FLAG_NONE, &resourceDesc, D3D12_RESOURCE_STATE_GENERIC_READ, nullptr,
+            IID_PPV_ARGS(&m_uploadBuffer)
+        ));
     }
 
     void UploadBuffer::CopyData(const void* data, UINT size) const
     {
         void* mappedData;
-        if (FAILED(m_uploadBuffer->Map(0, nullptr, &mappedData))) {
-            throw BalticException("Map");
-        }
+        ThrowIfFailed(m_uploadBuffer->Map(0, nullptr, &mappedData));
 
         memcpy(mappedData, data, size);
 
         m_uploadBuffer->Unmap(0, nullptr);
     }
 
-    void UploadBuffer::StageCmdUpload(ID3D12Resource2* dest, UINT size, ID3D12GraphicsCommandList6* commandList) const
+    void UploadBuffer::StageCmdUpload(ID3D12Resource2* dest, UINT size, ID3D12GraphicsCommandList6* cmdList) const
     {
-        commandList->CopyBufferRegion(dest, 0, m_uploadBuffer.Get(), 0, size);
+        cmdList->CopyBufferRegion(dest, 0, m_uploadBuffer.Get(), 0, size);
     }
 
     GPUBuffer::GPUBuffer(UINT64 size, ID3D12Device5* device)
@@ -75,12 +71,10 @@ namespace Baltic
             .Flags = D3D12_RESOURCE_FLAG_NONE
         };
 
-        if (FAILED(device->CreateCommittedResource(
-                &heapPropertiesUpload, D3D12_HEAP_FLAG_NONE, &resourceDesc, D3D12_RESOURCE_STATE_COMMON, nullptr,
-                IID_PPV_ARGS(&m_buffer)
-            ))) {
-            throw BalticException("CreateCommittedResource");
-        }
+        ThrowIfFailed(device->CreateCommittedResource(
+            &heapPropertiesUpload, D3D12_HEAP_FLAG_NONE, &resourceDesc, D3D12_RESOURCE_STATE_COMMON, nullptr,
+            IID_PPV_ARGS(&m_buffer)
+        ));
     }
 
 } // namespace Baltic

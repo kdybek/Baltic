@@ -6,7 +6,7 @@
 
 namespace Baltic
 {
-    struct Model
+    struct Mesh
     {
         std::vector<VertexBufferElement> vertices;
         std::vector<UINT32> indices;

@@ -3,7 +3,7 @@
 #include <filesystem>
 #include <fstream>
 
-#include "auxiliary/baltic_except.h"
+#include "auxiliary/baltic_exception.h"
 #include "auxiliary/win_include.h"
 
 namespace Baltic
@@ -49,11 +49,9 @@ namespace Baltic
     {
         Shader rootSigShader(filename);
 
-        if (FAILED(device->CreateRootSignature(
-                0, rootSigShader.GetData(), rootSigShader.GetSize(), IID_PPV_ARGS(&m_rootSignature)
-            ))) {
-            throw BalticException("CreateRootSignature");
-        }
+        ThrowIfFailed(device->CreateRootSignature(
+            0, rootSigShader.GetData(), rootSigShader.GetSize(), IID_PPV_ARGS(&m_rootSignature)
+        ));
     }
 
 } // namespace Baltic

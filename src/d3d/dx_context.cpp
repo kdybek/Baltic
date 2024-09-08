@@ -1,19 +1,15 @@
 #include "dx_context.h"
 
-#include "auxiliary/baltic_except.h"
+#include "auxiliary/baltic_exception.h"
 #include "auxiliary/constants.h"
 
 namespace Baltic
 {
     DXContext::DXContext() : m_fenceValue(0), m_fenceEvent(nullptr)
     {
-        if (FAILED(CreateDXGIFactory2(0, IID_PPV_ARGS(&m_factory)))) {
-            throw BalticException("CreateDXGIFactory2");
-        }
+        ThrowIfFailed(CreateDXGIFactory2(0, IID_PPV_ARGS(&m_factory)));
 
-        if (FAILED(D3D12CreateDevice(nullptr, D3D_FEATURE_LEVEL_11_0, IID_PPV_ARGS(&m_device)))) {
-            throw BalticException("D3D12CreateDevice");
-        }
+        ThrowIfFailed(D3D12CreateDevice(nullptr, D3D_FEATURE_LEVEL_11_0, IID_PPV_ARGS(&m_device)));
 
         D3D12_COMMAND_QUEUE_DESC cmdQueueDesc{
             .Type = D3D12_COMMAND_LIST_TYPE_DIRECT,
@@ -22,27 +18,19 @@ namespace Baltic
             .NodeMask = 0
         };
 
-        if (FAILED(m_device->CreateCommandQueue(&cmdQueueDesc, IID_PPV_ARGS(&m_cmdQueue)))) {
-            throw BalticException("m_device->CreateCommandQueue");
+        ThrowIfFailed(m_device->CreateCommandQueue(&cmdQueueDesc, IID_PPV_ARGS(&m_cmdQueue)));
+
+        ThrowIfFailed(m_device->CreateFence(m_fenceValue, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(&m_fence)));
+
+        if (!(m_fenceEvent = CreateEventW(nullptr, FALSE, FALSE, nullptr))) {
+            throw BalticException("CreateEventW");
         }
 
-        if (FAILED(m_device->CreateFence(m_fenceValue, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(&m_fence)))) {
-            throw BalticException("m_device->CreateFence");
-        }
+        ThrowIfFailed(m_device->CreateCommandAllocator(D3D12_COMMAND_LIST_TYPE_DIRECT, IID_PPV_ARGS(&m_cmdAllocator)));
 
-        if (!(m_fenceEvent = CreateEvent(nullptr, FALSE, FALSE, nullptr))) {
-            throw BalticException("CreateEvent");
-        }
-
-        if (FAILED(m_device->CreateCommandAllocator(D3D12_COMMAND_LIST_TYPE_DIRECT, IID_PPV_ARGS(&m_cmdAllocator)))) {
-            throw BalticException("m_device->CreateCommandAllocator");
-        }
-
-        if (FAILED(m_device->CreateCommandList1(
-                0, D3D12_COMMAND_LIST_TYPE_DIRECT, D3D12_COMMAND_LIST_FLAG_NONE, IID_PPV_ARGS(&m_cmdList)
-            ))) {
-            throw BalticException("m_device->CreateCommandList1");
-        }
+        ThrowIfFailed(m_device->CreateCommandList1(
+            0, D3D12_COMMAND_LIST_TYPE_DIRECT, D3D12_COMMAND_LIST_FLAG_NONE, IID_PPV_ARGS(&m_cmdList)
+        ));
     }
 
     DXContext::~DXContext()
@@ -54,13 +42,9 @@ namespace Baltic
 
     void DXContext::SignalAndWait()
     {
-        if (FAILED(m_cmdQueue->Signal(m_fence.Get(), ++m_fenceValue))) {
-            throw BalticException("m_cmdQueue->Signal");
-        }
+        ThrowIfFailed(m_cmdQueue->Signal(m_fence.Get(), ++m_fenceValue));
 
-        if (FAILED(m_fence->SetEventOnCompletion(m_fenceValue, m_fenceEvent))) {
-            throw BalticException("m_fence->SetEventOnCompletion");
-        }
+        ThrowIfFailed(m_fence->SetEventOnCompletion(m_fenceValue, m_fenceEvent));
 
         if (WaitForSingleObject(m_fenceEvent, EVENT_TIMEOUT) != WAIT_OBJECT_0) {
             throw BalticException("WaitForSingleObject");
@@ -69,20 +53,14 @@ namespace Baltic
 
     void DXContext::ResetCmdList()
     {
-        if (FAILED(m_cmdAllocator->Reset())) {
-            throw BalticException("m_cmdAllocator->Reset");
-        }
+        ThrowIfFailed(m_cmdAllocator->Reset());
 
-        if (FAILED(m_cmdList->Reset(m_cmdAllocator.Get(), nullptr))) {
-            throw BalticException("m_cmdList->Reset");
-        }
+        ThrowIfFailed(m_cmdList->Reset(m_cmdAllocator.Get(), nullptr));
     }
 
     void DXContext::ExecuteCmdList()
     {
-        if (FAILED(m_cmdList->Close())) {
-            throw BalticException("m_cmdList->Close");
-        }
+        ThrowIfFailed(m_cmdList->Close());
 
         ID3D12CommandList* lists[]{m_cmdList.Get()};
         m_cmdQueue->ExecuteCommandLists(1, lists);

@@ -1,5 +1,7 @@
 #include "d3d/pipeline_state.h"
 
+#include "auxiliary/baltic_exception.h"
+
 namespace Baltic
 {
     namespace
@@ -106,7 +108,7 @@ namespace Baltic
 
     void PipelineState::Finalize(ID3D12Device* device)
     {
-        device->CreateGraphicsPipelineState(&m_desc, IID_PPV_ARGS(&m_pipelineState));
+        ThrowIfFailed(device->CreateGraphicsPipelineState(&m_desc, IID_PPV_ARGS(&m_pipelineState)));
     }
 
     void PipelineState::Reset()
