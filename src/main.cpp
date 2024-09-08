@@ -27,12 +27,15 @@ int main()
         {
             DXContext dxContext;
 
-            VertexBufferElement vertices[3]{
-                {.position{0.0f, 0.5f}}, {.position{0.5f, -0.5f}}, {.position{-0.5f, -0.5f}}
+            VertexBufferElement vertices[4]{
+                {.position{-0.5f, -0.5f}}, {.position{-0.5f, 0.5f}}, {.position{0.5f, 0.5f}}, {.position{0.5f, -0.5f}}
             };
 
+            UINT32 indices[6]{0, 1, 3, 1, 2, 3};
+
             UploadBuffer uploadBuffer(1024, dxContext.GetDeviceComPtr().Get());
-            VertexBuffer vertexBuffer(1024, dxContext.GetDeviceComPtr().Get());
+            GPUBuffer vertexBuffer(1024, dxContext.GetDeviceComPtr().Get());
+            GPUBuffer indexBuffer(1024, dxContext.GetDeviceComPtr().Get());
 
             dxContext.ResetCmdList();
             uploadBuffer.CopyData(vertices, sizeof(vertices));
@@ -40,11 +43,23 @@ int main()
                 vertexBuffer.GetComPtr().Get(), sizeof(vertices), dxContext.GetCmdListComPtr().Get()
             );
             dxContext.ExecuteCmdList();
+            dxContext.ResetCmdList();
+            uploadBuffer.CopyData(indices, sizeof(indices));
+            uploadBuffer.StageCmdUpload(
+                indexBuffer.GetComPtr().Get(), sizeof(indices), dxContext.GetCmdListComPtr().Get()
+            );
+            dxContext.ExecuteCmdList();
 
             D3D12_VERTEX_BUFFER_VIEW vertexBufferView{
                 .BufferLocation = vertexBuffer.GetComPtr()->GetGPUVirtualAddress(),
                 .SizeInBytes = sizeof(vertices),
                 .StrideInBytes = sizeof(VertexBufferElement)
+            };
+
+            D3D12_INDEX_BUFFER_VIEW indexBufferView{
+                .BufferLocation = indexBuffer.GetComPtr()->GetGPUVirtualAddress(),
+                .SizeInBytes = sizeof(indices),
+                .Format = DXGI_FORMAT_R32_UINT
             };
 
             Shader vertexShader("vertex_shader.cso");
@@ -80,6 +95,7 @@ int main()
                 cmdList->SetGraphicsRootSignature(rootSignature.GetComPtr().Get());
 
                 cmdList->IASetVertexBuffers(0, 1, &vertexBufferView);
+                cmdList->IASetIndexBuffer(&indexBufferView);
                 cmdList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 
                 D3D12_VIEWPORT viewport{
@@ -102,7 +118,7 @@ int main()
 
                 cmdList->RSSetScissorRects(1, &scissorRect);
 
-                cmdList->DrawInstanced(_countof(vertices), 1, 0, 0);
+                cmdList->DrawIndexedInstanced(6, 1, 0, 0, 0);
 
                 mainWindow.StageCmdEndFrame(cmdList.Get());
 

@@ -52,7 +52,7 @@ namespace Baltic
         commandList->CopyBufferRegion(dest, 0, m_uploadBuffer.Get(), 0, size);
     }
 
-    VertexBuffer::VertexBuffer(UINT64 size, ID3D12Device5* device)
+    GPUBuffer::GPUBuffer(UINT64 size, ID3D12Device5* device)
     {
         D3D12_HEAP_PROPERTIES heapPropertiesUpload{
             .Type = D3D12_HEAP_TYPE_DEFAULT,
@@ -77,7 +77,7 @@ namespace Baltic
 
         if (FAILED(device->CreateCommittedResource(
                 &heapPropertiesUpload, D3D12_HEAP_FLAG_NONE, &resourceDesc, D3D12_RESOURCE_STATE_COMMON, nullptr,
-                IID_PPV_ARGS(&m_vertexBuffer)
+                IID_PPV_ARGS(&m_buffer)
             ))) {
             throw BalticException("CreateCommittedResource");
         }

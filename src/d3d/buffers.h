@@ -22,19 +22,19 @@ namespace Baltic
         ComPtr<ID3D12Resource2> m_uploadBuffer;
     };
 
-    class VertexBuffer
+    class GPUBuffer
     {
     public:
-        VertexBuffer(UINT64 size, ID3D12Device5* device);
-        ~VertexBuffer() = default;
+        GPUBuffer(UINT64 size, ID3D12Device5* device);
+        ~GPUBuffer() = default;
 
-        VertexBuffer(const VertexBuffer&) = delete;
-        VertexBuffer& operator=(const VertexBuffer&) = delete;
+        GPUBuffer(const GPUBuffer&) = delete;
+        GPUBuffer& operator=(const GPUBuffer&) = delete;
 
-        [[nodiscard]] inline const ComPtr<ID3D12Resource2>& GetComPtr() { return m_vertexBuffer; }
+        [[nodiscard]] inline const ComPtr<ID3D12Resource2>& GetComPtr() { return m_buffer; }
 
     private:
-        ComPtr<ID3D12Resource2> m_vertexBuffer;
+        ComPtr<ID3D12Resource2> m_buffer;
     };
 
 } // namespace Baltic

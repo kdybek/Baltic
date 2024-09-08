@@ -30,6 +30,7 @@ set(SOURCES
     ${SOURCE_DIR}/auxiliary/win_include.h
     ${SOURCE_DIR}/auxiliary/baltic_except.h
     ${SOURCE_DIR}/auxiliary/constants.h
+    ${SOURCE_DIR}/auxiliary/types.h
     ${SOURCE_DIR}/debug/dx_debug_layer.h
 )
 
