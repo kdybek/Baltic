@@ -27,7 +27,7 @@ set(SOURCES
     ${SOURCE_DIR}/d3d/buffers.cpp
     ${SOURCE_DIR}/d3d/buffers.h
     ${SOURCE_DIR}/auxiliary/input_layouts.h
-    ${SOURCE_DIR}/auxiliary/win_include.h
+    ${SOURCE_DIR}/auxiliary/pch.h
     ${SOURCE_DIR}/auxiliary/baltic_exception.h
     ${SOURCE_DIR}/auxiliary/constants.h
     ${SOURCE_DIR}/auxiliary/types.h
@@ -88,6 +88,6 @@ target_link_libraries(baltic
     runtimeobject.lib
 )
 
-target_precompile_headers(baltic PRIVATE ${SOURCE_DIR}/auxiliary/win_include.h)
+target_precompile_headers(baltic PRIVATE ${SOURCE_DIR}/auxiliary/pch.h)
 
 target_compile_definitions(baltic PRIVATE $<$<CONFIG:Debug>:BALTIC_DEBUG>)

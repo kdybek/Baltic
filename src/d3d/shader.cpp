@@ -4,7 +4,7 @@
 #include <fstream>
 
 #include "auxiliary/baltic_exception.h"
-#include "auxiliary/win_include.h"
+#include "auxiliary/pch.h"
 
 namespace Baltic
 {
