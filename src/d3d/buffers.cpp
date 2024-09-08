@@ -27,7 +27,7 @@ namespace Baltic
             .Flags = D3D12_RESOURCE_FLAG_NONE
         };
 
-        ThrowIfFailed(device->CreateCommittedResource(
+        DXThrowIfFailed(device->CreateCommittedResource(
             &heapPropertiesUpload, D3D12_HEAP_FLAG_NONE, &resourceDesc, D3D12_RESOURCE_STATE_GENERIC_READ, nullptr,
             IID_PPV_ARGS(&m_uploadBuffer)
         ));
@@ -36,7 +36,7 @@ namespace Baltic
     void UploadBuffer::CopyData(const void* data, UINT size) const
     {
         void* mappedData;
-        ThrowIfFailed(m_uploadBuffer->Map(0, nullptr, &mappedData));
+        DXThrowIfFailed(m_uploadBuffer->Map(0, nullptr, &mappedData));
 
         memcpy(mappedData, data, size);
 
@@ -71,7 +71,7 @@ namespace Baltic
             .Flags = D3D12_RESOURCE_FLAG_NONE
         };
 
-        ThrowIfFailed(device->CreateCommittedResource(
+        DXThrowIfFailed(device->CreateCommittedResource(
             &heapPropertiesUpload, D3D12_HEAP_FLAG_NONE, &resourceDesc, D3D12_RESOURCE_STATE_COMMON, nullptr,
             IID_PPV_ARGS(&m_buffer)
         ));

@@ -108,7 +108,7 @@ namespace Baltic
 
     void PipelineState::Finalize(ID3D12Device* device)
     {
-        ThrowIfFailed(device->CreateGraphicsPipelineState(&m_desc, IID_PPV_ARGS(&m_pipelineState)));
+        DXThrowIfFailed(device->CreateGraphicsPipelineState(&m_desc, IID_PPV_ARGS(&m_pipelineState)));
     }
 
     void PipelineState::Reset()

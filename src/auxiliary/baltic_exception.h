@@ -1,9 +1,5 @@
 #pragma once
 
-// clang-format off
-#include "auxiliary/pch.h"
-// clang-format on
-
 #include <stdio.h>
 
 #include <exception>
@@ -37,7 +33,7 @@ namespace Baltic
         HRESULT result;
     };
 
-    inline void ThrowIfFailed(HRESULT hr)
+    inline void DXThrowIfFailed(HRESULT hr)
     {
         if (FAILED(hr)) {
             throw ComException(hr);

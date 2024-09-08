@@ -10,8 +10,6 @@ set(CMAKE_CXX_STANDARD_REQUIRED True)
 
 set(CMAKE_CONFIGURATION_TYPES "Debug;Release" CACHE STRING "Configurations" FORCE)
 
-include_directories(${CMAKE_SOURCE_DIR}/src)
-
 set(SOURCE_DIR src)
 
 set(SOURCES
@@ -87,6 +85,8 @@ target_link_libraries(baltic
     dxguid.lib
     runtimeobject.lib
 )
+
+target_include_directories(baltic PRIVATE ${SOURCE_DIR})
 
 target_precompile_headers(baltic PRIVATE ${SOURCE_DIR}/auxiliary/pch.h)
 

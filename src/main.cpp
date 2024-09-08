@@ -21,7 +21,7 @@ int main()
     int ret = 0;
 
     try {
-        ThrowIfFailed(RoInitialize(RO_INIT_SINGLETHREADED));
+        DXThrowIfFailed(RoInitialize(RO_INIT_SINGLETHREADED));
 
         DXDebugLayer dxDebugLayer;
 

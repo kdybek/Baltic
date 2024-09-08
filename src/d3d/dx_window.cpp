@@ -112,12 +112,12 @@ namespace Baltic
 
         ComPtr<IDXGISwapChain1> swapChain1;
 
-        ThrowIfFailed(factory->CreateSwapChainForHwnd(
+        DXThrowIfFailed(factory->CreateSwapChainForHwnd(
             dxContext.GetCmdQueueComPtr().Get(), m_window, &swapChainDesc, &swapChainFullscreenDesc, nullptr,
             &swapChain1
         ));
 
-        ThrowIfFailed(swapChain1.As(&m_swapChain));
+        DXThrowIfFailed(swapChain1.As(&m_swapChain));
 
         D3D12_DESCRIPTOR_HEAP_DESC descriptorHeapDesc{
             .Type = D3D12_DESCRIPTOR_HEAP_TYPE_RTV,
@@ -126,7 +126,7 @@ namespace Baltic
             .NodeMask = 0
         };
 
-        ThrowIfFailed(
+        DXThrowIfFailed(
             dxContext.GetDeviceComPtr()->CreateDescriptorHeap(&descriptorHeapDesc, IID_PPV_ARGS(&m_rtvDescHeap))
         );
 
@@ -158,11 +158,11 @@ namespace Baltic
         while (PeekMessageW(&msg, m_window, 0, 0, PM_REMOVE)) {
             TranslateMessage(&msg);
 
-            ThrowIfFailed(DispatchMessageW(&msg));
+            DXThrowIfFailed(DispatchMessageW(&msg));
         }
     }
 
-    void DXWindow::Present() { ThrowIfFailed(m_swapChain->Present(1, 0)); }
+    void DXWindow::Present() { DXThrowIfFailed(m_swapChain->Present(1, 0)); }
 
     void DXWindow::ResizeSwapChain(ID3D12Device8* device)
     {
@@ -176,7 +176,7 @@ namespace Baltic
 
         ReleaseBuffers();
 
-        ThrowIfFailed(m_swapChain->ResizeBuffers(
+        DXThrowIfFailed(m_swapChain->ResizeBuffers(
             FRAME_COUNT, m_width, m_height, DXGI_FORMAT_UNKNOWN,
             DXGI_SWAP_CHAIN_FLAG_ALLOW_MODE_SWITCH | DXGI_SWAP_CHAIN_FLAG_ALLOW_TEARING
         ));
@@ -265,7 +265,7 @@ namespace Baltic
     void DXWindow::GetBuffers(ID3D12Device8* device)
     {
         for (UINT i = 0; i < FRAME_COUNT; i++) {
-            ThrowIfFailed(m_swapChain->GetBuffer(i, IID_PPV_ARGS(&m_buffers[i])));
+            DXThrowIfFailed(m_swapChain->GetBuffer(i, IID_PPV_ARGS(&m_buffers[i])));
 
             D3D12_RENDER_TARGET_VIEW_DESC rtvDesc{
                 .Format = DXGI_FORMAT_R8G8B8A8_UNORM,

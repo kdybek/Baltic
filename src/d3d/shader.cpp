@@ -49,7 +49,7 @@ namespace Baltic
     {
         Shader rootSigShader(filename);
 
-        ThrowIfFailed(device->CreateRootSignature(
+        DXThrowIfFailed(device->CreateRootSignature(
             0, rootSigShader.GetData(), rootSigShader.GetSize(), IID_PPV_ARGS(&m_rootSignature)
         ));
     }

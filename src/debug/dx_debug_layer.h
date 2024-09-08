@@ -14,11 +14,11 @@ namespace Baltic
         DXDebugLayer()
 #ifdef BALTIC_DEBUG
         {
-            ThrowIfFailed(D3D12GetDebugInterface(IID_PPV_ARGS(&m_d3d12Debug)));
+            DXThrowIfFailed(D3D12GetDebugInterface(IID_PPV_ARGS(&m_d3d12Debug)));
 
             m_d3d12Debug->EnableDebugLayer();
 
-            ThrowIfFailed(DXGIGetDebugInterface1(0, IID_PPV_ARGS(&m_dxgiDebug)));
+            DXThrowIfFailed(DXGIGetDebugInterface1(0, IID_PPV_ARGS(&m_dxgiDebug)));
 
             m_dxgiDebug->EnableLeakTrackingForThread();
         }
@@ -36,7 +36,7 @@ namespace Baltic
         {
 #ifdef BALTIC_DEBUG
             OutputDebugStringW(L"--- DXGI living object report ---\n");
-            ThrowIfFailed(m_dxgiDebug->ReportLiveObjects(
+            DXThrowIfFailed(m_dxgiDebug->ReportLiveObjects(
                 DXGI_DEBUG_ALL, DXGI_DEBUG_RLO_FLAGS(DXGI_DEBUG_RLO_DETAIL | DXGI_DEBUG_RLO_IGNORE_INTERNAL)
             ));
 #endif
