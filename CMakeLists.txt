@@ -88,4 +88,6 @@ target_link_libraries(baltic
     runtimeobject.lib
 )
 
+target_precompile_headers(baltic PRIVATE ${SOURCE_DIR}/auxiliary/win_include.h)
+
 target_compile_definitions(baltic PRIVATE $<$<CONFIG:Debug>:BALTIC_DEBUG>)

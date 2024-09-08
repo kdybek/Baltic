@@ -1,9 +1,12 @@
+// clang-format off
+#include "auxiliary/win_include.h"
+// clang-format on
+
 #include <iostream>
 
 #include "auxiliary/baltic_exception.h"
 #include "auxiliary/constants.h"
 #include "auxiliary/input_layouts.h"
-#include "auxiliary/win_include.h"
 #include "d3d/buffers.h"
 #include "d3d/dx_context.h"
 #include "d3d/dx_window.h"

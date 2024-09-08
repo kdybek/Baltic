@@ -1,7 +1,10 @@
 #pragma once
 
-#include "auxiliary/baltic_exception.h"
+// clang-format off
 #include "auxiliary/win_include.h"
+// clang-format on
+
+#include "auxiliary/baltic_exception.h"
 
 namespace Baltic
 {

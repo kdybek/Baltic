@@ -1,6 +1,8 @@
 #pragma once
 
+// clang-format off
 #include "auxiliary/win_include.h"
+// clang-format on
 
 namespace Baltic
 {

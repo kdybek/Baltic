@@ -1,7 +1,10 @@
 #pragma once
 
-#include "auxiliary/constants.h"
+// clang-format off
 #include "auxiliary/win_include.h"
+// clang-format on
+
+#include "auxiliary/constants.h"
 #include "d3d/dx_context.h"
 
 namespace Baltic

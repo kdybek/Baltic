@@ -1,8 +1,10 @@
 #pragma once
 
-#include <string_view>
-
+// clang-format off
 #include "auxiliary/win_include.h"
+// clang-format on
+
+#include <string_view>
 
 namespace Baltic
 {

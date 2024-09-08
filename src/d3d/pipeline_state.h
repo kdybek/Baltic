@@ -1,6 +1,9 @@
 #pragma once
 
+// clang-format off
 #include "auxiliary/win_include.h"
+// clang-format on
+
 #include "d3d/shader.h"
 
 namespace Baltic

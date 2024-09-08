@@ -1,8 +1,10 @@
 #pragma once
 
-#include <directxmath.h>
-
+// clang-format off
 #include "auxiliary/win_include.h"
+// clang-format on
+
+#include <directxmath.h>
 
 namespace Baltic
 {
