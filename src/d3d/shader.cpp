@@ -45,4 +45,15 @@ namespace Baltic
         }
     }
 
+    RootSignature::RootSignature(std::string_view filename, ID3D12Device5* device)
+    {
+        Shader rootSigShader(filename);
+
+        if (FAILED(device->CreateRootSignature(
+                0, rootSigShader.GetData(), rootSigShader.GetSize(), IID_PPV_ARGS(&m_rootSignature)
+            ))) {
+            throw BalticException("CreateRootSignature");
+        }
+    }
+
 } // namespace Baltic

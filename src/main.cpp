@@ -25,17 +25,16 @@ int main()
         DXDebugLayer dxDebugLayer;
 
         {
+            DXContext dxContext;
+
             VertexBufferElement vertices[3] = {
                 {.position = {0.0f, 0.5f}}, {.position = {0.5f, -0.5f}}, {.position = {-0.5f, -0.5f}}
             };
-
-            DXContext dxContext;
 
             UploadBuffer uploadBuffer(1024, dxContext.GetDeviceComPtr().Get());
             VertexBuffer vertexBuffer(1024, dxContext.GetDeviceComPtr().Get());
 
             dxContext.ResetCmdList();
-
             uploadBuffer.CopyData(vertices, sizeof(vertices));
             uploadBuffer.StageCmdUpload(
                 vertexBuffer.GetComPtr().Get(), sizeof(vertices), dxContext.GetCmdListComPtr().Get()
@@ -50,16 +49,11 @@ int main()
 
             Shader vertexShader("vertex_shader.cso");
             Shader pixelShader("pixel_shader.cso");
-            Shader rootSignatureShader("root_signature.cso");
-
-            ComPtr<ID3D12RootSignature> rootSignature;
-            dxContext.GetDeviceComPtr()->CreateRootSignature(
-                0, rootSignatureShader.GetData(), rootSignatureShader.GetSize(), IID_PPV_ARGS(&rootSignature)
-            );
+            RootSignature rootSignature("root_signature.cso", dxContext.GetDeviceComPtr().Get());
 
             PipelineState pipelineState;
 
-            pipelineState.StageRootSignature(rootSignature.Get());
+            pipelineState.StageRootSignature(rootSignature.GetComPtr().Get());
             pipelineState.StageVertexShader(vertexShader);
             pipelineState.StagePixelShader(pixelShader);
             pipelineState.StageInputLayout(g_vertexBufferLayout);
@@ -83,7 +77,7 @@ int main()
                 mainWindow.StageCmdBeginFrame(cmdList.Get());
 
                 cmdList->SetPipelineState(pipelineState.GetComPtr().Get());
-                cmdList->SetGraphicsRootSignature(rootSignature.Get());
+                cmdList->SetGraphicsRootSignature(rootSignature.GetComPtr().Get());
 
                 cmdList->IASetVertexBuffers(0, 1, &vertexBufferView);
                 cmdList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
