@@ -66,7 +66,7 @@ namespace Baltic
           m_isFullscreen(FALSE),
           m_currentBufferIdx(0)
     {
-        WNDCLASSEXW wcex = {
+        WNDCLASSEXW wcex{
             .cbSize = sizeof(wcex),
             .style = CS_OWNDC,
             .lpfnWndProc = &OnWindowMessage,
@@ -94,12 +94,12 @@ namespace Baltic
 
         const auto& factory = dxContext.GetFactoryComPtr();
 
-        DXGI_SWAP_CHAIN_DESC1 swapChainDesc = {
+        DXGI_SWAP_CHAIN_DESC1 swapChainDesc{
             .Width = 1920,
             .Height = 1080,
             .Format = DXGI_FORMAT_R8G8B8A8_UNORM,
             .Stereo = false,
-            .SampleDesc = {.Count = 1, .Quality = 0},
+            .SampleDesc{.Count = 1, .Quality = 0},
             .BufferUsage = DXGI_USAGE_BACK_BUFFER | DXGI_USAGE_RENDER_TARGET_OUTPUT,
             .BufferCount = FRAME_COUNT,
             .Scaling = DXGI_SCALING_STRETCH,
@@ -108,7 +108,7 @@ namespace Baltic
             .Flags = DXGI_SWAP_CHAIN_FLAG_ALLOW_MODE_SWITCH | DXGI_SWAP_CHAIN_FLAG_ALLOW_TEARING
         };
 
-        DXGI_SWAP_CHAIN_FULLSCREEN_DESC swapChainFullscreenDesc = {.Windowed = true};
+        DXGI_SWAP_CHAIN_FULLSCREEN_DESC swapChainFullscreenDesc{.Windowed = true};
 
         ComPtr<IDXGISwapChain1> swapChain1;
 
@@ -123,7 +123,7 @@ namespace Baltic
             throw BalticException("swapChain1.As");
         }
 
-        D3D12_DESCRIPTOR_HEAP_DESC descriptorHeapDesc = {
+        D3D12_DESCRIPTOR_HEAP_DESC descriptorHeapDesc{
             .Type = D3D12_DESCRIPTOR_HEAP_TYPE_RTV,
             .NumDescriptors = FRAME_COUNT,
             .Flags = D3D12_DESCRIPTOR_HEAP_FLAG_NONE,
@@ -217,7 +217,7 @@ namespace Baltic
 
         if (enable) {
             HMONITOR monitor = MonitorFromWindow(m_window, MONITOR_DEFAULTTONEAREST);
-            MONITORINFO monitorInfo = {.cbSize = sizeof(monitorInfo)};
+            MONITORINFO monitorInfo{.cbSize = sizeof(monitorInfo)};
             if (!GetMonitorInfoW(monitor, &monitorInfo)) {
                 throw BalticException("GetMonitorInfoW");
             }
@@ -239,7 +239,7 @@ namespace Baltic
     {
         m_currentBufferIdx = m_swapChain->GetCurrentBackBufferIndex();
 
-        D3D12_RESOURCE_BARRIER resourceBarrier = {
+        D3D12_RESOURCE_BARRIER resourceBarrier{
             .Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION,
             .Flags = D3D12_RESOURCE_BARRIER_FLAG_NONE,
             .Transition =
@@ -253,7 +253,7 @@ namespace Baltic
 
         cmdList->ResourceBarrier(1, &resourceBarrier);
 
-        FLOAT clearColor[] = {.1f, .1f, .1f, 1.f};
+        FLOAT clearColor[]{.1f, .1f, .1f, 1.f};
         cmdList->ClearRenderTargetView(m_rtvHandles[m_currentBufferIdx], clearColor, 0, nullptr);
 
         cmdList->OMSetRenderTargets(1, &m_rtvHandles[m_currentBufferIdx], FALSE, nullptr);
@@ -261,7 +261,7 @@ namespace Baltic
 
     void DXWindow::StageCmdEndFrame(ID3D12GraphicsCommandList6* cmdList)
     {
-        D3D12_RESOURCE_BARRIER resourceBarrier = {
+        D3D12_RESOURCE_BARRIER resourceBarrier{
             .Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION,
             .Flags = D3D12_RESOURCE_BARRIER_FLAG_NONE,
             .Transition =
@@ -283,10 +283,10 @@ namespace Baltic
                 throw BalticException("m_swapChain->GetBuffer");
             }
 
-            D3D12_RENDER_TARGET_VIEW_DESC rtvDesc = {
+            D3D12_RENDER_TARGET_VIEW_DESC rtvDesc{
                 .Format = DXGI_FORMAT_R8G8B8A8_UNORM,
                 .ViewDimension = D3D12_RTV_DIMENSION_TEXTURE2D,
-                .Texture2D = {.MipSlice = 0, .PlaneSlice = 0}
+                .Texture2D{.MipSlice = 0, .PlaneSlice = 0}
             };
 
             device->CreateRenderTargetView(m_buffers[i].Get(), &rtvDesc, m_rtvHandles[i]);

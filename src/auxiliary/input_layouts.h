@@ -7,7 +7,7 @@
 namespace Baltic
 {
     // Input Element Descriptors
-    inline D3D12_INPUT_ELEMENT_DESC g_vertexBufferLayoutElements[] = {
+    inline D3D12_INPUT_ELEMENT_DESC g_vertexBufferLayoutElements[]{
         {.SemanticName = "Position",
          .SemanticIndex = 0,
          .Format = DXGI_FORMAT_R32G32_FLOAT,
@@ -18,7 +18,7 @@ namespace Baltic
     };
 
     // Input Layout Descriptors
-    inline D3D12_INPUT_LAYOUT_DESC g_vertexBufferLayout = {
+    inline D3D12_INPUT_LAYOUT_DESC g_vertexBufferLayout{
         .pInputElementDescs = g_vertexBufferLayoutElements, .NumElements = _countof(g_vertexBufferLayoutElements)
     };
 

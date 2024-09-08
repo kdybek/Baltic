@@ -6,7 +6,7 @@ namespace Baltic
 {
     UploadBuffer::UploadBuffer(UINT64 size, ID3D12Device5* device)
     {
-        D3D12_HEAP_PROPERTIES heapPropertiesUpload = {
+        D3D12_HEAP_PROPERTIES heapPropertiesUpload{
             .Type = D3D12_HEAP_TYPE_UPLOAD,
             .CPUPageProperty = D3D12_CPU_PAGE_PROPERTY_UNKNOWN,
             .MemoryPoolPreference = D3D12_MEMORY_POOL_UNKNOWN,
@@ -14,7 +14,7 @@ namespace Baltic
             .VisibleNodeMask = 0
         };
 
-        D3D12_RESOURCE_DESC resourceDesc = {
+        D3D12_RESOURCE_DESC resourceDesc{
             .Dimension = D3D12_RESOURCE_DIMENSION_BUFFER,
             .Alignment = D3D12_DEFAULT_RESOURCE_PLACEMENT_ALIGNMENT,
             .Width = size,
@@ -22,7 +22,7 @@ namespace Baltic
             .DepthOrArraySize = 1,
             .MipLevels = 1,
             .Format = DXGI_FORMAT_UNKNOWN,
-            .SampleDesc = {.Count = 1, .Quality = 0},
+            .SampleDesc{.Count = 1, .Quality = 0},
             .Layout = D3D12_TEXTURE_LAYOUT_ROW_MAJOR,
             .Flags = D3D12_RESOURCE_FLAG_NONE
         };
@@ -54,7 +54,7 @@ namespace Baltic
 
     VertexBuffer::VertexBuffer(UINT64 size, ID3D12Device5* device)
     {
-        D3D12_HEAP_PROPERTIES heapPropertiesUpload = {
+        D3D12_HEAP_PROPERTIES heapPropertiesUpload{
             .Type = D3D12_HEAP_TYPE_DEFAULT,
             .CPUPageProperty = D3D12_CPU_PAGE_PROPERTY_UNKNOWN,
             .MemoryPoolPreference = D3D12_MEMORY_POOL_UNKNOWN,
@@ -62,7 +62,7 @@ namespace Baltic
             .VisibleNodeMask = 0
         };
 
-        D3D12_RESOURCE_DESC resourceDesc = {
+        D3D12_RESOURCE_DESC resourceDesc{
             .Dimension = D3D12_RESOURCE_DIMENSION_BUFFER,
             .Alignment = D3D12_DEFAULT_RESOURCE_PLACEMENT_ALIGNMENT,
             .Width = size,
@@ -70,7 +70,7 @@ namespace Baltic
             .DepthOrArraySize = 1,
             .MipLevels = 1,
             .Format = DXGI_FORMAT_UNKNOWN,
-            .SampleDesc = {.Count = 1, .Quality = 0},
+            .SampleDesc{.Count = 1, .Quality = 0},
             .Layout = D3D12_TEXTURE_LAYOUT_ROW_MAJOR,
             .Flags = D3D12_RESOURCE_FLAG_NONE
         };

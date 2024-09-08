@@ -15,7 +15,7 @@ namespace Baltic
             throw BalticException("D3D12CreateDevice");
         }
 
-        D3D12_COMMAND_QUEUE_DESC cmdQueueDesc = {
+        D3D12_COMMAND_QUEUE_DESC cmdQueueDesc{
             .Type = D3D12_COMMAND_LIST_TYPE_DIRECT,
             .Priority = D3D12_COMMAND_QUEUE_PRIORITY_HIGH,
             .Flags = D3D12_COMMAND_QUEUE_FLAG_NONE,
@@ -84,7 +84,7 @@ namespace Baltic
             throw BalticException("m_cmdList->Close");
         }
 
-        ID3D12CommandList* lists[] = {m_cmdList.Get()};
+        ID3D12CommandList* lists[]{m_cmdList.Get()};
         m_cmdQueue->ExecuteCommandLists(1, lists);
         SignalAndWait();
     }

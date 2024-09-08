@@ -4,24 +4,24 @@ namespace Baltic
 {
     namespace
     {
-        constexpr D3D12_GRAPHICS_PIPELINE_STATE_DESC g_defaultPipelineStateDesc = {
+        constexpr D3D12_GRAPHICS_PIPELINE_STATE_DESC g_defaultPipelineStateDesc{
             .pRootSignature = nullptr,
-            .VS = {.pShaderBytecode = nullptr, .BytecodeLength = 0},
-            .PS = {.pShaderBytecode = nullptr, .BytecodeLength = 0},
-            .DS = {.pShaderBytecode = nullptr, .BytecodeLength = 0},
-            .HS = {.pShaderBytecode = nullptr, .BytecodeLength = 0},
-            .GS = {.pShaderBytecode = nullptr, .BytecodeLength = 0},
-            .StreamOutput = {
+            .VS{.pShaderBytecode = nullptr, .BytecodeLength = 0},
+            .PS{.pShaderBytecode = nullptr, .BytecodeLength = 0},
+            .DS{.pShaderBytecode = nullptr, .BytecodeLength = 0},
+            .HS{.pShaderBytecode = nullptr, .BytecodeLength = 0},
+            .GS{.pShaderBytecode = nullptr, .BytecodeLength = 0},
+            .StreamOutput{
                 .pSODeclaration = nullptr,
                 .NumEntries = 0,
                 .pBufferStrides = nullptr,
                 .NumStrides = 0,
                 .RasterizedStream = 0
             },
-            .BlendState = {
+            .BlendState{
                 .AlphaToCoverageEnable = FALSE,
                 .IndependentBlendEnable = FALSE,
-                .RenderTarget = {
+                .RenderTarget{
                     {.BlendEnable = FALSE,
                      .LogicOpEnable = FALSE,
                      .SrcBlend = D3D12_BLEND_ONE,
@@ -35,7 +35,7 @@ namespace Baltic
                 }
             },
             .SampleMask = UINT_MAX,
-            .RasterizerState = {
+            .RasterizerState{
                 .FillMode = D3D12_FILL_MODE_SOLID,
                 .CullMode = D3D12_CULL_MODE_NONE,
                 .FrontCounterClockwise = FALSE,
@@ -48,35 +48,35 @@ namespace Baltic
                 .ForcedSampleCount = 0,
                 .ConservativeRaster = D3D12_CONSERVATIVE_RASTERIZATION_MODE_OFF
             },
-            .DepthStencilState = {
+            .DepthStencilState{
                 .DepthEnable = FALSE,
                 .DepthWriteMask = D3D12_DEPTH_WRITE_MASK_ZERO,
                 .DepthFunc = D3D12_COMPARISON_FUNC_ALWAYS,
                 .StencilEnable = FALSE,
                 .StencilReadMask = D3D12_DEFAULT_STENCIL_READ_MASK,
                 .StencilWriteMask = D3D12_DEFAULT_STENCIL_WRITE_MASK,
-                .FrontFace = {
+                .FrontFace{
                     .StencilFailOp = D3D12_STENCIL_OP_KEEP,
                     .StencilDepthFailOp = D3D12_STENCIL_OP_KEEP,
                     .StencilPassOp = D3D12_STENCIL_OP_KEEP,
                     .StencilFunc = D3D12_COMPARISON_FUNC_ALWAYS
                 },
-                .BackFace = {
+                .BackFace{
                     .StencilFailOp = D3D12_STENCIL_OP_KEEP,
                     .StencilDepthFailOp = D3D12_STENCIL_OP_KEEP,
                     .StencilPassOp = D3D12_STENCIL_OP_KEEP,
                     .StencilFunc = D3D12_COMPARISON_FUNC_ALWAYS
                 }
             },
-            .InputLayout = {.pInputElementDescs = nullptr, .NumElements = 0},
+            .InputLayout{.pInputElementDescs = nullptr, .NumElements = 0},
             .IBStripCutValue = D3D12_INDEX_BUFFER_STRIP_CUT_VALUE_DISABLED,
             .PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE,
             .NumRenderTargets = 1,
-            .RTVFormats = {DXGI_FORMAT_R8G8B8A8_UNORM},
+            .RTVFormats{DXGI_FORMAT_R8G8B8A8_UNORM},
             .DSVFormat = DXGI_FORMAT_UNKNOWN,
-            .SampleDesc = {.Count = 1, .Quality = 0},
+            .SampleDesc{.Count = 1, .Quality = 0},
             .NodeMask = 0,
-            .CachedPSO = {.pCachedBlob = nullptr, .CachedBlobSizeInBytes = 0},
+            .CachedPSO{.pCachedBlob = nullptr, .CachedBlobSizeInBytes = 0},
             .Flags = D3D12_PIPELINE_STATE_FLAG_NONE
         };
 

@@ -27,8 +27,8 @@ int main()
         {
             DXContext dxContext;
 
-            VertexBufferElement vertices[3] = {
-                {.position = {0.0f, 0.5f}}, {.position = {0.5f, -0.5f}}, {.position = {-0.5f, -0.5f}}
+            VertexBufferElement vertices[3]{
+                {.position{0.0f, 0.5f}}, {.position{0.5f, -0.5f}}, {.position{-0.5f, -0.5f}}
             };
 
             UploadBuffer uploadBuffer(1024, dxContext.GetDeviceComPtr().Get());
@@ -41,7 +41,7 @@ int main()
             );
             dxContext.ExecuteCmdList();
 
-            D3D12_VERTEX_BUFFER_VIEW vertexBufferView = {
+            D3D12_VERTEX_BUFFER_VIEW vertexBufferView{
                 .BufferLocation = vertexBuffer.GetComPtr()->GetGPUVirtualAddress(),
                 .SizeInBytes = sizeof(vertices),
                 .StrideInBytes = sizeof(VertexBufferElement)
