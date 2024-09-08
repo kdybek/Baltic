@@ -40,8 +40,13 @@ int main()
             uploadBuffer.StageCmdUpload(
                 vertexBuffer.GetComPtr().Get(), sizeof(vertices), dxContext.GetCmdListComPtr().Get()
             );
-            vertexBuffer.SetView(sizeof(vertices), sizeof(VertexBufferElement));
             dxContext.ExecuteCmdList();
+
+            D3D12_VERTEX_BUFFER_VIEW vertexBufferView = {
+                .BufferLocation = vertexBuffer.GetComPtr()->GetGPUVirtualAddress(),
+                .SizeInBytes = sizeof(vertices),
+                .StrideInBytes = sizeof(VertexBufferElement)
+            };
 
             Shader vertexShader("vertex_shader.cso");
             Shader pixelShader("pixel_shader.cso");
@@ -80,7 +85,7 @@ int main()
                 cmdList->SetPipelineState(pipelineState.GetComPtr().Get());
                 cmdList->SetGraphicsRootSignature(rootSignature.Get());
 
-                vertexBuffer.StageCmdBind(cmdList.Get());
+                cmdList->IASetVertexBuffers(0, 1, &vertexBufferView);
                 cmdList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 
                 D3D12_VIEWPORT viewport{

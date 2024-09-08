@@ -53,7 +53,6 @@ namespace Baltic
     }
 
     VertexBuffer::VertexBuffer(UINT64 size, ID3D12Device5* device)
-        : m_vertexBufferView({.BufferLocation = 0, .SizeInBytes = 0, .StrideInBytes = 0})
     {
         D3D12_HEAP_PROPERTIES heapPropertiesUpload = {
             .Type = D3D12_HEAP_TYPE_DEFAULT,
@@ -82,18 +81,6 @@ namespace Baltic
             ))) {
             throw BalticException("CreateCommittedResource");
         }
-    }
-
-    void VertexBuffer::SetView(UINT size, UINT stride)
-    {
-        m_vertexBufferView = {
-            .BufferLocation = m_vertexBuffer->GetGPUVirtualAddress(), .SizeInBytes = size, .StrideInBytes = stride
-        };
-    }
-
-    void VertexBuffer::StageCmdBind(ID3D12GraphicsCommandList6* commandList) const
-    {
-        commandList->IASetVertexBuffers(0, 1, &m_vertexBufferView);
     }
 
 } // namespace Baltic

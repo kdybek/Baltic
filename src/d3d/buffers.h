@@ -31,14 +31,10 @@ namespace Baltic
         VertexBuffer(const VertexBuffer&) = delete;
         VertexBuffer& operator=(const VertexBuffer&) = delete;
 
-        void SetView(UINT size, UINT stride);
-        void StageCmdBind(ID3D12GraphicsCommandList6* commandList) const;
-
         [[nodiscard]] inline const ComPtr<ID3D12Resource2>& GetComPtr() { return m_vertexBuffer; }
 
     private:
         ComPtr<ID3D12Resource2> m_vertexBuffer;
-        D3D12_VERTEX_BUFFER_VIEW m_vertexBufferView;
     };
 
 } // namespace Baltic
