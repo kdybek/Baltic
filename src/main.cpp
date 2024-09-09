@@ -5,6 +5,7 @@
 #include <chrono>
 #include <iostream>
 #include <thread>
+#include <unordered_map>
 
 #include "auxiliary/baltic_exception.h"
 #include "auxiliary/constants.h"
@@ -17,6 +18,27 @@
 #include "debug/dx_debug_layer.h"
 
 using namespace Baltic;
+
+DirectX::XMMATRIX UpdateViewMatrix(const std::unordered_map<Key, BOOL>& keyStates, DirectX::XMMATRIX viewMatrix)
+{
+    DirectX::XMVECTOR forward = viewMatrix.r[2];
+    DirectX::XMVECTOR right = viewMatrix.r[0];
+
+    if (keyStates.at(Key::W)) {
+        viewMatrix.r[3] = DirectX::XMVectorSubtract(viewMatrix.r[3], forward);
+    }
+    if (keyStates.at(Key::A)) {
+        viewMatrix.r[3] = DirectX::XMVectorAdd(viewMatrix.r[3], right);
+    }
+    if (keyStates.at(Key::S)) {
+        viewMatrix.r[3] = DirectX::XMVectorAdd(viewMatrix.r[3], forward);
+    }
+    if (keyStates.at(Key::D)) {
+        viewMatrix.r[3] = DirectX::XMVectorSubtract(viewMatrix.r[3], right);
+    }
+
+    return viewMatrix;
+}
 
 int main()
 {
@@ -86,12 +108,30 @@ int main()
             DXWindow mainWindow(1920, 1080, dxContext);
             mainWindow.SetFullscreen(TRUE);
 
-            while (!mainWindow.ShouldClose()) {
+            DirectX::XMMATRIX viewMatrix = DirectX::XMMatrixIdentity();
+
+            std::unordered_map<Key, BOOL> keyStates{{Key::W, FALSE}, {Key::A, FALSE}, {Key::S, FALSE}, {Key::D, FALSE}};
+
+            BOOL stop = FALSE;
+
+            while (!stop) {
                 mainWindow.Update();
 
-                if (mainWindow.ShouldResize()) {
-                    dxContext.Flush(FRAME_COUNT);
-                    mainWindow.ResizeSwapChain(dxContext.GetDeviceComPtr().Get());
+                WindowEvent event;
+                while ((event = mainWindow.PollEvent()).type != WindowEventType::None) {
+                    if (event.type == WindowEventType::Close) {
+                        stop = TRUE;
+                    }
+                    else if (event.type == WindowEventType::Resize) {
+                        dxContext.Flush(FRAME_COUNT);
+                        mainWindow.ResizeSwapChain(dxContext.GetDeviceComPtr().Get());
+                    }
+                    else if (event.type == WindowEventType::KeyDown) {
+                        keyStates[event.key] = TRUE;
+                    }
+                    else if (event.type == WindowEventType::KeyUp) {
+                        keyStates[event.key] = FALSE;
+                    }
                 }
 
                 dxContext.ResetCmdList();
@@ -127,11 +167,10 @@ int main()
 
                 cmdList->RSSetScissorRects(1, &scissorRect);
 
+                viewMatrix = UpdateViewMatrix(keyStates, viewMatrix);
+
                 CameraCBuffer cameraCBufferData{
-                    .viewMatrix = DirectX::XMMatrixLookAtLH(
-                        DirectX::XMVectorSet(0.f, 0.f, -1.f, 0.f), DirectX::XMVectorSet(0.f, 0.f, 0.f, 0.f),
-                        DirectX::XMVectorSet(0.f, 1.f, 0.f, 0.f)
-                    ),
+                    .viewMatrix = viewMatrix,
                     .projectionMatrix = DirectX::XMMatrixPerspectiveFovLH(
                         DirectX::XMConvertToRadians(90.f),
                         static_cast<FLOAT>(mainWindow.GetWidth()) / static_cast<FLOAT>(mainWindow.GetHeight()), .1f,
@@ -151,7 +190,7 @@ int main()
 
                 mainWindow.Present();
 
-                std::this_thread::sleep_for(std::chrono::milliseconds(16));
+                std::this_thread::sleep_for(std::chrono::milliseconds(160));
             }
 
             dxContext.Flush(FRAME_COUNT);

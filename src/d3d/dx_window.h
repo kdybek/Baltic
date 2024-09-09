@@ -4,6 +4,8 @@
 #include "auxiliary/pch.h"
 // clang-format on
 
+#include <queue>
+
 #include "auxiliary/constants.h"
 #include "auxiliary/types.h"
 #include "d3d/dx_context.h"
@@ -25,6 +27,8 @@ namespace Baltic
 
         void Present();
 
+        [[nodiscard]] WindowEvent PollEvent();
+
         void ResizeSwapChain(ID3D12Device8* device);
 
         void SetFullscreen(BOOL enable);
@@ -36,10 +40,6 @@ namespace Baltic
         [[nodiscard]] inline UINT GetWidth() const { return m_width; }
 
         [[nodiscard]] inline UINT GetHeight() const { return m_height; }
-
-        [[nodiscard]] inline BOOL ShouldClose() const { return m_shouldClose; }
-
-        [[nodiscard]] inline BOOL ShouldResize() const { return m_shouldResize; }
 
         [[nodiscard]] inline BOOL isFullscreen() const { return m_isFullscreen; }
 
@@ -55,9 +55,9 @@ namespace Baltic
         HWND m_window;
         UINT m_width;
         UINT m_height;
-        BOOL m_shouldClose;
-        BOOL m_shouldResize;
         BOOL m_isFullscreen;
+
+        std::queue<WindowEvent> m_eventQueue;
 
         ComPtr<IDXGISwapChain4> m_swapChain;
         ComPtr<ID3D12Resource2> m_buffers[FRAME_COUNT];

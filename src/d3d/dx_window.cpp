@@ -18,7 +18,7 @@ namespace Baltic
 
             if (LOWORD(lParam) && HIWORD(lParam) &&
                 (LOWORD(lParam) != windowPtr->m_width || HIWORD(lParam) != windowPtr->m_height)) {
-                windowPtr->m_shouldResize = TRUE;
+                windowPtr->m_eventQueue.push({.type = WindowEventType::Resize});
             }
 
             return DefWindowProcW(wnd, msg, wParam, lParam);
@@ -29,8 +29,48 @@ namespace Baltic
                 throw BalticException("GetWindowLongPtrW");
             }
 
-            if (wParam == VK_F11) {
-                windowPtr->SetFullscreen(!windowPtr->isFullscreen());
+            switch (wParam) {
+                case VK_F11:
+                    windowPtr->SetFullscreen(!windowPtr->isFullscreen());
+                    break;
+                case 'W':
+                    windowPtr->m_eventQueue.push({.type = WindowEventType::KeyDown, .key = Key::W});
+                    break;
+                case 'A':
+                    windowPtr->m_eventQueue.push({.type = WindowEventType::KeyDown, .key = Key::A});
+                    break;
+                case 'S':
+                    windowPtr->m_eventQueue.push({.type = WindowEventType::KeyDown, .key = Key::S});
+                    break;
+                case 'D':
+                    windowPtr->m_eventQueue.push({.type = WindowEventType::KeyDown, .key = Key::D});
+                    break;
+            }
+
+            return DefWindowProcW(wnd, msg, wParam, lParam);
+        }
+        else if (msg == WM_KEYUP) {
+            DXWindow* windowPtr;
+            if (!(windowPtr = reinterpret_cast<DXWindow*>(GetWindowLongPtrW(wnd, GWLP_USERDATA)))) {
+                throw BalticException("GetWindowLongPtrW");
+            }
+
+            switch (wParam) {
+                case VK_F11:
+                    windowPtr->SetFullscreen(!windowPtr->isFullscreen());
+                    break;
+                case 'W':
+                    windowPtr->m_eventQueue.push({.type = WindowEventType::KeyUp, .key = Key::W});
+                    break;
+                case 'A':
+                    windowPtr->m_eventQueue.push({.type = WindowEventType::KeyUp, .key = Key::A});
+                    break;
+                case 'S':
+                    windowPtr->m_eventQueue.push({.type = WindowEventType::KeyUp, .key = Key::S});
+                    break;
+                case 'D':
+                    windowPtr->m_eventQueue.push({.type = WindowEventType::KeyUp, .key = Key::D});
+                    break;
             }
 
             return DefWindowProcW(wnd, msg, wParam, lParam);
@@ -40,7 +80,7 @@ namespace Baltic
             if (!(windowPtr = reinterpret_cast<DXWindow*>(GetWindowLongPtrW(wnd, GWLP_USERDATA)))) {
                 throw BalticException("GetWindowLongPtrW");
             }
-            windowPtr->m_shouldClose = TRUE;
+            windowPtr->m_eventQueue.push({.type = WindowEventType::Close});
 
             return 0;
         }
@@ -61,8 +101,6 @@ namespace Baltic
           m_window(nullptr),
           m_width(width),
           m_height(height),
-          m_shouldClose(FALSE),
-          m_shouldResize(FALSE),
           m_isFullscreen(FALSE),
           m_currentBufferIdx(0)
     {
@@ -164,6 +202,18 @@ namespace Baltic
 
     void DXWindow::Present() { DXThrowIfFailed(m_swapChain->Present(1, 0)); }
 
+    WindowEvent DXWindow::PollEvent()
+    {
+        if (m_eventQueue.empty()) {
+            return {.type = WindowEventType::None};
+        }
+
+        WindowEvent event = m_eventQueue.front();
+        m_eventQueue.pop();
+
+        return event;
+    }
+
     void DXWindow::ResizeSwapChain(ID3D12Device8* device)
     {
         RECT clientRect;
@@ -182,8 +232,6 @@ namespace Baltic
         ));
 
         GetBuffers(device);
-
-        m_shouldResize = FALSE;
     }
 
     void DXWindow::SetFullscreen(BOOL enable)

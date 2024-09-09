@@ -25,10 +25,36 @@ namespace Baltic
         std::vector<UINT32> indices;
     };
 
-    enum class WindowEvent
+    enum class WindowEventType
     {
+        None,
         Resize,
-        Close
+        Close,
+        KeyDown,
+        KeyUp,
+        MouseMove
+    };
+
+    enum class Key
+    {
+        W,
+        A,
+        S,
+        D,
+    };
+
+    struct WindowEvent
+    {
+        WindowEventType type;
+        union
+        {
+            Key key;
+            struct
+            {
+                SHORT x;
+                SHORT y;
+            } position;
+        };
     };
 
 } // namespace Baltic
