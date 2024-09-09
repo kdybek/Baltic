@@ -8,7 +8,7 @@ namespace Baltic
 
     struct VertexBufferElement
     {
-        DirectX::XMFLOAT2 position;
+        DirectX::XMFLOAT3 position;
 
     } __attribute__((packed));
 

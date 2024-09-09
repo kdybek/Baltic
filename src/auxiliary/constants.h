@@ -12,7 +12,7 @@ namespace Baltic
     inline constexpr D3D12_INPUT_ELEMENT_DESC VB_INPUT_ELEMENT_DESC[]{
         {.SemanticName = "Position",
          .SemanticIndex = 0,
-         .Format = DXGI_FORMAT_R32G32_FLOAT,
+         .Format = DXGI_FORMAT_R32G32B32_FLOAT,
          .InputSlot = 0,
          .AlignedByteOffset = 0,
          .InputSlotClass = D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA,

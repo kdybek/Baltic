@@ -29,7 +29,10 @@ int main()
             DXContext dxContext;
 
             VertexBufferElement vertices[4]{
-                {.position{-0.5f, -0.5f}}, {.position{-0.5f, 0.5f}}, {.position{0.5f, 0.5f}}, {.position{0.5f, -0.5f}}
+                {.position{-0.5f, -0.5f, 1.f}},
+                {.position{-0.5f, 0.5f, 1.f}},
+                {.position{0.5f, 0.5f, 1.f}},
+                {.position{0.5f, -0.5f, 1.f}}
             };
 
             UINT32 indices[6]{0, 1, 3, 1, 2, 3};
@@ -118,6 +121,13 @@ int main()
                 };
 
                 cmdList->RSSetScissorRects(1, &scissorRect);
+
+                DirectX::XMMATRIX projectionMatrix = DirectX::XMMatrixPerspectiveFovLH(
+                    DirectX::XMConvertToRadians(90.f),
+                    static_cast<FLOAT>(mainWindow.GetWidth()) / static_cast<FLOAT>(mainWindow.GetHeight()), 0.1f, 100.
+                );
+
+                cmdList->SetGraphicsRoot32BitConstants(0, 16, &projectionMatrix, 0);
 
                 cmdList->DrawIndexedInstanced(6, 1, 0, 0, 0);
 
