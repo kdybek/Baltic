@@ -1,16 +1,5 @@
 #include "root_signature.hlsli"
-
-struct PS_Input
-{
-    float4 position : SV_POSITION;
-    float3 worldPosition : TEXCOORD0;
-    float3 normal : NORMAL;
-};
-
-struct PS_Output
-{
-    float4 color : SV_TARGET;
-};
+#include "structs.hlsli"
 
 [RootSignature(ROOTSIG)]
 void main(in PS_Input input, out PS_Output output)

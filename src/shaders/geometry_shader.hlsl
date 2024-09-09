@@ -1,30 +1,21 @@
-struct GS_INPUT
-{
-    float4 position : SV_POSITION;
-    float3 worldPosition : TEXCOORD0;
-};
+#include "root_signature.hlsli"
+#include "structs.hlsli"
 
-struct GS_OUTPUT
-{
-    float4 position : SV_POSITION;
-    float3 worldPosition : TEXCOORD0;
-    float3 normal : NORMAL;
-};
-
+[RootSignature(ROOTSIG)]
 [maxvertexcount(3)]
-void main(triangle GS_INPUT input[3], inout TriangleStream<GS_OUTPUT> triStream)
+void main(triangle GS_Input input[3], inout TriangleStream<GS_Output> triStream)
 {
     float3 edge1 = input[1].worldPosition - input[0].worldPosition;
     float3 edge2 = input[2].worldPosition - input[0].worldPosition;
 
-    float3 faceNormal = normalize(cross(edge1, edge2));
+    float3 normal = normalize(cross(edge1, edge2));
 
     for (int i = 0; i < 3; i++)
     {
-        GS_OUTPUT output;
+        GS_Output output;
         output.position = input[i].position;
         output.worldPosition = input[i].worldPosition;
-        output.normal = faceNormal;
+        output.normal = normal;
         
         triStream.Append(output);
     }

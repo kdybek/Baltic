@@ -1,17 +1,11 @@
 #include "root_signature.hlsli"
+#include "structs.hlsli"
 
-float4x4 projectionMatrix : register(b0);
-
-struct VS_Input
+cbuffer cameraCBuffer : register(b0)
 {
-    float3 position : POSITION;
-};
-
-struct VS_Output
-{
-    float4 position : SV_POSITION;
-    float3 worldPosition : TEXCOORD0;
-};
+    float4x4 viewMatrix;
+    float4x4 projectionMatrix;
+}
 
 [RootSignature(ROOTSIG)]
 void main(in VS_Input input, out VS_Output output)

@@ -2,7 +2,9 @@
 #include "auxiliary/pch.h"
 // clang-format on
 
+#include <chrono>
 #include <iostream>
+#include <thread>
 
 #include "auxiliary/baltic_exception.h"
 #include "auxiliary/constants.h"
@@ -29,14 +31,15 @@ int main()
             DXContext dxContext;
 
             VertexBufferElement vertices[4]{
-                {.position{-0.5f, -0.5f, 1.f}},
-                {.position{-0.5f, 0.5f, 1.f}},
-                {.position{0.5f, 0.5f, 1.f}},
-                {.position{0.5f, -0.5f, 1.f}}
+                {.position{-.5f, -.5f, 1.f}},
+                {.position{-.5f, .5f, 1.f}},
+                {.position{.5f, .5f, 1.f}},
+                {.position{.5f, -.5f, 1.f}}
             };
 
             UINT32 indices[6]{0, 1, 3, 1, 2, 3};
 
+            UploadBuffer cameraCBuffer(sizeof(CameraCBuffer), dxContext.GetDeviceComPtr().Get());
             UploadBuffer uploadBuffer(1024, dxContext.GetDeviceComPtr().Get());
             GPUBuffer vertexBuffer(1024, dxContext.GetDeviceComPtr().Get());
             GPUBuffer indexBuffer(1024, dxContext.GetDeviceComPtr().Get());
@@ -124,12 +127,21 @@ int main()
 
                 cmdList->RSSetScissorRects(1, &scissorRect);
 
-                DirectX::XMMATRIX projectionMatrix = DirectX::XMMatrixPerspectiveFovLH(
-                    DirectX::XMConvertToRadians(90.f),
-                    static_cast<FLOAT>(mainWindow.GetWidth()) / static_cast<FLOAT>(mainWindow.GetHeight()), 0.1f, 100.
-                );
+                CameraCBuffer cameraCBufferData{
+                    .viewMatrix = DirectX::XMMatrixLookAtLH(
+                        DirectX::XMVectorSet(0.f, 0.f, -1.f, 0.f), DirectX::XMVectorSet(0.f, 0.f, 0.f, 0.f),
+                        DirectX::XMVectorSet(0.f, 1.f, 0.f, 0.f)
+                    ),
+                    .projectionMatrix = DirectX::XMMatrixPerspectiveFovLH(
+                        DirectX::XMConvertToRadians(90.f),
+                        static_cast<FLOAT>(mainWindow.GetWidth()) / static_cast<FLOAT>(mainWindow.GetHeight()), .1f,
+                        100.f
+                    )
+                };
 
-                cmdList->SetGraphicsRoot32BitConstants(0, 16, &projectionMatrix, 0);
+                cameraCBuffer.CopyData(&cameraCBufferData, sizeof(CameraCBuffer));
+
+                cmdList->SetGraphicsRootConstantBufferView(0, cameraCBuffer.GetComPtr()->GetGPUVirtualAddress());
 
                 cmdList->DrawIndexedInstanced(6, 1, 0, 0, 0);
 
@@ -138,6 +150,8 @@ int main()
                 dxContext.ExecuteCmdList();
 
                 mainWindow.Present();
+
+                std::this_thread::sleep_for(std::chrono::milliseconds(16));
             }
 
             dxContext.Flush(FRAME_COUNT);
