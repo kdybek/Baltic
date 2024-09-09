@@ -67,6 +67,7 @@ int main()
             };
 
             Shader vertexShader("vertex_shader.cso");
+            Shader geometryShader("geometry_shader.cso");
             Shader pixelShader("pixel_shader.cso");
             RootSignature rootSignature("root_signature.cso", dxContext.GetDeviceComPtr().Get());
 
@@ -74,6 +75,7 @@ int main()
 
             pipelineState.StageRootSignature(rootSignature.GetComPtr().Get());
             pipelineState.StageVertexShader(vertexShader);
+            pipelineState.StageGeometryShader(geometryShader);
             pipelineState.StagePixelShader(pixelShader);
             pipelineState.StageInputLayout(VB_INPUT_LAYOUT_DESC);
             pipelineState.Finalize(dxContext.GetDeviceComPtr().Get());

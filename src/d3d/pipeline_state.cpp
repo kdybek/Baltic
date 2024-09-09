@@ -96,6 +96,11 @@ namespace Baltic
         m_desc.VS = {vertexShader.GetData(), vertexShader.GetSize()};
     }
 
+    void PipelineState::StageGeometryShader(const Shader& geometryShader)
+    {
+        m_desc.GS = {geometryShader.GetData(), geometryShader.GetSize()};
+    }
+
     void PipelineState::StagePixelShader(const Shader& pixelShader)
     {
         m_desc.PS = {pixelShader.GetData(), pixelShader.GetSize()};

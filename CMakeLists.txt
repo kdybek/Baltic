@@ -35,24 +35,28 @@ set(SHADER_DIR src/shaders)
 
 set(VERTEX_SHADERS ${SHADER_DIR}/vertex_shader.hlsl)
 
+set(GEOMETRY_SHADERS ${SHADER_DIR}/geometry_shader.hlsl)
+
 set(PIXEL_SHADERS ${SHADER_DIR}/pixel_shader.hlsl)
 
 set(ROOT_SIGNATURES ${SHADER_DIR}/root_signature.hlsli)
 
 set(SHADERS
     ${VERTEX_SHADERS}
+    ${GEOMETRY_SHADERS}
     ${PIXEL_SHADERS}
     ${ROOT_SIGNATURES}
 )
 
 set_source_files_properties(${VERTEX_SHADERS} PROPERTIES SHADER_TYPE "vs")
+set_source_files_properties(${GEOMETRY_SHADERS} PROPERTIES SHADER_TYPE "gs")
 set_source_files_properties(${PIXEL_SHADERS} PROPERTIES SHADER_TYPE "ps")
 set_source_files_properties(${ROOT_SIGNATURES} PROPERTIES SHADER_TYPE "rootsig")
 
-set_source_files_properties(${VERTEX_SHADERS} ${PIXEL_SHADERS} PROPERTIES SHADER_MODEL "6_5")
+set_source_files_properties(${VERTEX_SHADERS} ${GEOMETRY_SHADERS} ${PIXEL_SHADERS} PROPERTIES SHADER_MODEL "6_5")
 set_source_files_properties(${ROOT_SIGNATURES} PROPERTIES SHADER_MODEL "1_1")
 
-set_source_files_properties(${VERTEX_SHADERS} ${PIXEL_SHADERS} PROPERTIES SHADER_ENTRY "main")
+set_source_files_properties(${VERTEX_SHADERS} ${GEOMETRY_SHADERS} ${PIXEL_SHADERS} PROPERTIES SHADER_ENTRY "main")
 set_source_files_properties(${ROOT_SIGNATURES} PROPERTIES SHADER_ENTRY "ROOTSIG")
 
 foreach(SHADER ${SHADERS})

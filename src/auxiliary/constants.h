@@ -10,7 +10,7 @@ namespace Baltic
     inline constexpr UINT FRAME_COUNT = 2;
 
     inline constexpr D3D12_INPUT_ELEMENT_DESC VB_INPUT_ELEMENT_DESC[]{
-        {.SemanticName = "Position",
+        {.SemanticName = "POSITION",
          .SemanticIndex = 0,
          .Format = DXGI_FORMAT_R32G32B32_FLOAT,
          .InputSlot = 0,

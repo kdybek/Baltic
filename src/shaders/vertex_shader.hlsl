@@ -2,9 +2,22 @@
 
 float4x4 projectionMatrix : register(b0);
 
-[RootSignature(ROOTSIG)]
-float4 main(float3 position : Position) : SV_Position
+struct VS_Input
 {
-    float4 worldPos = float4(position, 1.0f);
-    return mul(projectionMatrix, worldPos);
+    float3 position : POSITION;
+};
+
+struct VS_Output
+{
+    float4 position : SV_POSITION;
+    float3 worldPosition : TEXCOORD0;
+};
+
+[RootSignature(ROOTSIG)]
+void main(in VS_Input input, out VS_Output output)
+{
+    float4 worldPosition = float4(input.position, 1.0f);
+
+    output.position = mul(projectionMatrix, worldPosition);
+    output.worldPosition = input.position;
 }

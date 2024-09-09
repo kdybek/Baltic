@@ -20,6 +20,7 @@ namespace Baltic
 
         void StageRootSignature(ID3D12RootSignature* rootSignature);
         void StageVertexShader(const Shader& vertexShader);
+        void StageGeometryShader(const Shader& geometryShader);
         void StagePixelShader(const Shader& pixelShader);
         void StageInputLayout(const D3D12_INPUT_LAYOUT_DESC& inputLayout);
 
