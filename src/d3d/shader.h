@@ -6,6 +6,8 @@
 
 #include <string_view>
 
+#include "auxiliary/types.h"
+
 namespace Baltic
 {
     class Shader
@@ -30,7 +32,7 @@ namespace Baltic
     public:
         RootSignature(std::string_view filename, ID3D12Device5* device);
         ~RootSignature() = default;
-        
+
         RootSignature(const RootSignature&) = delete;
         RootSignature& operator=(const RootSignature&) = delete;
 

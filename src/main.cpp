@@ -6,7 +6,7 @@
 
 #include "auxiliary/baltic_exception.h"
 #include "auxiliary/constants.h"
-#include "auxiliary/input_layouts.h"
+#include "auxiliary/types.h"
 #include "d3d/buffers.h"
 #include "d3d/dx_context.h"
 #include "d3d/dx_window.h"
@@ -72,7 +72,7 @@ int main()
             pipelineState.StageRootSignature(rootSignature.GetComPtr().Get());
             pipelineState.StageVertexShader(vertexShader);
             pipelineState.StagePixelShader(pixelShader);
-            pipelineState.StageInputLayout(g_vertexBufferLayout);
+            pipelineState.StageInputLayout(VB_INPUT_LAYOUT_DESC);
             pipelineState.Finalize(dxContext.GetDeviceComPtr().Get());
 
             DXWindow mainWindow(1920, 1080, dxContext);

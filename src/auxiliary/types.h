@@ -2,10 +2,16 @@
 
 #include <vector>
 
-#include "auxiliary/input_layouts.h"
-
 namespace Baltic
 {
+    using Microsoft::WRL::ComPtr;
+
+    struct VertexBufferElement
+    {
+        DirectX::XMFLOAT2 position;
+
+    } __attribute__((packed));
+
     struct Mesh
     {
         std::vector<VertexBufferElement> vertices;

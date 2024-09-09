@@ -5,6 +5,7 @@
 // clang-format on
 
 #include "auxiliary/constants.h"
+#include "auxiliary/types.h"
 #include "d3d/dx_context.h"
 
 namespace Baltic

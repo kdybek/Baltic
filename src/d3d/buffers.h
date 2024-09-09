@@ -4,6 +4,8 @@
 #include "auxiliary/pch.h"
 // clang-format on
 
+#include "auxiliary/types.h"
+
 namespace Baltic
 {
     class UploadBuffer

@@ -24,7 +24,6 @@ set(SOURCES
     ${SOURCE_DIR}/d3d/shader.h
     ${SOURCE_DIR}/d3d/buffers.cpp
     ${SOURCE_DIR}/d3d/buffers.h
-    ${SOURCE_DIR}/auxiliary/input_layouts.h
     ${SOURCE_DIR}/auxiliary/pch.h
     ${SOURCE_DIR}/auxiliary/baltic_exception.h
     ${SOURCE_DIR}/auxiliary/constants.h

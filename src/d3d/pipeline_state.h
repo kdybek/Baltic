@@ -4,6 +4,7 @@
 #include "auxiliary/pch.h"
 // clang-format on
 
+#include "auxiliary/types.h"
 #include "d3d/shader.h"
 
 namespace Baltic
