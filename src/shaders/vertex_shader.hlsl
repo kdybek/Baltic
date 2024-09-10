@@ -1,5 +1,15 @@
 #include "root_signature.hlsli"
-#include "structs.hlsli"
+
+struct VS_Input
+{
+    float3 position : POSITION;
+};
+
+struct VS_Output
+{
+    float4 position : SV_POSITION;
+    float3 worldPosition : TEXCOORD0;
+};
 
 cbuffer cameraCBuffer : register(b0)
 {

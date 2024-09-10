@@ -1,5 +1,17 @@
 #include "root_signature.hlsli"
-#include "structs.hlsli"
+
+struct GS_Input
+{
+    float4 position : SV_POSITION;
+    float3 worldPosition : TEXCOORD0;
+};
+
+struct GS_Output
+{
+    float4 position : SV_POSITION;
+    float3 worldPosition : TEXCOORD0;
+    float3 normal : NORMAL;
+};
 
 [RootSignature(ROOTSIG)]
 [maxvertexcount(3)]

@@ -19,6 +19,22 @@ namespace Baltic
 
     } __attribute__((packed));
 
+    struct LightSource
+    {
+        DirectX::XMFLOAT3 position;
+        FLOAT padding;
+        DirectX::XMFLOAT3 color;
+        FLOAT intensity;
+
+    } __attribute__((packed));
+    
+    struct LightCBuffer
+    {
+        LightSource lightSource[16];
+        UINT16 lightCount;
+
+    } __attribute__((packed));
+
     struct Mesh
     {
         std::vector<VertexBufferElement> vertices;

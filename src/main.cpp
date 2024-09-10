@@ -19,27 +19,6 @@
 
 using namespace Baltic;
 
-DirectX::XMMATRIX UpdateViewMatrix(const std::unordered_map<Key, BOOL>& keyStates, DirectX::XMMATRIX viewMatrix)
-{
-    DirectX::XMVECTOR forward = viewMatrix.r[2];
-    DirectX::XMVECTOR right = viewMatrix.r[0];
-
-    if (keyStates.at(Key::W)) {
-        viewMatrix.r[3] = DirectX::XMVectorSubtract(viewMatrix.r[3], forward);
-    }
-    if (keyStates.at(Key::A)) {
-        viewMatrix.r[3] = DirectX::XMVectorAdd(viewMatrix.r[3], right);
-    }
-    if (keyStates.at(Key::S)) {
-        viewMatrix.r[3] = DirectX::XMVectorAdd(viewMatrix.r[3], forward);
-    }
-    if (keyStates.at(Key::D)) {
-        viewMatrix.r[3] = DirectX::XMVectorSubtract(viewMatrix.r[3], right);
-    }
-
-    return viewMatrix;
-}
-
 int main()
 {
     int ret = 0;
@@ -52,6 +31,12 @@ int main()
         {
             DXContext dxContext;
 
+            UploadBuffer cameraCBuffer(((sizeof(CameraCBuffer) + 255) & ~255), dxContext.GetDeviceComPtr().Get());
+            UploadBuffer lightCBuffer(((sizeof(LightCBuffer) + 255) & ~255), dxContext.GetDeviceComPtr().Get());
+            UploadBuffer uploadBuffer(1024, dxContext.GetDeviceComPtr().Get());
+            GPUBuffer vertexBuffer(1024, dxContext.GetDeviceComPtr().Get());
+            GPUBuffer indexBuffer(1024, dxContext.GetDeviceComPtr().Get());
+
             VertexBufferElement vertices[4]{
                 {.position{-.5f, -.5f, 1.f}},
                 {.position{-.5f, .5f, 1.f}},
@@ -61,10 +46,24 @@ int main()
 
             UINT32 indices[6]{0, 1, 3, 1, 2, 3};
 
-            UploadBuffer cameraCBuffer(sizeof(CameraCBuffer), dxContext.GetDeviceComPtr().Get());
-            UploadBuffer uploadBuffer(1024, dxContext.GetDeviceComPtr().Get());
-            GPUBuffer vertexBuffer(1024, dxContext.GetDeviceComPtr().Get());
-            GPUBuffer indexBuffer(1024, dxContext.GetDeviceComPtr().Get());
+            LightSource lightSource1{
+                .position{-1.f, 1.f, 0.f},
+                .color{0.4f, 1.f, 1.f},
+                .intensity = .4f
+            };
+             
+            LightSource lightSource2{
+                .position{1.f, 1.f, 0.f},
+                .color{1.f, 0.4f, 1.f},
+                .intensity = .4f
+            };
+
+            LightCBuffer lightCBufferData{
+                .lightSource{lightSource1, lightSource2},
+                .lightCount = 2
+            };
+            
+            lightCBuffer.CopyData(&lightCBufferData, sizeof(LightCBuffer));
 
             dxContext.ResetCmdList();
             uploadBuffer.CopyData(vertices, sizeof(vertices));
@@ -116,6 +115,7 @@ int main()
 
             BOOL stop = FALSE;
             POINT lastCursorPos = mainWindow.GetCursorPosition();
+            FLOAT xPlaneAngle = 0.f;
 
             while (!stop) {
                 mainWindow.Update();
@@ -155,17 +155,32 @@ int main()
                         keyStates[event.key] = FALSE;
                     }
                     else if (event.type == EventType::MouseMove) {
-                        DirectX::XMVECTOR cursorMovement = DirectX::XMVectorSet(
-                            static_cast<FLOAT>(event.cursorPosition.x - lastCursorPos.x),
-                            static_cast<FLOAT>(lastCursorPos.y - event.cursorPosition.y), 0.f, 0.f
-                        );
-                        DirectX::XMVECTOR axis =
-                            DirectX::XMVector3Cross(DirectX::XMVectorSet(0.f, 0.f, 1.f, 0.f), cursorMovement);
-                        if (!DirectX::XMVector3Equal(axis, DirectX::XMVectorZero())) {
-                            FLOAT angle = -DirectX::XMVectorGetX(DirectX::XMVector3Length(cursorMovement)) * .001f;
-                            viewMatrix =
-                                DirectX::XMMatrixMultiply(DirectX::XMMatrixRotationAxis(axis, angle), viewMatrix);
+                        FLOAT xAngle = static_cast<FLOAT>(event.cursorPosition.y - lastCursorPos.y) * -.001f;
+                        FLOAT yAngle = static_cast<FLOAT>(event.cursorPosition.x - lastCursorPos.x) * -.001f;
+                        FLOAT zTranslation = 0.f;
+                        FLOAT xTranslation = 0.f;
+                        if (keyStates.at(Key::W)) {
+                            zTranslation -= .1f;
                         }
+                        if (keyStates.at(Key::A)) {
+                            xTranslation += .1f;
+                        }
+                        if (keyStates.at(Key::S)) {
+                            zTranslation += .1f;
+                        }
+                        if (keyStates.at(Key::D)) {
+                            xTranslation -= .1f;
+                        }
+                        DirectX::XMMATRIX rotationMatrix1 = DirectX::XMMatrixRotationX(-xPlaneAngle);
+                        DirectX::XMMATRIX translationMatrix =
+                            DirectX::XMMatrixTranslation(xTranslation, 0.f, zTranslation);
+                        DirectX::XMMATRIX rotationMatrix2 = DirectX::XMMatrixRotationY(yAngle);
+                        DirectX::XMMATRIX rotationMatrix3 = DirectX::XMMatrixRotationX(xAngle + xPlaneAngle);
+                        viewMatrix = DirectX::XMMatrixMultiply(viewMatrix, rotationMatrix1);
+                        viewMatrix = DirectX::XMMatrixMultiply(viewMatrix, translationMatrix);
+                        viewMatrix = DirectX::XMMatrixMultiply(viewMatrix, rotationMatrix2);
+                        viewMatrix = DirectX::XMMatrixMultiply(viewMatrix, rotationMatrix3);
+                        xPlaneAngle += xAngle;
                         mainWindow.CenterCursor();
                         lastCursorPos = mainWindow.GetCursorPosition();
                     }
@@ -204,12 +219,10 @@ int main()
 
                 cmdList->RSSetScissorRects(1, &scissorRect);
 
-                viewMatrix = UpdateViewMatrix(keyStates, viewMatrix);
-
                 CameraCBuffer cameraCBufferData{
                     .viewMatrix = viewMatrix,
                     .projectionMatrix = DirectX::XMMatrixPerspectiveFovLH(
-                        DirectX::XMConvertToRadians(90.f),
+                        DirectX::XMConvertToRadians(60.f),
                         static_cast<FLOAT>(mainWindow.GetWidth()) / static_cast<FLOAT>(mainWindow.GetHeight()), .1f,
                         100.f
                     )
@@ -218,6 +231,8 @@ int main()
                 cameraCBuffer.CopyData(&cameraCBufferData, sizeof(CameraCBuffer));
 
                 cmdList->SetGraphicsRootConstantBufferView(0, cameraCBuffer.GetComPtr()->GetGPUVirtualAddress());
+                
+                cmdList->SetGraphicsRootConstantBufferView(1, lightCBuffer.GetComPtr()->GetGPUVirtualAddress());
 
                 cmdList->DrawIndexedInstanced(6, 1, 0, 0, 0);
 
