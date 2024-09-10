@@ -28,8 +28,11 @@ namespace Baltic
     enum class WindowEventType
     {
         None,
-        Resize,
         Close,
+        Resize,
+        Focus,
+        Blur,
+        Move,
         KeyDown,
         KeyUp,
         MouseMove
@@ -41,6 +44,7 @@ namespace Baltic
         A,
         S,
         D,
+        F11
     };
 
     struct WindowEvent
@@ -49,11 +53,7 @@ namespace Baltic
         union
         {
             Key key;
-            struct
-            {
-                SHORT x;
-                SHORT y;
-            } position;
+            POINT cursorPosition;
         };
     };
 

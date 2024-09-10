@@ -4,6 +4,7 @@
 #include "auxiliary/pch.h"
 // clang-format on
 
+#include <mutex>
 #include <queue>
 
 #include "auxiliary/constants.h"
@@ -31,6 +32,12 @@ namespace Baltic
 
         void ResizeSwapChain(ID3D12Device8* device);
 
+        void ConfineCursor();
+
+        void CenterCursor();
+
+        [[nodiscard]] POINT GetCursorPosition();
+
         void SetFullscreen(BOOL enable);
 
         void StageCmdBeginFrame(ID3D12GraphicsCommandList6* cmdList);
@@ -57,6 +64,7 @@ namespace Baltic
         UINT m_height;
         BOOL m_isFullscreen;
 
+        std::mutex m_eventQueueMutex;
         std::queue<WindowEvent> m_eventQueue;
 
         ComPtr<IDXGISwapChain4> m_swapChain;

@@ -1,5 +1,7 @@
 #include "dx_window.h"
 
+#include <iostream>
+
 #include "auxiliary/baltic_exception.h"
 #include "d3d/dx_context.h"
 
@@ -10,89 +12,141 @@ namespace Baltic
 {
     LRESULT OnWindowMessage(HWND wnd, UINT msg, WPARAM wParam, LPARAM lParam)
     {
-        if (msg == WM_SIZE) {
-            DXWindow* windowPtr;
-            if (!(windowPtr = reinterpret_cast<DXWindow*>(GetWindowLongPtrW(wnd, GWLP_USERDATA)))) {
-                throw BalticException("GetWindowLongPtrW");
-            }
+        try {
+            if (msg == WM_MOUSEMOVE) {
+                DXWindow* windowPtr;
+                if (!(windowPtr = reinterpret_cast<DXWindow*>(GetWindowLongPtrW(wnd, GWLP_USERDATA)))) {
+                    throw BalticException("GetWindowLongPtrW");
+                }
 
-            if (LOWORD(lParam) && HIWORD(lParam) &&
-                (LOWORD(lParam) != windowPtr->m_width || HIWORD(lParam) != windowPtr->m_height)) {
-                windowPtr->m_eventQueue.push({.type = WindowEventType::Resize});
-            }
+                std::unique_lock<std::mutex> lock(windowPtr->m_eventQueueMutex);
+                windowPtr->m_eventQueue.push(
+                    {.type = WindowEventType::MouseMove, .cursorPosition = {.x = LOWORD(lParam), .y = HIWORD(lParam)}}
+                );
+                lock.unlock();
 
-            return DefWindowProcW(wnd, msg, wParam, lParam);
+                return DefWindowProcW(wnd, msg, wParam, lParam);
+            }
+            else if (msg == WM_KEYDOWN) {
+                DXWindow* windowPtr;
+                if (!(windowPtr = reinterpret_cast<DXWindow*>(GetWindowLongPtrW(wnd, GWLP_USERDATA)))) {
+                    throw BalticException("GetWindowLongPtrW");
+                }
+
+                std::unique_lock<std::mutex> lock(windowPtr->m_eventQueueMutex);
+                switch (wParam) {
+                    case VK_F11:
+                        windowPtr->m_eventQueue.push({.type = WindowEventType::KeyDown, .key = Key::F11});
+                        break;
+                    case 'W':
+                        windowPtr->m_eventQueue.push({.type = WindowEventType::KeyDown, .key = Key::W});
+                        break;
+                    case 'A':
+                        windowPtr->m_eventQueue.push({.type = WindowEventType::KeyDown, .key = Key::A});
+                        break;
+                    case 'S':
+                        windowPtr->m_eventQueue.push({.type = WindowEventType::KeyDown, .key = Key::S});
+                        break;
+                    case 'D':
+                        windowPtr->m_eventQueue.push({.type = WindowEventType::KeyDown, .key = Key::D});
+                        break;
+                }
+                lock.unlock();
+
+                return DefWindowProcW(wnd, msg, wParam, lParam);
+            }
+            else if (msg == WM_KEYUP) {
+                DXWindow* windowPtr;
+                if (!(windowPtr = reinterpret_cast<DXWindow*>(GetWindowLongPtrW(wnd, GWLP_USERDATA)))) {
+                    throw BalticException("GetWindowLongPtrW");
+                }
+
+                std::unique_lock<std::mutex> lock(windowPtr->m_eventQueueMutex);
+                switch (wParam) {
+                    case VK_F11:
+                        windowPtr->m_eventQueue.push({.type = WindowEventType::KeyUp, .key = Key::F11});
+                        break;
+                    case 'W':
+                        windowPtr->m_eventQueue.push({.type = WindowEventType::KeyUp, .key = Key::W});
+                        break;
+                    case 'A':
+                        windowPtr->m_eventQueue.push({.type = WindowEventType::KeyUp, .key = Key::A});
+                        break;
+                    case 'S':
+                        windowPtr->m_eventQueue.push({.type = WindowEventType::KeyUp, .key = Key::S});
+                        break;
+                    case 'D':
+                        windowPtr->m_eventQueue.push({.type = WindowEventType::KeyUp, .key = Key::D});
+                        break;
+                }
+                lock.unlock();
+
+                return DefWindowProcW(wnd, msg, wParam, lParam);
+            }
+            if (msg == WM_SIZE) {
+                DXWindow* windowPtr;
+                if (!(windowPtr = reinterpret_cast<DXWindow*>(GetWindowLongPtrW(wnd, GWLP_USERDATA)))) {
+                    throw BalticException("GetWindowLongPtrW");
+                }
+
+                if (LOWORD(lParam) && HIWORD(lParam) &&
+                    (LOWORD(lParam) != windowPtr->m_width || HIWORD(lParam) != windowPtr->m_height)) {
+                    std::unique_lock<std::mutex> lock(windowPtr->m_eventQueueMutex);
+                    windowPtr->m_eventQueue.push({.type = WindowEventType::Resize});
+                }
+
+                return DefWindowProcW(wnd, msg, wParam, lParam);
+            }
+            else if (msg == WM_MOVE) {
+                DXWindow* windowPtr;
+                if (!(windowPtr = reinterpret_cast<DXWindow*>(GetWindowLongPtrW(wnd, GWLP_USERDATA)))) {
+                    throw BalticException("GetWindowLongPtrW");
+                }
+
+                std::unique_lock<std::mutex> lock(windowPtr->m_eventQueueMutex);
+                windowPtr->m_eventQueue.push({.type = WindowEventType::Move});
+                lock.unlock();
+
+                return DefWindowProcW(wnd, msg, wParam, lParam);
+            }
+            else if (msg == WM_SETFOCUS) {
+                DXWindow* windowPtr;
+                if (!(windowPtr = reinterpret_cast<DXWindow*>(GetWindowLongPtrW(wnd, GWLP_USERDATA)))) {
+                    throw BalticException("GetWindowLongPtrW");
+                }
+
+                std::unique_lock<std::mutex> lock(windowPtr->m_eventQueueMutex);
+                windowPtr->m_eventQueue.push({.type = WindowEventType::Focus});
+                lock.unlock();
+
+                return DefWindowProcW(wnd, msg, wParam, lParam);
+            }
+            else if (msg == WM_CLOSE) {
+                DXWindow* windowPtr;
+                if (!(windowPtr = reinterpret_cast<DXWindow*>(GetWindowLongPtrW(wnd, GWLP_USERDATA)))) {
+                    throw BalticException("GetWindowLongPtrW");
+                }
+
+                std::unique_lock<std::mutex> lock(windowPtr->m_eventQueueMutex);
+                windowPtr->m_eventQueue.push({.type = WindowEventType::Close});
+                lock.unlock();
+
+                return TRUE;
+            }
+            else if (msg == WM_NCCREATE) {
+                auto* createPtr = reinterpret_cast<CREATESTRUCT*>(lParam);
+                auto* windowPtr = reinterpret_cast<DXWindow*>(createPtr->lpCreateParams);
+                SetWindowLongPtrW(wnd, GWLP_USERDATA, reinterpret_cast<LONG_PTR>(windowPtr));
+
+                return DefWindowProcW(wnd, msg, wParam, lParam);
+            }
+            else {
+                return DefWindowProcW(wnd, msg, wParam, lParam);
+            }
         }
-        else if (msg == WM_KEYDOWN) {
-            DXWindow* windowPtr;
-            if (!(windowPtr = reinterpret_cast<DXWindow*>(GetWindowLongPtrW(wnd, GWLP_USERDATA)))) {
-                throw BalticException("GetWindowLongPtrW");
-            }
-
-            switch (wParam) {
-                case VK_F11:
-                    windowPtr->SetFullscreen(!windowPtr->isFullscreen());
-                    break;
-                case 'W':
-                    windowPtr->m_eventQueue.push({.type = WindowEventType::KeyDown, .key = Key::W});
-                    break;
-                case 'A':
-                    windowPtr->m_eventQueue.push({.type = WindowEventType::KeyDown, .key = Key::A});
-                    break;
-                case 'S':
-                    windowPtr->m_eventQueue.push({.type = WindowEventType::KeyDown, .key = Key::S});
-                    break;
-                case 'D':
-                    windowPtr->m_eventQueue.push({.type = WindowEventType::KeyDown, .key = Key::D});
-                    break;
-            }
-
-            return DefWindowProcW(wnd, msg, wParam, lParam);
-        }
-        else if (msg == WM_KEYUP) {
-            DXWindow* windowPtr;
-            if (!(windowPtr = reinterpret_cast<DXWindow*>(GetWindowLongPtrW(wnd, GWLP_USERDATA)))) {
-                throw BalticException("GetWindowLongPtrW");
-            }
-
-            switch (wParam) {
-                case VK_F11:
-                    windowPtr->SetFullscreen(!windowPtr->isFullscreen());
-                    break;
-                case 'W':
-                    windowPtr->m_eventQueue.push({.type = WindowEventType::KeyUp, .key = Key::W});
-                    break;
-                case 'A':
-                    windowPtr->m_eventQueue.push({.type = WindowEventType::KeyUp, .key = Key::A});
-                    break;
-                case 'S':
-                    windowPtr->m_eventQueue.push({.type = WindowEventType::KeyUp, .key = Key::S});
-                    break;
-                case 'D':
-                    windowPtr->m_eventQueue.push({.type = WindowEventType::KeyUp, .key = Key::D});
-                    break;
-            }
-
-            return DefWindowProcW(wnd, msg, wParam, lParam);
-        }
-        else if (msg == WM_CLOSE) {
-            DXWindow* windowPtr;
-            if (!(windowPtr = reinterpret_cast<DXWindow*>(GetWindowLongPtrW(wnd, GWLP_USERDATA)))) {
-                throw BalticException("GetWindowLongPtrW");
-            }
-            windowPtr->m_eventQueue.push({.type = WindowEventType::Close});
-
-            return 0;
-        }
-        else if (msg == WM_NCCREATE) {
-            auto* createPtr = reinterpret_cast<CREATESTRUCT*>(lParam);
-            auto* windowPtr = reinterpret_cast<DXWindow*>(createPtr->lpCreateParams);
-            SetWindowLongPtrW(wnd, GWLP_USERDATA, reinterpret_cast<LONG_PTR>(windowPtr));
-
-            return DefWindowProcW(wnd, msg, wParam, lParam);
-        }
-        else {
-            return DefWindowProcW(wnd, msg, wParam, lParam);
+        catch (const BalticException& e) {
+            std::cerr << "[WndProc Error]" << e.what() << std::endl;
+            return FALSE;
         }
     }
 
@@ -177,6 +231,8 @@ namespace Baltic
         }
 
         GetBuffers(dxContext.GetDeviceComPtr().Get());
+
+        // ShowCursor(FALSE);
     }
 
     DXWindow::~DXWindow()
@@ -195,7 +251,6 @@ namespace Baltic
         MSG msg;
         while (PeekMessageW(&msg, m_window, 0, 0, PM_REMOVE)) {
             TranslateMessage(&msg);
-
             DXThrowIfFailed(DispatchMessageW(&msg));
         }
     }
@@ -204,6 +259,7 @@ namespace Baltic
 
     WindowEvent DXWindow::PollEvent()
     {
+        std::unique_lock<std::mutex> lock(m_eventQueueMutex);
         if (m_eventQueue.empty()) {
             return {.type = WindowEventType::None};
         }
@@ -232,6 +288,65 @@ namespace Baltic
         ));
 
         GetBuffers(device);
+    }
+
+    void DXWindow::ConfineCursor()
+    {
+        RECT clientRect;
+        if (!GetClientRect(m_window, &clientRect)) {
+            throw BalticException("GetClientRect");
+        }
+
+        POINT topLeft{clientRect.left, clientRect.top};
+        POINT bottomRight{clientRect.right, clientRect.bottom};
+
+        if (!ClientToScreen(m_window, &topLeft) || !ClientToScreen(m_window, &bottomRight)) {
+            throw BalticException("ClientToScreen");
+        }
+
+        clientRect.left = topLeft.x;
+        clientRect.top = topLeft.y;
+        clientRect.right = bottomRight.x;
+        clientRect.bottom = bottomRight.y;
+
+        if (!ClipCursor(&clientRect)) {
+            throw BalticException("ClipCursor");
+        }
+    }
+
+    void DXWindow::CenterCursor()
+    {
+        RECT clientRect;
+        if (!GetClientRect(m_window, &clientRect)) {
+            throw BalticException("GetClientRect");
+        }
+
+        POINT center{
+            .x = clientRect.left + (clientRect.right - clientRect.left) / 2,
+            .y = clientRect.top + (clientRect.bottom - clientRect.top) / 2
+        };
+
+        if (!ClientToScreen(m_window, &center)) {
+            throw BalticException("ClientToScreen");
+        }
+
+        if (!SetCursorPos(center.x, center.y)) {
+            throw BalticException("SetCursorPos");
+        }
+    }
+
+    POINT DXWindow::GetCursorPosition()
+    {
+        POINT cursorPos;
+        if (!GetCursorPos(&cursorPos)) {
+            throw BalticException("GetCursorPos");
+        }
+
+        if (!ScreenToClient(m_window, &cursorPos)) {
+            throw BalticException("ScreenToClient");
+        }
+
+        return cursorPos;
     }
 
     void DXWindow::SetFullscreen(BOOL enable)

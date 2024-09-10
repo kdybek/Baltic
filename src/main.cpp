@@ -110,9 +110,12 @@ int main()
 
             DirectX::XMMATRIX viewMatrix = DirectX::XMMatrixIdentity();
 
-            std::unordered_map<Key, BOOL> keyStates{{Key::W, FALSE}, {Key::A, FALSE}, {Key::S, FALSE}, {Key::D, FALSE}};
+            std::unordered_map<Key, BOOL> keyStates{
+                {Key::W, FALSE}, {Key::A, FALSE}, {Key::S, FALSE}, {Key::D, FALSE}, {Key::F11, FALSE}
+            };
 
             BOOL stop = FALSE;
+            POINT lastCursorPos = mainWindow.GetCursorPosition();
 
             while (!stop) {
                 mainWindow.Update();
@@ -125,12 +128,39 @@ int main()
                     else if (event.type == WindowEventType::Resize) {
                         dxContext.Flush(FRAME_COUNT);
                         mainWindow.ResizeSwapChain(dxContext.GetDeviceComPtr().Get());
+                        mainWindow.ConfineCursor();
+                        mainWindow.CenterCursor();
+                        lastCursorPos = mainWindow.GetCursorPosition();
+                    }
+                    else if (event.type == WindowEventType::Focus) {
+                        mainWindow.ConfineCursor();
+                        mainWindow.CenterCursor();
+                        lastCursorPos = mainWindow.GetCursorPosition();
+                    }
+                    else if (event.type == WindowEventType::Move) {
+                        mainWindow.ConfineCursor();
+                        mainWindow.CenterCursor();
+                        lastCursorPos = mainWindow.GetCursorPosition();
                     }
                     else if (event.type == WindowEventType::KeyDown) {
+                        if (event.key == Key::F11) {
+                            mainWindow.SetFullscreen(!mainWindow.isFullscreen());
+                            mainWindow.ConfineCursor();
+                            mainWindow.CenterCursor();
+                            lastCursorPos = mainWindow.GetCursorPosition();
+                        }
                         keyStates[event.key] = TRUE;
                     }
                     else if (event.type == WindowEventType::KeyUp) {
                         keyStates[event.key] = FALSE;
+                    }
+                    else if (event.type == WindowEventType::MouseMove) {
+                        DirectX::XMVECTOR cursorMovement = DirectX::XMVectorSet(
+                            static_cast<FLOAT>(event.cursorPosition.x - lastCursorPos.x),
+                            static_cast<FLOAT>(event.cursorPosition.y - lastCursorPos.y), 0.f, 0.f
+                        );
+                        mainWindow.CenterCursor();
+                        lastCursorPos = mainWindow.GetCursorPosition();
                     }
                 }
 
