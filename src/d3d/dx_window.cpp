@@ -21,7 +21,7 @@ namespace Baltic
 
                 std::unique_lock<std::mutex> lock(windowPtr->m_eventQueueMutex);
                 windowPtr->m_eventQueue.push(
-                    {.type = WindowEventType::MouseMove, .cursorPosition = {.x = LOWORD(lParam), .y = HIWORD(lParam)}}
+                    {.type = EventType::MouseMove, .cursorPosition = {.x = LOWORD(lParam), .y = HIWORD(lParam)}}
                 );
                 lock.unlock();
 
@@ -36,19 +36,19 @@ namespace Baltic
                 std::unique_lock<std::mutex> lock(windowPtr->m_eventQueueMutex);
                 switch (wParam) {
                     case VK_F11:
-                        windowPtr->m_eventQueue.push({.type = WindowEventType::KeyDown, .key = Key::F11});
+                        windowPtr->m_eventQueue.push({.type = EventType::KeyDown, .key = Key::F11});
                         break;
                     case 'W':
-                        windowPtr->m_eventQueue.push({.type = WindowEventType::KeyDown, .key = Key::W});
+                        windowPtr->m_eventQueue.push({.type = EventType::KeyDown, .key = Key::W});
                         break;
                     case 'A':
-                        windowPtr->m_eventQueue.push({.type = WindowEventType::KeyDown, .key = Key::A});
+                        windowPtr->m_eventQueue.push({.type = EventType::KeyDown, .key = Key::A});
                         break;
                     case 'S':
-                        windowPtr->m_eventQueue.push({.type = WindowEventType::KeyDown, .key = Key::S});
+                        windowPtr->m_eventQueue.push({.type = EventType::KeyDown, .key = Key::S});
                         break;
                     case 'D':
-                        windowPtr->m_eventQueue.push({.type = WindowEventType::KeyDown, .key = Key::D});
+                        windowPtr->m_eventQueue.push({.type = EventType::KeyDown, .key = Key::D});
                         break;
                 }
                 lock.unlock();
@@ -64,19 +64,19 @@ namespace Baltic
                 std::unique_lock<std::mutex> lock(windowPtr->m_eventQueueMutex);
                 switch (wParam) {
                     case VK_F11:
-                        windowPtr->m_eventQueue.push({.type = WindowEventType::KeyUp, .key = Key::F11});
+                        windowPtr->m_eventQueue.push({.type = EventType::KeyUp, .key = Key::F11});
                         break;
                     case 'W':
-                        windowPtr->m_eventQueue.push({.type = WindowEventType::KeyUp, .key = Key::W});
+                        windowPtr->m_eventQueue.push({.type = EventType::KeyUp, .key = Key::W});
                         break;
                     case 'A':
-                        windowPtr->m_eventQueue.push({.type = WindowEventType::KeyUp, .key = Key::A});
+                        windowPtr->m_eventQueue.push({.type = EventType::KeyUp, .key = Key::A});
                         break;
                     case 'S':
-                        windowPtr->m_eventQueue.push({.type = WindowEventType::KeyUp, .key = Key::S});
+                        windowPtr->m_eventQueue.push({.type = EventType::KeyUp, .key = Key::S});
                         break;
                     case 'D':
-                        windowPtr->m_eventQueue.push({.type = WindowEventType::KeyUp, .key = Key::D});
+                        windowPtr->m_eventQueue.push({.type = EventType::KeyUp, .key = Key::D});
                         break;
                 }
                 lock.unlock();
@@ -92,7 +92,7 @@ namespace Baltic
                 if (LOWORD(lParam) && HIWORD(lParam) &&
                     (LOWORD(lParam) != windowPtr->m_width || HIWORD(lParam) != windowPtr->m_height)) {
                     std::unique_lock<std::mutex> lock(windowPtr->m_eventQueueMutex);
-                    windowPtr->m_eventQueue.push({.type = WindowEventType::Resize});
+                    windowPtr->m_eventQueue.push({.type = EventType::Resize});
                 }
 
                 return DefWindowProcW(wnd, msg, wParam, lParam);
@@ -104,7 +104,7 @@ namespace Baltic
                 }
 
                 std::unique_lock<std::mutex> lock(windowPtr->m_eventQueueMutex);
-                windowPtr->m_eventQueue.push({.type = WindowEventType::Move});
+                windowPtr->m_eventQueue.push({.type = EventType::Move});
                 lock.unlock();
 
                 return DefWindowProcW(wnd, msg, wParam, lParam);
@@ -116,7 +116,7 @@ namespace Baltic
                 }
 
                 std::unique_lock<std::mutex> lock(windowPtr->m_eventQueueMutex);
-                windowPtr->m_eventQueue.push({.type = WindowEventType::Focus});
+                windowPtr->m_eventQueue.push({.type = EventType::Focus});
                 lock.unlock();
 
                 return DefWindowProcW(wnd, msg, wParam, lParam);
@@ -128,7 +128,7 @@ namespace Baltic
                 }
 
                 std::unique_lock<std::mutex> lock(windowPtr->m_eventQueueMutex);
-                windowPtr->m_eventQueue.push({.type = WindowEventType::Close});
+                windowPtr->m_eventQueue.push({.type = EventType::Close});
                 lock.unlock();
 
                 return TRUE;
@@ -232,7 +232,7 @@ namespace Baltic
 
         GetBuffers(dxContext.GetDeviceComPtr().Get());
 
-        // ShowCursor(FALSE);
+        ShowCursor(FALSE);
     }
 
     DXWindow::~DXWindow()
@@ -257,14 +257,14 @@ namespace Baltic
 
     void DXWindow::Present() { DXThrowIfFailed(m_swapChain->Present(1, 0)); }
 
-    WindowEvent DXWindow::PollEvent()
+    Event DXWindow::PollEvent()
     {
         std::unique_lock<std::mutex> lock(m_eventQueueMutex);
         if (m_eventQueue.empty()) {
-            return {.type = WindowEventType::None};
+            return {.type = EventType::None};
         }
 
-        WindowEvent event = m_eventQueue.front();
+        Event event = m_eventQueue.front();
         m_eventQueue.pop();
 
         return event;

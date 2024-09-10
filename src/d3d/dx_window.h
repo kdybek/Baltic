@@ -28,7 +28,7 @@ namespace Baltic
 
         void Present();
 
-        [[nodiscard]] WindowEvent PollEvent();
+        [[nodiscard]] Event PollEvent();
 
         void ResizeSwapChain(ID3D12Device8* device);
 
@@ -65,7 +65,7 @@ namespace Baltic
         BOOL m_isFullscreen;
 
         std::mutex m_eventQueueMutex;
-        std::queue<WindowEvent> m_eventQueue;
+        std::queue<Event> m_eventQueue;
 
         ComPtr<IDXGISwapChain4> m_swapChain;
         ComPtr<ID3D12Resource2> m_buffers[FRAME_COUNT];

@@ -25,7 +25,7 @@ namespace Baltic
         std::vector<UINT32> indices;
     };
 
-    enum class WindowEventType
+    enum class EventType
     {
         None,
         Close,
@@ -47,9 +47,9 @@ namespace Baltic
         F11
     };
 
-    struct WindowEvent
+    struct Event
     {
-        WindowEventType type;
+        EventType type;
         union
         {
             Key key;

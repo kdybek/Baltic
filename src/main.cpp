@@ -120,29 +120,29 @@ int main()
             while (!stop) {
                 mainWindow.Update();
 
-                WindowEvent event;
-                while ((event = mainWindow.PollEvent()).type != WindowEventType::None) {
-                    if (event.type == WindowEventType::Close) {
+                Event event;
+                while ((event = mainWindow.PollEvent()).type != EventType::None) {
+                    if (event.type == EventType::Close) {
                         stop = TRUE;
                     }
-                    else if (event.type == WindowEventType::Resize) {
+                    else if (event.type == EventType::Resize) {
                         dxContext.Flush(FRAME_COUNT);
                         mainWindow.ResizeSwapChain(dxContext.GetDeviceComPtr().Get());
                         mainWindow.ConfineCursor();
                         mainWindow.CenterCursor();
                         lastCursorPos = mainWindow.GetCursorPosition();
                     }
-                    else if (event.type == WindowEventType::Focus) {
+                    else if (event.type == EventType::Focus) {
                         mainWindow.ConfineCursor();
                         mainWindow.CenterCursor();
                         lastCursorPos = mainWindow.GetCursorPosition();
                     }
-                    else if (event.type == WindowEventType::Move) {
+                    else if (event.type == EventType::Move) {
                         mainWindow.ConfineCursor();
                         mainWindow.CenterCursor();
                         lastCursorPos = mainWindow.GetCursorPosition();
                     }
-                    else if (event.type == WindowEventType::KeyDown) {
+                    else if (event.type == EventType::KeyDown) {
                         if (event.key == Key::F11) {
                             mainWindow.SetFullscreen(!mainWindow.isFullscreen());
                             mainWindow.ConfineCursor();
@@ -151,14 +151,21 @@ int main()
                         }
                         keyStates[event.key] = TRUE;
                     }
-                    else if (event.type == WindowEventType::KeyUp) {
+                    else if (event.type == EventType::KeyUp) {
                         keyStates[event.key] = FALSE;
                     }
-                    else if (event.type == WindowEventType::MouseMove) {
+                    else if (event.type == EventType::MouseMove) {
                         DirectX::XMVECTOR cursorMovement = DirectX::XMVectorSet(
                             static_cast<FLOAT>(event.cursorPosition.x - lastCursorPos.x),
-                            static_cast<FLOAT>(event.cursorPosition.y - lastCursorPos.y), 0.f, 0.f
+                            static_cast<FLOAT>(lastCursorPos.y - event.cursorPosition.y), 0.f, 0.f
                         );
+                        DirectX::XMVECTOR axis =
+                            DirectX::XMVector3Cross(DirectX::XMVectorSet(0.f, 0.f, 1.f, 0.f), cursorMovement);
+                        if (!DirectX::XMVector3Equal(axis, DirectX::XMVectorZero())) {
+                            FLOAT angle = -DirectX::XMVectorGetX(DirectX::XMVector3Length(cursorMovement)) * .001f;
+                            viewMatrix =
+                                DirectX::XMMatrixMultiply(DirectX::XMMatrixRotationAxis(axis, angle), viewMatrix);
+                        }
                         mainWindow.CenterCursor();
                         lastCursorPos = mainWindow.GetCursorPosition();
                     }
@@ -220,7 +227,7 @@ int main()
 
                 mainWindow.Present();
 
-                std::this_thread::sleep_for(std::chrono::milliseconds(160));
+                std::this_thread::sleep_for(std::chrono::milliseconds(30));
             }
 
             dxContext.Flush(FRAME_COUNT);
