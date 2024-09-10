@@ -46,23 +46,12 @@ int main()
 
             UINT32 indices[6]{0, 1, 3, 1, 2, 3};
 
-            LightSource lightSource1{
-                .position{-1.f, 1.f, 0.f},
-                .color{0.4f, 1.f, 1.f},
-                .intensity = .4f
-            };
-             
-            LightSource lightSource2{
-                .position{1.f, 1.f, 0.f},
-                .color{1.f, 0.4f, 1.f},
-                .intensity = .4f
-            };
+            LightSource lightSource1{.position{-1.f, 1.f, 0.f}, .color{0.4f, 1.f, 1.f}, .intensity = .4f};
 
-            LightCBuffer lightCBufferData{
-                .lightSource{lightSource1, lightSource2},
-                .lightCount = 2
-            };
-            
+            LightSource lightSource2{.position{1.f, 1.f, 0.f}, .color{1.f, 0.4f, 1.f}, .intensity = .4f};
+
+            LightCBuffer lightCBufferData{.lightSource{lightSource1, lightSource2}, .lightCount = 2};
+
             lightCBuffer.CopyData(&lightCBufferData, sizeof(LightCBuffer));
 
             dxContext.ResetCmdList();
@@ -109,9 +98,9 @@ int main()
 
             DirectX::XMMATRIX viewMatrix = DirectX::XMMatrixIdentity();
 
-            std::unordered_map<Key, BOOL> keyStates{
-                {Key::W, FALSE}, {Key::A, FALSE}, {Key::S, FALSE}, {Key::D, FALSE}, {Key::F11, FALSE}
-            };
+            std::unordered_map<Key, BOOL> keyStates{{Key::W, FALSE},  {Key::A, FALSE},     {Key::S, FALSE},
+                                                    {Key::D, FALSE},  {Key::Space, FALSE}, {Key::Shift, FALSE},
+                                                    {Key::F11, FALSE}};
 
             BOOL stop = FALSE;
             POINT lastCursorPos = mainWindow.GetCursorPosition();
@@ -157,8 +146,9 @@ int main()
                     else if (event.type == EventType::MouseMove) {
                         FLOAT xAngle = static_cast<FLOAT>(event.cursorPosition.y - lastCursorPos.y) * -.001f;
                         FLOAT yAngle = static_cast<FLOAT>(event.cursorPosition.x - lastCursorPos.x) * -.001f;
-                        FLOAT zTranslation = 0.f;
                         FLOAT xTranslation = 0.f;
+                        FLOAT yTranslation = 0.f;
+                        FLOAT zTranslation = 0.f;
                         if (keyStates.at(Key::W)) {
                             zTranslation -= .1f;
                         }
@@ -171,9 +161,15 @@ int main()
                         if (keyStates.at(Key::D)) {
                             xTranslation -= .1f;
                         }
+                        if (keyStates.at(Key::Space)) {
+                            yTranslation -= .1f;
+                        }
+                        if (keyStates.at(Key::Shift)) {
+                            yTranslation += .1f;
+                        }
                         DirectX::XMMATRIX rotationMatrix1 = DirectX::XMMatrixRotationX(-xPlaneAngle);
                         DirectX::XMMATRIX translationMatrix =
-                            DirectX::XMMatrixTranslation(xTranslation, 0.f, zTranslation);
+                            DirectX::XMMatrixTranslation(xTranslation, yTranslation, zTranslation);
                         DirectX::XMMATRIX rotationMatrix2 = DirectX::XMMatrixRotationY(yAngle);
                         DirectX::XMMATRIX rotationMatrix3 = DirectX::XMMatrixRotationX(xAngle + xPlaneAngle);
                         viewMatrix = DirectX::XMMatrixMultiply(viewMatrix, rotationMatrix1);
@@ -231,7 +227,7 @@ int main()
                 cameraCBuffer.CopyData(&cameraCBufferData, sizeof(CameraCBuffer));
 
                 cmdList->SetGraphicsRootConstantBufferView(0, cameraCBuffer.GetComPtr()->GetGPUVirtualAddress());
-                
+
                 cmdList->SetGraphicsRootConstantBufferView(1, lightCBuffer.GetComPtr()->GetGPUVirtualAddress());
 
                 cmdList->DrawIndexedInstanced(6, 1, 0, 0, 0);

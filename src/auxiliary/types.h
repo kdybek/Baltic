@@ -60,6 +60,8 @@ namespace Baltic
         A,
         S,
         D,
+        Space,
+        Shift,
         F11
     };
 

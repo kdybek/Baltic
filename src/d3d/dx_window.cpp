@@ -35,9 +35,6 @@ namespace Baltic
 
                 std::unique_lock<std::mutex> lock(windowPtr->m_eventQueueMutex);
                 switch (wParam) {
-                    case VK_F11:
-                        windowPtr->m_eventQueue.push({.type = EventType::KeyDown, .key = Key::F11});
-                        break;
                     case 'W':
                         windowPtr->m_eventQueue.push({.type = EventType::KeyDown, .key = Key::W});
                         break;
@@ -49,6 +46,15 @@ namespace Baltic
                         break;
                     case 'D':
                         windowPtr->m_eventQueue.push({.type = EventType::KeyDown, .key = Key::D});
+                        break;
+                    case VK_SPACE:
+                        windowPtr->m_eventQueue.push({.type = EventType::KeyDown, .key = Key::Space});
+                        break;
+                    case VK_SHIFT:
+                        windowPtr->m_eventQueue.push({.type = EventType::KeyDown, .key = Key::Shift});
+                        break;
+                    case VK_F11:
+                        windowPtr->m_eventQueue.push({.type = EventType::KeyDown, .key = Key::F11});
                         break;
                 }
                 lock.unlock();
@@ -63,9 +69,6 @@ namespace Baltic
 
                 std::unique_lock<std::mutex> lock(windowPtr->m_eventQueueMutex);
                 switch (wParam) {
-                    case VK_F11:
-                        windowPtr->m_eventQueue.push({.type = EventType::KeyUp, .key = Key::F11});
-                        break;
                     case 'W':
                         windowPtr->m_eventQueue.push({.type = EventType::KeyUp, .key = Key::W});
                         break;
@@ -77,6 +80,15 @@ namespace Baltic
                         break;
                     case 'D':
                         windowPtr->m_eventQueue.push({.type = EventType::KeyUp, .key = Key::D});
+                        break;
+                    case VK_SPACE:
+                        windowPtr->m_eventQueue.push({.type = EventType::KeyUp, .key = Key::Space});
+                        break;
+                    case VK_SHIFT:
+                        windowPtr->m_eventQueue.push({.type = EventType::KeyUp, .key = Key::Shift});
+                        break;
+                    case VK_F11:
+                        windowPtr->m_eventQueue.push({.type = EventType::KeyUp, .key = Key::F11});
                         break;
                 }
                 lock.unlock();
