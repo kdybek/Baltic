@@ -4,19 +4,23 @@
 
 namespace Baltic
 {
-    void CopyDataToResource(const DXResource& resource, const void* data, UINT64 size, UINT64 offset)
+
+    DXResource::DXResource(const ComPtr<ID3D12Resource2>& resource, D3D12_RESOURCE_STATES resourceState)
+        : m_resource(resource), m_state(resourceState)
     {
-        void* mappedData;
-        DXThrowIfFailed(resource.resourceComPtr->Map(0, nullptr, &mappedData));
-        std::memcpy(static_cast<BYTE*>(mappedData) + offset, data, size);
-        resource.resourceComPtr->Unmap(0, nullptr);
     }
 
-    void QueueTransition(
-        const DXResource& resource, D3D12_RESOURCE_STATES newState, std::vector<D3D12_RESOURCE_BARRIER>& barriers
-    )
+    void DXResource::CopyData(const void* data, UINT64 size, UINT64 offset)
     {
-        if (resource.resourceState == newState) {
+        void* mappedData;
+        DXThrowIfFailed(m_resource->Map(0, nullptr, &mappedData));
+        std::memcpy(static_cast<BYTE*>(mappedData) + offset, data, size);
+        m_resource->Unmap(0, nullptr);
+    }
+
+    void DXResource::QueueTransition(D3D12_RESOURCE_STATES newState, std::vector<D3D12_RESOURCE_BARRIER>& barriers)
+    {
+        if (m_state == newState) {
             return;
         }
 
@@ -24,9 +28,9 @@ namespace Baltic
             .Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION,
             .Flags = D3D12_RESOURCE_BARRIER_FLAG_NONE,
             .Transition{
-                .pResource = resource.resourceComPtr.Get(),
+                .pResource = m_resource.Get(),
                 .Subresource = D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES,
-                .StateBefore = resource.resourceState,
+                .StateBefore = m_state,
                 .StateAfter = newState
             }
         };
@@ -57,14 +61,15 @@ namespace Baltic
             .Flags = D3D12_RESOURCE_FLAG_NONE
         };
 
-        DXResource resource{.resourceComPtr = nullptr, .resourceState = D3D12_RESOURCE_STATE_GENERIC_READ};
+        ComPtr<ID3D12Resource2> resource;
+        D3D12_RESOURCE_STATES resourceState = D3D12_RESOURCE_STATE_GENERIC_READ;
 
         DXThrowIfFailed(device->CreateCommittedResource(
-            &heapProperties, D3D12_HEAP_FLAG_NONE, &resourceDesc, resource.resourceState, nullptr,
-            IID_PPV_ARGS(&resource.resourceComPtr)
+            &heapProperties, D3D12_HEAP_FLAG_NONE, &resourceDesc, resourceState, nullptr,
+            IID_PPV_ARGS(&resource)
         ));
 
-        return resource;
+        return DXResource(resource, resourceState);
     }
 
     DXResource CreateGPUBuffer(UINT64 size, D3D12_RESOURCE_STATES resourceState, ID3D12Device5* device)
@@ -90,14 +95,14 @@ namespace Baltic
             .Flags = D3D12_RESOURCE_FLAG_NONE
         };
 
-        DXResource resource{.resourceComPtr = nullptr, .resourceState = resourceState};
+        ComPtr<ID3D12Resource2> resource;
 
         DXThrowIfFailed(device->CreateCommittedResource(
-            &heapProperties, D3D12_HEAP_FLAG_NONE, &resourceDesc, resource.resourceState, nullptr,
-            IID_PPV_ARGS(&resource.resourceComPtr)
+            &heapProperties, D3D12_HEAP_FLAG_NONE, &resourceDesc, resourceState, nullptr,
+            IID_PPV_ARGS(&resource)
         ));
 
-        return resource;
+        return DXResource(resource, resourceState);
     }
 
     DXResource CreateDepthStencilBuffer(
@@ -127,14 +132,14 @@ namespace Baltic
 
         D3D12_CLEAR_VALUE clearValue{.Format = format, .DepthStencil{.Depth = 1.0f, .Stencil = 0}};
 
-        DXResource resource{.resourceComPtr = nullptr, .resourceState = resourceState};
+        ComPtr<ID3D12Resource2> resource;
 
         DXThrowIfFailed(device->CreateCommittedResource(
-            &heapProperties, D3D12_HEAP_FLAG_NONE, &resourceDesc, resource.resourceState, &clearValue,
-            IID_PPV_ARGS(&resource.resourceComPtr)
+            &heapProperties, D3D12_HEAP_FLAG_NONE, &resourceDesc, resourceState, &clearValue,
+            IID_PPV_ARGS(&resource)
         ));
 
-        return resource;
+        return DXResource(resource, resourceState);
     }
 
     void StageCmdResourceBarrier(

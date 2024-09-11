@@ -17,44 +17,30 @@ namespace Baltic
     {
     public:
         DXWindow(UINT width, UINT height, DXContext& context);
-
         ~DXWindow();
 
         DXWindow(const DXWindow&) = delete;
-
         DXWindow& operator=(const DXWindow&) = delete;
 
         void Update();
-
         void Present();
-
         [[nodiscard]] Event PollEvent();
-
         void ResizeSwapChain(ID3D12Device8* device);
-
         void ConfineCursor();
-
         void CenterCursor();
-
         [[nodiscard]] POINT GetCursorPosition();
-
         void SetFullscreen(BOOL enable);
-
         void StageCmdBeginFrame(ID3D12GraphicsCommandList6* cmdList);
-
         void StageCmdEndFrame(ID3D12GraphicsCommandList6* cmdList);
 
         [[nodiscard]] inline UINT GetWidth() const { return m_width; }
-
         [[nodiscard]] inline UINT GetHeight() const { return m_height; }
-
         [[nodiscard]] inline BOOL isFullscreen() const { return m_isFullscreen; }
 
     private:
         friend LRESULT CALLBACK OnWindowMessage(HWND wnd, UINT msg, WPARAM wParam, LPARAM lParam);
 
         void GetBuffers(ID3D12Device8* device);
-
         void ReleaseBuffers();
 
     private:

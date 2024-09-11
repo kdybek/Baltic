@@ -12,27 +12,19 @@ namespace Baltic
     {
     public:
         DXContext();
-
         ~DXContext();
 
         DXContext(const DXContext&) = delete;
-
         DXContext& operator=(const DXContext&) = delete;
 
         void SignalAndWait();
-
         void ResetCmdList();
-
         void ExecuteCmdList();
-
         void Flush(UINT count);
 
         [[nodiscard]] inline const ComPtr<IDXGIFactory7>& GetFactoryComPtr() { return m_factory; }
-
         [[nodiscard]] inline const ComPtr<ID3D12Device8>& GetDeviceComPtr() { return m_device; }
-
         [[nodiscard]] inline const ComPtr<ID3D12CommandQueue>& GetCmdQueueComPtr() { return m_cmdQueue; }
-
         [[nodiscard]] inline const ComPtr<ID3D12GraphicsCommandList6>& GetCmdListComPtr() { return m_cmdList; }
 
     private:

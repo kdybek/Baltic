@@ -8,14 +8,20 @@
 
 namespace Baltic
 {
-    struct DXResource
+    class DXResource
     {
-        ComPtr<ID3D12Resource2> resourceComPtr;
-        D3D12_RESOURCE_STATES resourceState;
-    };
+    public:
+        DXResource(const ComPtr<ID3D12Resource2>& resource, D3D12_RESOURCE_STATES resourceState);
 
-    void CopyDataToResource(const DXResource& resource, const void* data, UINT64 size, UINT64 offset = 0);
-    void QueueTransition(const DXResource& resource, D3D12_RESOURCE_STATES newState, std::vector<D3D12_RESOURCE_BARRIER>& barriers);
+        void CopyData(const void* data, UINT64 size, UINT64 offset = 0);
+        void QueueTransition(D3D12_RESOURCE_STATES newState, std::vector<D3D12_RESOURCE_BARRIER>& barriers);
+
+        [[nodiscard]] inline const ComPtr<ID3D12Resource2>& GetComPtr() const { return m_resource; }
+
+    private:
+        ComPtr<ID3D12Resource2> m_resource;
+        D3D12_RESOURCE_STATES m_state;
+    };
 
     DXResource CreateUploadBuffer(UINT64 size, ID3D12Device5* device);
     DXResource CreateGPUBuffer(UINT64 size, D3D12_RESOURCE_STATES resourceState, ID3D12Device5* device);
