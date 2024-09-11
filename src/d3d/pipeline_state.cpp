@@ -51,7 +51,7 @@ namespace Baltic
                 .ConservativeRaster = D3D12_CONSERVATIVE_RASTERIZATION_MODE_OFF
             },
             .DepthStencilState{
-                .DepthEnable = TRUE,
+                .DepthEnable = FALSE,
                 .DepthWriteMask = D3D12_DEPTH_WRITE_MASK_ALL,
                 .DepthFunc = D3D12_COMPARISON_FUNC_LESS,
                 .StencilEnable = FALSE,

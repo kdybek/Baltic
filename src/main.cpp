@@ -103,7 +103,7 @@ int main()
 
             BOOL stop = FALSE;
             POINT lastCursorPos = mainWindow.GetCursorPosition();
-            FLOAT xPlaneAngle = 0.f;
+            FLOAT xzPlaneAngle = 0.f;
 
             while (!stop) {
                 mainWindow.Update();
@@ -166,16 +166,22 @@ int main()
                         if (keyStates.at(Key::Shift)) {
                             yTranslation += .1f;
                         }
-                        DirectX::XMMATRIX rotationMatrix1 = DirectX::XMMatrixRotationX(-xPlaneAngle);
+                        if (xAngle + xzPlaneAngle > DirectX::XM_PIDIV2) {
+                            xAngle = DirectX::XM_PIDIV2 - xzPlaneAngle;
+                        }
+                        else if (xAngle + xzPlaneAngle < -DirectX::XM_PIDIV2) {
+                            xAngle = -DirectX::XM_PIDIV2 - xzPlaneAngle;
+                        }
+                        DirectX::XMMATRIX rotationMatrix1 = DirectX::XMMatrixRotationX(-xzPlaneAngle);
                         DirectX::XMMATRIX translationMatrix =
                             DirectX::XMMatrixTranslation(xTranslation, yTranslation, zTranslation);
                         DirectX::XMMATRIX rotationMatrix2 = DirectX::XMMatrixRotationY(yAngle);
-                        DirectX::XMMATRIX rotationMatrix3 = DirectX::XMMatrixRotationX(xAngle + xPlaneAngle);
+                        DirectX::XMMATRIX rotationMatrix3 = DirectX::XMMatrixRotationX(xAngle + xzPlaneAngle);
                         viewMatrix = DirectX::XMMatrixMultiply(viewMatrix, rotationMatrix1);
                         viewMatrix = DirectX::XMMatrixMultiply(viewMatrix, translationMatrix);
                         viewMatrix = DirectX::XMMatrixMultiply(viewMatrix, rotationMatrix2);
                         viewMatrix = DirectX::XMMatrixMultiply(viewMatrix, rotationMatrix3);
-                        xPlaneAngle += xAngle;
+                        xzPlaneAngle += xAngle;
                         mainWindow.CenterCursor();
                         lastCursorPos = mainWindow.GetCursorPosition();
                     }
