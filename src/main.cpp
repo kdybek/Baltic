@@ -33,14 +33,14 @@ int main()
 
             std::vector<D3D12_RESOURCE_BARRIER> barriers;
 
-            DXResource uploadBuffer = CreateUploadBuffer(1024, dxContext.GetDeviceComPtr().Get());
-            DXResource vertexBuffer =
+            ComPtr<ID3D12Resource2> uploadBuffer = CreateUploadBuffer(1024, dxContext.GetDeviceComPtr().Get());
+            ComPtr<ID3D12Resource2> vertexBuffer =
                 CreateGPUBuffer(1024, D3D12_RESOURCE_STATE_COMMON, dxContext.GetDeviceComPtr().Get());
-            DXResource indexBuffer =
+            ComPtr<ID3D12Resource2> indexBuffer =
                 CreateGPUBuffer(1024, D3D12_RESOURCE_STATE_COMMON, dxContext.GetDeviceComPtr().Get());
-            DXResource cameraCBuffer =
+            ComPtr<ID3D12Resource2> cameraCBuffer =
                 CreateUploadBuffer(((sizeof(CameraCBuffer) + 255) & ~255), dxContext.GetDeviceComPtr().Get());
-            DXResource lightCBuffer =
+            ComPtr<ID3D12Resource2> lightCBuffer =
                 CreateUploadBuffer(((sizeof(LightCBuffer) + 255) & ~255), dxContext.GetDeviceComPtr().Get());
 
             VertexBufferElement vertices[12]{{.position{-.5f, -.5f, 1.f}}, {.position{-.5f, .5f, 1.f}},
@@ -59,43 +59,48 @@ int main()
 
             LightCBuffer lightCBufferData{.lightSource{lightSource1, lightSource2}, .lightCount = 2};
 
-            lightCBuffer.CopyData(&lightCBufferData, sizeof(LightCBuffer));
+            CopyDataToResource(lightCBuffer.Get(), &lightCBufferData, sizeof(LightCBuffer));
 
             dxContext.ResetCmdList();
-            uploadBuffer.CopyData(vertices, sizeof(vertices));
-            vertexBuffer.QueueTransition(D3D12_RESOURCE_STATE_COPY_DEST, barriers);
+            CopyDataToResource(uploadBuffer.Get(), vertices, sizeof(vertices));
+            QueueTransition(vertexBuffer.Get(), D3D12_RESOURCE_STATE_COMMON, D3D12_RESOURCE_STATE_COPY_DEST, barriers);
             StageCmdResourceBarrier(dxContext.GetCmdListComPtr().Get(), barriers);
             barriers.clear();
             dxContext.GetCmdListComPtr()->CopyBufferRegion(
-                vertexBuffer.GetComPtr().Get(), 0, uploadBuffer.GetComPtr().Get(), 0, sizeof(vertices)
+                vertexBuffer.Get(), 0, uploadBuffer.Get(), 0, sizeof(vertices)
             );
             dxContext.ExecuteCmdList();
 
             dxContext.ResetCmdList();
-            uploadBuffer.CopyData(indices, sizeof(indices));
-            indexBuffer.QueueTransition(D3D12_RESOURCE_STATE_COPY_DEST, barriers);
+            CopyDataToResource(uploadBuffer.Get(), indices, sizeof(indices));
+            QueueTransition(indexBuffer.Get(), D3D12_RESOURCE_STATE_COMMON, D3D12_RESOURCE_STATE_COPY_DEST, barriers);
             StageCmdResourceBarrier(dxContext.GetCmdListComPtr().Get(), barriers);
             barriers.clear();
             dxContext.GetCmdListComPtr()->CopyBufferRegion(
-                indexBuffer.GetComPtr().Get(), 0, uploadBuffer.GetComPtr().Get(), 0, sizeof(indices)
+                indexBuffer.Get(), 0, uploadBuffer.Get(), 0, sizeof(indices)
             );
             dxContext.ExecuteCmdList();
 
             dxContext.ResetCmdList();
-            vertexBuffer.QueueTransition(D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER, barriers);
-            indexBuffer.QueueTransition(D3D12_RESOURCE_STATE_INDEX_BUFFER, barriers);
+            QueueTransition(
+                vertexBuffer.Get(), D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER,
+                barriers
+            );
+            QueueTransition(
+                indexBuffer.Get(), D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_INDEX_BUFFER, barriers
+            );
             StageCmdResourceBarrier(dxContext.GetCmdListComPtr().Get(), barriers);
             barriers.clear();
             dxContext.ExecuteCmdList();
 
             D3D12_VERTEX_BUFFER_VIEW vertexBufferView{
-                .BufferLocation = vertexBuffer.GetComPtr()->GetGPUVirtualAddress(),
+                .BufferLocation = vertexBuffer->GetGPUVirtualAddress(),
                 .SizeInBytes = sizeof(vertices),
                 .StrideInBytes = sizeof(VertexBufferElement)
             };
 
             D3D12_INDEX_BUFFER_VIEW indexBufferView{
-                .BufferLocation = indexBuffer.GetComPtr()->GetGPUVirtualAddress(),
+                .BufferLocation = indexBuffer->GetGPUVirtualAddress(),
                 .SizeInBytes = sizeof(indices),
                 .Format = DXGI_FORMAT_R32_UINT
             };
@@ -251,11 +256,11 @@ int main()
                     )
                 };
 
-                cameraCBuffer.CopyData(&cameraCBufferData, sizeof(CameraCBuffer));
+                CopyDataToResource(cameraCBuffer.Get(), &cameraCBufferData, sizeof(CameraCBuffer));
 
-                cmdList->SetGraphicsRootConstantBufferView(0, cameraCBuffer.GetComPtr()->GetGPUVirtualAddress());
+                cmdList->SetGraphicsRootConstantBufferView(0, cameraCBuffer->GetGPUVirtualAddress());
 
-                cmdList->SetGraphicsRootConstantBufferView(1, lightCBuffer.GetComPtr()->GetGPUVirtualAddress());
+                cmdList->SetGraphicsRootConstantBufferView(1, lightCBuffer->GetGPUVirtualAddress());
 
                 cmdList->DrawIndexedInstanced(39, 1, 0, 0, 0);
 

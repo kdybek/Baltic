@@ -4,41 +4,7 @@
 
 namespace Baltic
 {
-
-    DXResource::DXResource(const ComPtr<ID3D12Resource2>& resource, D3D12_RESOURCE_STATES resourceState)
-        : m_resource(resource), m_state(resourceState)
-    {
-    }
-
-    void DXResource::CopyData(const void* data, UINT64 size, UINT64 offset)
-    {
-        void* mappedData;
-        DXThrowIfFailed(m_resource->Map(0, nullptr, &mappedData));
-        std::memcpy(static_cast<BYTE*>(mappedData) + offset, data, size);
-        m_resource->Unmap(0, nullptr);
-    }
-
-    void DXResource::QueueTransition(D3D12_RESOURCE_STATES newState, std::vector<D3D12_RESOURCE_BARRIER>& barriers)
-    {
-        if (m_state == newState) {
-            return;
-        }
-
-        D3D12_RESOURCE_BARRIER barrier{
-            .Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION,
-            .Flags = D3D12_RESOURCE_BARRIER_FLAG_NONE,
-            .Transition{
-                .pResource = m_resource.Get(),
-                .Subresource = D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES,
-                .StateBefore = m_state,
-                .StateAfter = newState
-            }
-        };
-
-        barriers.push_back(barrier);
-    }
-
-    DXResource CreateUploadBuffer(UINT64 size, ID3D12Device5* device)
+    ComPtr<ID3D12Resource2> CreateUploadBuffer(UINT64 size, ID3D12Device5* device)
     {
         D3D12_HEAP_PROPERTIES heapProperties{
             .Type = D3D12_HEAP_TYPE_UPLOAD,
@@ -62,17 +28,16 @@ namespace Baltic
         };
 
         ComPtr<ID3D12Resource2> resource;
-        D3D12_RESOURCE_STATES resourceState = D3D12_RESOURCE_STATE_GENERIC_READ;
 
         DXThrowIfFailed(device->CreateCommittedResource(
-            &heapProperties, D3D12_HEAP_FLAG_NONE, &resourceDesc, resourceState, nullptr,
+            &heapProperties, D3D12_HEAP_FLAG_NONE, &resourceDesc, D3D12_RESOURCE_STATE_GENERIC_READ, nullptr,
             IID_PPV_ARGS(&resource)
         ));
 
-        return DXResource(resource, resourceState);
+        return resource;
     }
 
-    DXResource CreateGPUBuffer(UINT64 size, D3D12_RESOURCE_STATES resourceState, ID3D12Device5* device)
+    ComPtr<ID3D12Resource2> CreateGPUBuffer(UINT64 size, D3D12_RESOURCE_STATES resourceState, ID3D12Device5* device)
     {
         D3D12_HEAP_PROPERTIES heapProperties{
             .Type = D3D12_HEAP_TYPE_DEFAULT,
@@ -98,14 +63,13 @@ namespace Baltic
         ComPtr<ID3D12Resource2> resource;
 
         DXThrowIfFailed(device->CreateCommittedResource(
-            &heapProperties, D3D12_HEAP_FLAG_NONE, &resourceDesc, resourceState, nullptr,
-            IID_PPV_ARGS(&resource)
+            &heapProperties, D3D12_HEAP_FLAG_NONE, &resourceDesc, resourceState, nullptr, IID_PPV_ARGS(&resource)
         ));
 
-        return DXResource(resource, resourceState);
+        return resource;
     }
 
-    DXResource CreateDepthStencilBuffer(
+    ComPtr<ID3D12Resource2> CreateDepthStencilBuffer(
         UINT width, UINT height, DXGI_FORMAT format, D3D12_RESOURCE_STATES resourceState, ID3D12Device5* device
     )
     {
@@ -135,11 +99,37 @@ namespace Baltic
         ComPtr<ID3D12Resource2> resource;
 
         DXThrowIfFailed(device->CreateCommittedResource(
-            &heapProperties, D3D12_HEAP_FLAG_NONE, &resourceDesc, resourceState, &clearValue,
-            IID_PPV_ARGS(&resource)
+            &heapProperties, D3D12_HEAP_FLAG_NONE, &resourceDesc, resourceState, &clearValue, IID_PPV_ARGS(&resource)
         ));
 
-        return DXResource(resource, resourceState);
+        return resource;
+    }
+
+    void CopyDataToResource(ID3D12Resource2* resource, const void* data, UINT64 size, UINT64 offset)
+    {
+        void* mappedData;
+        DXThrowIfFailed(resource->Map(0, nullptr, &mappedData));
+        std::memcpy(static_cast<BYTE*>(mappedData) + offset, data, size);
+        resource->Unmap(0, nullptr);
+    }
+
+    void QueueTransition(
+        ID3D12Resource2* resource, D3D12_RESOURCE_STATES oldState, D3D12_RESOURCE_STATES newState,
+        std::vector<D3D12_RESOURCE_BARRIER>& barriers
+    )
+    {
+        D3D12_RESOURCE_BARRIER barrier{
+            .Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION,
+            .Flags = D3D12_RESOURCE_BARRIER_FLAG_NONE,
+            .Transition{
+                .pResource = resource,
+                .Subresource = D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES,
+                .StateBefore = oldState,
+                .StateAfter = newState
+            }
+        };
+
+        barriers.push_back(barrier);
     }
 
     void StageCmdResourceBarrier(

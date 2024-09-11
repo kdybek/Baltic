@@ -157,14 +157,14 @@ namespace Baltic
             }
         }
         catch (const BalticException& e) {
-            std::cerr << "[WndProc Error]" << e.what() << std::endl;
+            std::cerr << "[WndProc Error] " << e.what() << std::endl;
             return FALSE;
         }
     }
 
     DXWindow::DXWindow(UINT width, UINT height, DXContext& dxContext)
         : m_wndClass(0),
-          m_window(nullptr),
+          m_windowHandle(nullptr),
           m_width(width),
           m_height(height),
           m_isFullscreen(FALSE),
@@ -189,7 +189,7 @@ namespace Baltic
             throw BalticException("RegisterClassExW");
         }
 
-        if (!(m_window = CreateWindowExW(
+        if (!(m_windowHandle = CreateWindowExW(
                   WS_EX_OVERLAPPEDWINDOW | WS_EX_APPWINDOW, reinterpret_cast<LPCWSTR>(m_wndClass), L"Baltic",
                   WS_OVERLAPPEDWINDOW | WS_VISIBLE, 100, 100, 1920, 1080, nullptr, nullptr, wcex.hInstance, this
               ))) {
@@ -217,7 +217,7 @@ namespace Baltic
         ComPtr<IDXGISwapChain1> swapChain1;
 
         DXThrowIfFailed(factory->CreateSwapChainForHwnd(
-            dxContext.GetCmdQueueComPtr().Get(), m_window, &swapChainDesc, &swapChainFullscreenDesc, nullptr,
+            dxContext.GetCmdQueueComPtr().Get(), m_windowHandle, &swapChainDesc, &swapChainFullscreenDesc, nullptr,
             &swapChain1
         ));
 
@@ -249,8 +249,8 @@ namespace Baltic
 
     DXWindow::~DXWindow()
     {
-        if (m_window) {
-            DestroyWindow(m_window);
+        if (m_windowHandle) {
+            DestroyWindow(m_windowHandle);
         }
 
         if (m_wndClass) {
@@ -261,7 +261,7 @@ namespace Baltic
     void DXWindow::Update()
     {
         MSG msg;
-        while (PeekMessageW(&msg, m_window, 0, 0, PM_REMOVE)) {
+        while (PeekMessageW(&msg, m_windowHandle, 0, 0, PM_REMOVE)) {
             TranslateMessage(&msg);
             DXThrowIfFailed(DispatchMessageW(&msg));
         }
@@ -285,7 +285,7 @@ namespace Baltic
     void DXWindow::ResizeSwapChain(ID3D12Device8* device)
     {
         RECT clientRect;
-        if (!GetClientRect(m_window, &clientRect)) {
+        if (!GetClientRect(m_windowHandle, &clientRect)) {
             throw BalticException("GetClientRect");
         }
 
@@ -305,14 +305,14 @@ namespace Baltic
     void DXWindow::ConfineCursor()
     {
         RECT clientRect;
-        if (!GetClientRect(m_window, &clientRect)) {
+        if (!GetClientRect(m_windowHandle, &clientRect)) {
             throw BalticException("GetClientRect");
         }
 
         POINT topLeft{clientRect.left, clientRect.top};
         POINT bottomRight{clientRect.right, clientRect.bottom};
 
-        if (!ClientToScreen(m_window, &topLeft) || !ClientToScreen(m_window, &bottomRight)) {
+        if (!ClientToScreen(m_windowHandle, &topLeft) || !ClientToScreen(m_windowHandle, &bottomRight)) {
             throw BalticException("ClientToScreen");
         }
 
@@ -329,7 +329,7 @@ namespace Baltic
     void DXWindow::CenterCursor()
     {
         RECT clientRect;
-        if (!GetClientRect(m_window, &clientRect)) {
+        if (!GetClientRect(m_windowHandle, &clientRect)) {
             throw BalticException("GetClientRect");
         }
 
@@ -338,7 +338,7 @@ namespace Baltic
             .y = clientRect.top + (clientRect.bottom - clientRect.top) / 2
         };
 
-        if (!ClientToScreen(m_window, &center)) {
+        if (!ClientToScreen(m_windowHandle, &center)) {
             throw BalticException("ClientToScreen");
         }
 
@@ -354,7 +354,7 @@ namespace Baltic
             throw BalticException("GetCursorPos");
         }
 
-        if (!ScreenToClient(m_window, &cursorPos)) {
+        if (!ScreenToClient(m_windowHandle, &cursorPos)) {
             throw BalticException("ScreenToClient");
         }
 
@@ -371,20 +371,20 @@ namespace Baltic
             exStyle = WS_EX_APPWINDOW;
         }
 
-        SetWindowLongPtrW(m_window, GWL_STYLE, style);
-        SetWindowLongPtrW(m_window, GWL_EXSTYLE, exStyle);
+        SetWindowLongPtrW(m_windowHandle, GWL_STYLE, style);
+        SetWindowLongPtrW(m_windowHandle, GWL_EXSTYLE, exStyle);
 
         m_isFullscreen = enable;
 
         if (enable) {
-            HMONITOR monitor = MonitorFromWindow(m_window, MONITOR_DEFAULTTONEAREST);
+            HMONITOR monitor = MonitorFromWindow(m_windowHandle, MONITOR_DEFAULTTONEAREST);
             MONITORINFO monitorInfo{.cbSize = sizeof(monitorInfo)};
             if (!GetMonitorInfoW(monitor, &monitorInfo)) {
                 throw BalticException("GetMonitorInfoW");
             }
 
             if (!SetWindowPos(
-                    m_window, nullptr, monitorInfo.rcMonitor.left, monitorInfo.rcMonitor.top,
+                    m_windowHandle, nullptr, monitorInfo.rcMonitor.left, monitorInfo.rcMonitor.top,
                     monitorInfo.rcMonitor.right - monitorInfo.rcMonitor.left,
                     monitorInfo.rcMonitor.bottom - monitorInfo.rcMonitor.top, SWP_NOZORDER
                 )) {
@@ -392,7 +392,7 @@ namespace Baltic
             }
         }
         else {
-            ShowWindow(m_window, SW_MAXIMIZE);
+            ShowWindow(m_windowHandle, SW_MAXIMIZE);
         }
     }
 

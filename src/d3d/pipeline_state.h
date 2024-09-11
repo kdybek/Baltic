@@ -15,9 +15,6 @@ namespace Baltic
         PipelineState();
         ~PipelineState() = default;
 
-        PipelineState(const PipelineState&) = delete;
-        PipelineState& operator=(const PipelineState&) = delete;
-
         void StageRootSignature(ID3D12RootSignature* rootSignature);
         void StageVertexShader(const Shader& vertexShader);
         void StageGeometryShader(const Shader& geometryShader);

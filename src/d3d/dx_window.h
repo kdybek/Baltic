@@ -45,7 +45,7 @@ namespace Baltic
 
     private:
         ATOM m_wndClass;
-        HWND m_window;
+        HWND m_windowHandle;
         UINT m_width;
         UINT m_height;
         BOOL m_isFullscreen;
