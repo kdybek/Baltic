@@ -13,7 +13,6 @@
 #include "d3d/dx_context.h"
 #include "d3d/dx_resource.h"
 #include "d3d/dx_window.h"
-#include "d3d/pipeline_state.h"
 #include "d3d/shader.h"
 #include "debug/dx_debug_layer.h"
 
@@ -110,14 +109,14 @@ int main()
             Shader pixelShader("pixel_shader.cso");
             RootSignature rootSignature("root_signature.cso", dxContext.GetDeviceComPtr().Get());
 
-            PipelineState pipelineState;
-
-            pipelineState.StageRootSignature(rootSignature.GetComPtr().Get());
-            pipelineState.StageVertexShader(vertexShader);
-            pipelineState.StageGeometryShader(geometryShader);
-            pipelineState.StagePixelShader(pixelShader);
-            pipelineState.StageInputLayout(VB_INPUT_LAYOUT_DESC);
-            pipelineState.Finalize(dxContext.GetDeviceComPtr().Get());
+            D3D12_GRAPHICS_PIPELINE_STATE_DESC pipelineStateDesc = DEFAULT_PIPELINE_STATE_DESC;
+            pipelineStateDesc.pRootSignature = rootSignature.GetComPtr().Get();
+            pipelineStateDesc.VS = {vertexShader.GetData(), vertexShader.GetSize()};
+            pipelineStateDesc.GS = {geometryShader.GetData(), geometryShader.GetSize()};
+            pipelineStateDesc.PS = {pixelShader.GetData(), pixelShader.GetSize()};
+            pipelineStateDesc.InputLayout = VB_INPUT_LAYOUT_DESC;
+            ComPtr<ID3D12PipelineState> pipelineState;
+            dxContext.GetDeviceComPtr()->CreateGraphicsPipelineState(&pipelineStateDesc, IID_PPV_ARGS(&pipelineState));
 
             DXWindow mainWindow(1920, 1080, dxContext);
             mainWindow.SetFullscreen(TRUE);
@@ -220,7 +219,7 @@ int main()
 
                 mainWindow.StageCmdBeginFrame(cmdList.Get());
 
-                cmdList->SetPipelineState(pipelineState.GetComPtr().Get());
+                cmdList->SetPipelineState(pipelineState.Get());
                 cmdList->SetGraphicsRootSignature(rootSignature.GetComPtr().Get());
 
                 cmdList->IASetVertexBuffers(0, 1, &vertexBufferView);

@@ -16,8 +16,6 @@ set(SOURCES
     ${SOURCE_DIR}/main.cpp
     ${SOURCE_DIR}/d3d/dx_context.cpp
     ${SOURCE_DIR}/d3d/dx_context.h
-    ${SOURCE_DIR}/d3d/pipeline_state.cpp
-    ${SOURCE_DIR}/d3d/pipeline_state.h
     ${SOURCE_DIR}/d3d/dx_window.cpp
     ${SOURCE_DIR}/d3d/dx_window.h
     ${SOURCE_DIR}/d3d/shader.cpp
