@@ -33,7 +33,7 @@ void main(in PS_Input input, out PS_Output output)
     for (uint i = 0; i < numLights; i++)
     {
         float3 lightDirection = normalize(lightSources[i].position - input.worldPosition);
-        float lightIntensity = dot(input.normal, lightDirection);
+        float lightIntensity = max(0, dot(input.normal, lightDirection));
 
         output.color += float4(lightSources[i].color * lightIntensity, 0.0f) * lightSources[i].intensity;
     }

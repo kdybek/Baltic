@@ -9,6 +9,7 @@ namespace Baltic
     struct VertexBufferElement
     {
         DirectX::XMFLOAT3 position;
+        FLOAT padding;
 
     } __attribute__((packed));
 

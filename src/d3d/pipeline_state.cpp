@@ -39,7 +39,7 @@ namespace Baltic
             .SampleMask = UINT_MAX,
             .RasterizerState{
                 .FillMode = D3D12_FILL_MODE_SOLID,
-                .CullMode = D3D12_CULL_MODE_NONE,
+                .CullMode = D3D12_CULL_MODE_BACK,
                 .FrontCounterClockwise = FALSE,
                 .DepthBias = D3D12_DEFAULT_DEPTH_BIAS,
                 .DepthBiasClamp = D3D12_DEFAULT_DEPTH_BIAS_CLAMP,
@@ -51,9 +51,9 @@ namespace Baltic
                 .ConservativeRaster = D3D12_CONSERVATIVE_RASTERIZATION_MODE_OFF
             },
             .DepthStencilState{
-                .DepthEnable = FALSE,
-                .DepthWriteMask = D3D12_DEPTH_WRITE_MASK_ZERO,
-                .DepthFunc = D3D12_COMPARISON_FUNC_ALWAYS,
+                .DepthEnable = TRUE,
+                .DepthWriteMask = D3D12_DEPTH_WRITE_MASK_ALL,
+                .DepthFunc = D3D12_COMPARISON_FUNC_LESS,
                 .StencilEnable = FALSE,
                 .StencilReadMask = D3D12_DEFAULT_STENCIL_READ_MASK,
                 .StencilWriteMask = D3D12_DEFAULT_STENCIL_WRITE_MASK,

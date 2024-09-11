@@ -37,18 +37,17 @@ int main()
             GPUBuffer vertexBuffer(1024, dxContext.GetDeviceComPtr().Get());
             GPUBuffer indexBuffer(1024, dxContext.GetDeviceComPtr().Get());
 
-            VertexBufferElement vertices[4]{
-                {.position{-.5f, -.5f, 1.f}},
-                {.position{-.5f, .5f, 1.f}},
-                {.position{.5f, .5f, 1.f}},
-                {.position{.5f, -.5f, 1.f}}
-            };
+            VertexBufferElement vertices[8]{{.position{-.5f, -.5f, 1.f}}, {.position{-.5f, .5f, 1.f}},
+                                            {.position{.5f, .5f, 1.f}},   {.position{.5f, -.5f, 1.f}},
+                                            {.position{-.5f, -.5f, 2.f}}, {.position{-.5f, .5f, 2.f}},
+                                            {.position{.5f, .5f, 2.f}},   {.position{.5f, -.5f, 2.f}}};
 
-            UINT32 indices[6]{0, 1, 3, 1, 2, 3};
+            UINT32 indices[36]{0, 1, 3, 1, 2, 3, 4, 5, 0, 5, 1, 0, 7, 6, 4, 6, 5, 4,
+                               3, 2, 7, 2, 6, 7, 1, 5, 2, 5, 6, 2, 4, 0, 7, 0, 3, 7};
 
-            LightSource lightSource1{.position{-1.f, 1.f, 0.f}, .color{0.4f, 1.f, 1.f}, .intensity = .4f};
+            LightSource lightSource1{.position{-1.f, 1.f, 0.f}, .color{0.4f, 1.f, 1.f}, .intensity = .9f};
 
-            LightSource lightSource2{.position{1.f, 1.f, 0.f}, .color{1.f, 0.4f, 1.f}, .intensity = .4f};
+            LightSource lightSource2{.position{1.f, -1.f, 3.f}, .color{1.f, 0.4f, 1.f}, .intensity = .9f};
 
             LightCBuffer lightCBufferData{.lightSource{lightSource1, lightSource2}, .lightCount = 2};
 
@@ -230,7 +229,7 @@ int main()
 
                 cmdList->SetGraphicsRootConstantBufferView(1, lightCBuffer.GetComPtr()->GetGPUVirtualAddress());
 
-                cmdList->DrawIndexedInstanced(6, 1, 0, 0, 0);
+                cmdList->DrawIndexedInstanced(36, 1, 0, 0, 0);
 
                 mainWindow.StageCmdEndFrame(cmdList.Get());
 
