@@ -1,10 +1,29 @@
-#include "d3d/buffers.h"
+#include "d3d/dx_resource.h"
 
 #include "auxiliary/baltic_exception.h"
 
 namespace Baltic
 {
-    UploadBuffer::UploadBuffer(UINT64 size, ID3D12Device5* device)
+    DXResource::DXResource(
+        D3D12_HEAP_PROPERTIES heapProperties, D3D12_RESOURCE_DESC resourceDesc, D3D12_RESOURCE_STATES resourceState,
+        ID3D12Device5* device
+    )
+        : m_resourceState(resourceState)
+    {
+        DXThrowIfFailed(device->CreateCommittedResource(
+            &heapProperties, D3D12_HEAP_FLAG_NONE, &resourceDesc, resourceState, nullptr, IID_PPV_ARGS(&m_resource)
+        ));
+    }
+
+    void DXResource::CopyData(const void* data, UINT64 size, UINT64 offset)
+    {
+        void* mappedData;
+        DXThrowIfFailed(m_resource->Map(0, nullptr, &mappedData));
+        std::memcpy(static_cast<BYTE*>(mappedData) + offset, data, size);
+        m_resource->Unmap(0, nullptr);
+    }
+
+    DXResource CreateUploadBuffer(UINT64 size, ID3D12Device5* device, D3D12_RESOURCE_STATES resourceState)
     {
         D3D12_HEAP_PROPERTIES heapPropertiesUpload{
             .Type = D3D12_HEAP_TYPE_UPLOAD,
@@ -27,28 +46,10 @@ namespace Baltic
             .Flags = D3D12_RESOURCE_FLAG_NONE
         };
 
-        DXThrowIfFailed(device->CreateCommittedResource(
-            &heapPropertiesUpload, D3D12_HEAP_FLAG_NONE, &resourceDesc, D3D12_RESOURCE_STATE_GENERIC_READ, nullptr,
-            IID_PPV_ARGS(&m_uploadBuffer)
-        ));
+        return DXResource(heapPropertiesUpload, resourceDesc, resourceState, device);
     }
 
-    void UploadBuffer::CopyData(const void* data, UINT size) const
-    {
-        void* mappedData;
-        DXThrowIfFailed(m_uploadBuffer->Map(0, nullptr, &mappedData));
-
-        memcpy(mappedData, data, size);
-
-        m_uploadBuffer->Unmap(0, nullptr);
-    }
-
-    void UploadBuffer::StageCmdUpload(ID3D12Resource2* dest, UINT size, ID3D12GraphicsCommandList6* cmdList) const
-    {
-        cmdList->CopyBufferRegion(dest, 0, m_uploadBuffer.Get(), 0, size);
-    }
-
-    GPUBuffer::GPUBuffer(UINT64 size, ID3D12Device5* device)
+    DXResource CreateGPUBuffer(UINT64 size, ID3D12Device5* device, D3D12_RESOURCE_STATES resourceState)
     {
         D3D12_HEAP_PROPERTIES heapPropertiesUpload{
             .Type = D3D12_HEAP_TYPE_DEFAULT,
@@ -71,10 +72,7 @@ namespace Baltic
             .Flags = D3D12_RESOURCE_FLAG_NONE
         };
 
-        DXThrowIfFailed(device->CreateCommittedResource(
-            &heapPropertiesUpload, D3D12_HEAP_FLAG_NONE, &resourceDesc, D3D12_RESOURCE_STATE_COMMON, nullptr,
-            IID_PPV_ARGS(&m_buffer)
-        ));
+        return DXResource(heapPropertiesUpload, resourceDesc, resourceState, device);
     }
 
 } // namespace Baltic

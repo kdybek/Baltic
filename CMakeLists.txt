@@ -22,8 +22,8 @@ set(SOURCES
     ${SOURCE_DIR}/d3d/dx_window.h
     ${SOURCE_DIR}/d3d/shader.cpp
     ${SOURCE_DIR}/d3d/shader.h
-    ${SOURCE_DIR}/d3d/buffers.cpp
-    ${SOURCE_DIR}/d3d/buffers.h
+    ${SOURCE_DIR}/d3d/dx_resource.cpp
+    ${SOURCE_DIR}/d3d/dx_resource.h
     ${SOURCE_DIR}/auxiliary/pch.h
     ${SOURCE_DIR}/auxiliary/baltic_exception.h
     ${SOURCE_DIR}/auxiliary/constants.h

@@ -10,8 +10,8 @@
 #include "auxiliary/baltic_exception.h"
 #include "auxiliary/constants.h"
 #include "auxiliary/types.h"
-#include "d3d/buffers.h"
 #include "d3d/dx_context.h"
+#include "d3d/dx_resource.h"
 #include "d3d/dx_window.h"
 #include "d3d/pipeline_state.h"
 #include "d3d/shader.h"
@@ -31,19 +31,30 @@ int main()
         {
             DXContext dxContext;
 
-            UploadBuffer cameraCBuffer(((sizeof(CameraCBuffer) + 255) & ~255), dxContext.GetDeviceComPtr().Get());
-            UploadBuffer lightCBuffer(((sizeof(LightCBuffer) + 255) & ~255), dxContext.GetDeviceComPtr().Get());
-            UploadBuffer uploadBuffer(1024, dxContext.GetDeviceComPtr().Get());
-            GPUBuffer vertexBuffer(1024, dxContext.GetDeviceComPtr().Get());
-            GPUBuffer indexBuffer(1024, dxContext.GetDeviceComPtr().Get());
+            DXResource uploadBuffer =
+                CreateUploadBuffer(1024, dxContext.GetDeviceComPtr().Get(), D3D12_RESOURCE_STATE_GENERIC_READ);
+            DXResource vertexBuffer =
+                CreateGPUBuffer(1024, dxContext.GetDeviceComPtr().Get(), D3D12_RESOURCE_STATE_COMMON);
+            DXResource indexBuffer =
+                CreateGPUBuffer(1024, dxContext.GetDeviceComPtr().Get(), D3D12_RESOURCE_STATE_COMMON);
+            DXResource cameraCBuffer = CreateUploadBuffer(
+                ((sizeof(CameraCBuffer) + 255) & ~255), dxContext.GetDeviceComPtr().Get(),
+                D3D12_RESOURCE_STATE_GENERIC_READ
+            );
+            DXResource lightCBuffer = CreateUploadBuffer(
+                ((sizeof(LightCBuffer) + 255) & ~255), dxContext.GetDeviceComPtr().Get(),
+                D3D12_RESOURCE_STATE_GENERIC_READ
+            );
 
-            VertexBufferElement vertices[8]{{.position{-.5f, -.5f, 1.f}}, {.position{-.5f, .5f, 1.f}},
-                                            {.position{.5f, .5f, 1.f}},   {.position{.5f, -.5f, 1.f}},
-                                            {.position{-.5f, -.5f, 2.f}}, {.position{-.5f, .5f, 2.f}},
-                                            {.position{.5f, .5f, 2.f}},   {.position{.5f, -.5f, 2.f}}};
+            VertexBufferElement vertices[12]{{.position{-.5f, -.5f, 1.f}}, {.position{-.5f, .5f, 1.f}},
+                                             {.position{.5f, .5f, 1.f}},   {.position{.5f, -.5f, 1.f}},
+                                             {.position{-.5f, -.5f, 2.f}}, {.position{-.5f, .5f, 2.f}},
+                                             {.position{.5f, .5f, 2.f}},   {.position{.5f, -.5f, 2.f}},
+                                             {.position{-.5f, -.5f, 3.f}}, {.position{-.5f, .5f, 3.f}},
+                                             {.position{.5f, .5f, 3.f}},   {.position{.5f, -.5f, 3.f}}};
 
-            UINT32 indices[36]{0, 1, 3, 1, 2, 3, 4, 5, 0, 5, 1, 0, 7, 6, 4, 6, 5, 4,
-                               3, 2, 7, 2, 6, 7, 1, 5, 2, 5, 6, 2, 4, 0, 7, 0, 3, 7};
+            UINT32 indices[39]{0, 1, 3, 1, 2, 3, 4, 5, 0, 5, 1, 0, 7, 6, 4, 6, 5, 4, 3, 2,
+                               7, 2, 6, 7, 1, 5, 2, 5, 6, 2, 4, 0, 7, 0, 3, 7, 8, 9, 10};
 
             LightSource lightSource1{.position{-1.f, 1.f, 0.f}, .color{0.4f, 1.f, 1.f}, .intensity = .9f};
 
@@ -55,14 +66,14 @@ int main()
 
             dxContext.ResetCmdList();
             uploadBuffer.CopyData(vertices, sizeof(vertices));
-            uploadBuffer.StageCmdUpload(
-                vertexBuffer.GetComPtr().Get(), sizeof(vertices), dxContext.GetCmdListComPtr().Get()
+            dxContext.GetCmdListComPtr()->CopyBufferRegion(
+                vertexBuffer.GetComPtr().Get(), 0, uploadBuffer.GetComPtr().Get(), 0, sizeof(vertices)
             );
             dxContext.ExecuteCmdList();
             dxContext.ResetCmdList();
             uploadBuffer.CopyData(indices, sizeof(indices));
-            uploadBuffer.StageCmdUpload(
-                indexBuffer.GetComPtr().Get(), sizeof(indices), dxContext.GetCmdListComPtr().Get()
+            dxContext.GetCmdListComPtr()->CopyBufferRegion(
+                indexBuffer.GetComPtr().Get(), 0, uploadBuffer.GetComPtr().Get(), 0, sizeof(indices)
             );
             dxContext.ExecuteCmdList();
 
@@ -235,7 +246,7 @@ int main()
 
                 cmdList->SetGraphicsRootConstantBufferView(1, lightCBuffer.GetComPtr()->GetGPUVirtualAddress());
 
-                cmdList->DrawIndexedInstanced(36, 1, 0, 0, 0);
+                cmdList->DrawIndexedInstanced(39, 1, 0, 0, 0);
 
                 mainWindow.StageCmdEndFrame(cmdList.Get());
 
