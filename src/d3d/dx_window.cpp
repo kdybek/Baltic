@@ -199,8 +199,8 @@ namespace Baltic
         const auto& factory = dxContext.GetFactoryComPtr();
 
         DXGI_SWAP_CHAIN_DESC1 swapChainDesc{
-            .Width = 1920,
-            .Height = 1080,
+            .Width = width,
+            .Height = height,
             .Format = DXGI_FORMAT_R8G8B8A8_UNORM,
             .Stereo = false,
             .SampleDesc{.Count = 1, .Quality = 0},
@@ -404,12 +404,10 @@ namespace Baltic
             .Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION,
             .Flags = D3D12_RESOURCE_BARRIER_FLAG_NONE,
             .Transition =
-                D3D12_RESOURCE_TRANSITION_BARRIER{
-                    .pResource = m_buffers[m_currentBufferIdx].Get(),
-                    .Subresource = 0,
-                    .StateBefore = D3D12_RESOURCE_STATE_PRESENT,
-                    .StateAfter = D3D12_RESOURCE_STATE_RENDER_TARGET
-                }
+                {.pResource = m_buffers[m_currentBufferIdx].Get(),
+                 .Subresource = 0,
+                 .StateBefore = D3D12_RESOURCE_STATE_PRESENT,
+                 .StateAfter = D3D12_RESOURCE_STATE_RENDER_TARGET}
         };
 
         cmdList->ResourceBarrier(1, &resourceBarrier);
@@ -426,12 +424,10 @@ namespace Baltic
             .Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION,
             .Flags = D3D12_RESOURCE_BARRIER_FLAG_NONE,
             .Transition =
-                D3D12_RESOURCE_TRANSITION_BARRIER{
-                    .pResource = m_buffers[m_currentBufferIdx].Get(),
-                    .Subresource = 0,
-                    .StateBefore = D3D12_RESOURCE_STATE_RENDER_TARGET,
-                    .StateAfter = D3D12_RESOURCE_STATE_PRESENT
-                }
+                {.pResource = m_buffers[m_currentBufferIdx].Get(),
+                 .Subresource = 0,
+                 .StateBefore = D3D12_RESOURCE_STATE_RENDER_TARGET,
+                 .StateAfter = D3D12_RESOURCE_STATE_PRESENT}
         };
 
         cmdList->ResourceBarrier(1, &resourceBarrier);
