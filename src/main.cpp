@@ -63,7 +63,7 @@ int main()
             dxContext.ResetCmdList();
             CopyDataToResource(uploadBuffer.Get(), vertices, sizeof(vertices));
             QueueTransition(vertexBuffer.Get(), D3D12_RESOURCE_STATE_COMMON, D3D12_RESOURCE_STATE_COPY_DEST, barriers);
-            StageCmdResourceBarrier(dxContext.GetCmdListComPtr().Get(), barriers);
+            dxContext.GetCmdListComPtr()->ResourceBarrier(barriers.size(), barriers.data());
             barriers.clear();
             dxContext.GetCmdListComPtr()->CopyBufferRegion(
                 vertexBuffer.Get(), 0, uploadBuffer.Get(), 0, sizeof(vertices)
@@ -73,7 +73,7 @@ int main()
             dxContext.ResetCmdList();
             CopyDataToResource(uploadBuffer.Get(), indices, sizeof(indices));
             QueueTransition(indexBuffer.Get(), D3D12_RESOURCE_STATE_COMMON, D3D12_RESOURCE_STATE_COPY_DEST, barriers);
-            StageCmdResourceBarrier(dxContext.GetCmdListComPtr().Get(), barriers);
+            dxContext.GetCmdListComPtr()->ResourceBarrier(barriers.size(), barriers.data());
             barriers.clear();
             dxContext.GetCmdListComPtr()->CopyBufferRegion(
                 indexBuffer.Get(), 0, uploadBuffer.Get(), 0, sizeof(indices)
@@ -88,7 +88,7 @@ int main()
             QueueTransition(
                 indexBuffer.Get(), D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_INDEX_BUFFER, barriers
             );
-            StageCmdResourceBarrier(dxContext.GetCmdListComPtr().Get(), barriers);
+            dxContext.GetCmdListComPtr()->ResourceBarrier(barriers.size(), barriers.data());
             barriers.clear();
             dxContext.ExecuteCmdList();
 
@@ -141,7 +141,7 @@ int main()
                     }
                     else if (event.type == EventType::Resize) {
                         dxContext.Flush(FRAME_COUNT);
-                        mainWindow.ResizeSwapChain(dxContext.GetDeviceComPtr().Get());
+                        mainWindow.Resize(dxContext.GetDeviceComPtr().Get());
                         mainWindow.ConfineCursor();
                         mainWindow.CenterCursor();
                         lastCursorPos = mainWindow.GetCursorPosition();
@@ -217,7 +217,12 @@ int main()
 
                 const auto& cmdList = dxContext.GetCmdListComPtr();
 
-                mainWindow.StageCmdBeginFrame(cmdList.Get());
+                mainWindow.QueuePreRenderingTransitions(barriers);
+                cmdList->ResourceBarrier(barriers.size(), barriers.data());
+                barriers.clear();
+                FLOAT clearColor[]{.1f, .1f, .1f, 1.f};
+                cmdList->ClearRenderTargetView(*mainWindow.GetBackBufferRTVHandlePtr(), clearColor, 0, nullptr);
+                cmdList->OMSetRenderTargets(1, mainWindow.GetBackBufferRTVHandlePtr(), FALSE, nullptr);
 
                 cmdList->SetPipelineState(pipelineState.Get());
                 cmdList->SetGraphicsRootSignature(rootSignature.GetComPtr().Get());
@@ -226,25 +231,9 @@ int main()
                 cmdList->IASetIndexBuffer(&indexBufferView);
                 cmdList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 
-                D3D12_VIEWPORT viewport{
-                    .TopLeftX = 0.f,
-                    .TopLeftY = 0.f,
-                    .Width = static_cast<FLOAT>(mainWindow.GetWidth()),
-                    .Height = static_cast<FLOAT>(mainWindow.GetHeight()),
-                    .MinDepth = 0.f,
-                    .MaxDepth = 1.f
-                };
+                cmdList->RSSetViewports(1, mainWindow.GetViewportPtr());
 
-                cmdList->RSSetViewports(1, &viewport);
-
-                D3D12_RECT scissorRect{
-                    .left = 0,
-                    .top = 0,
-                    .right = static_cast<LONG>(mainWindow.GetWidth()),
-                    .bottom = static_cast<LONG>(mainWindow.GetHeight())
-                };
-
-                cmdList->RSSetScissorRects(1, &scissorRect);
+                cmdList->RSSetScissorRects(1, mainWindow.GetScissorRectPtr());
 
                 CameraCBuffer cameraCBufferData{
                     .viewMatrix = viewMatrix,
@@ -263,7 +252,9 @@ int main()
 
                 cmdList->DrawIndexedInstanced(39, 1, 0, 0, 0);
 
-                mainWindow.StageCmdEndFrame(cmdList.Get());
+                mainWindow.QueuePostRenderingTransitions(barriers);
+                cmdList->ResourceBarrier(barriers.size(), barriers.data());
+                barriers.clear();
 
                 dxContext.ExecuteCmdList();
 

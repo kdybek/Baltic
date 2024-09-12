@@ -132,13 +132,4 @@ namespace Baltic
         barriers.push_back(barrier);
     }
 
-    void StageCmdResourceBarrier(
-        ID3D12GraphicsCommandList6* commandList, const std::vector<D3D12_RESOURCE_BARRIER>& barriers
-    )
-    {
-        if (!barriers.empty()) {
-            commandList->ResourceBarrier(barriers.size(), barriers.data());
-        }
-    }
-
 } // namespace Baltic

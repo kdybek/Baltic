@@ -4,6 +4,7 @@
 
 #include "auxiliary/baltic_exception.h"
 #include "d3d/dx_context.h"
+#include "d3d/dx_resource.h"
 
 #define IDI_APPLICATION_W MAKEINTRESOURCEW(32512)
 #define IDC_ARROW_W MAKEINTRESOURCEW(32512)
@@ -167,8 +168,16 @@ namespace Baltic
           m_windowHandle(nullptr),
           m_width(width),
           m_height(height),
-          m_isFullscreen(FALSE),
-          m_currentBufferIdx(0)
+          m_viewport{
+              .TopLeftX = 0.f,
+              .TopLeftY = 0.f,
+              .Width = static_cast<FLOAT>(width),
+              .Height = static_cast<FLOAT>(height),
+              .MinDepth = 0.f,
+              .MaxDepth = 1.f
+          },
+          m_scissorRect{.left = 0, .top = 0, .right = static_cast<LONG>(width), .bottom = static_cast<LONG>(height)},
+          m_isFullscreen(FALSE)
     {
         WNDCLASSEXW wcex{
             .cbSize = sizeof(wcex),
@@ -282,7 +291,7 @@ namespace Baltic
         return event;
     }
 
-    void DXWindow::ResizeSwapChain(ID3D12Device8* device)
+    void DXWindow::Resize(ID3D12Device8* device)
     {
         RECT clientRect;
         if (!GetClientRect(m_windowHandle, &clientRect)) {
@@ -291,6 +300,12 @@ namespace Baltic
 
         m_width = clientRect.right - clientRect.left;
         m_height = clientRect.bottom - clientRect.top;
+
+        m_viewport.Width = static_cast<FLOAT>(m_width);
+        m_viewport.Height = static_cast<FLOAT>(m_height);
+
+        m_scissorRect.right = m_width;
+        m_scissorRect.bottom = m_height;
 
         ReleaseBuffers();
 
@@ -396,41 +411,20 @@ namespace Baltic
         }
     }
 
-    void DXWindow::StageCmdBeginFrame(ID3D12GraphicsCommandList6* cmdList)
+    void DXWindow::QueuePreRenderingTransitions(std::vector<D3D12_RESOURCE_BARRIER>& barriers)
     {
-        m_currentBufferIdx = m_swapChain->GetCurrentBackBufferIndex();
-
-        D3D12_RESOURCE_BARRIER resourceBarrier{
-            .Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION,
-            .Flags = D3D12_RESOURCE_BARRIER_FLAG_NONE,
-            .Transition =
-                {.pResource = m_buffers[m_currentBufferIdx].Get(),
-                 .Subresource = 0,
-                 .StateBefore = D3D12_RESOURCE_STATE_PRESENT,
-                 .StateAfter = D3D12_RESOURCE_STATE_RENDER_TARGET}
-        };
-
-        cmdList->ResourceBarrier(1, &resourceBarrier);
-
-        FLOAT clearColor[]{.1f, .1f, .1f, 1.f};
-        cmdList->ClearRenderTargetView(m_rtvHandles[m_currentBufferIdx], clearColor, 0, nullptr);
-
-        cmdList->OMSetRenderTargets(1, &m_rtvHandles[m_currentBufferIdx], FALSE, nullptr);
+        QueueTransition(
+            m_buffers[m_swapChain->GetCurrentBackBufferIndex()].Get(), D3D12_RESOURCE_STATE_PRESENT,
+            D3D12_RESOURCE_STATE_RENDER_TARGET, barriers
+        );
     }
 
-    void DXWindow::StageCmdEndFrame(ID3D12GraphicsCommandList6* cmdList)
+    void DXWindow::QueuePostRenderingTransitions(std::vector<D3D12_RESOURCE_BARRIER>& barriers)
     {
-        D3D12_RESOURCE_BARRIER resourceBarrier{
-            .Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION,
-            .Flags = D3D12_RESOURCE_BARRIER_FLAG_NONE,
-            .Transition =
-                {.pResource = m_buffers[m_currentBufferIdx].Get(),
-                 .Subresource = 0,
-                 .StateBefore = D3D12_RESOURCE_STATE_RENDER_TARGET,
-                 .StateAfter = D3D12_RESOURCE_STATE_PRESENT}
-        };
-
-        cmdList->ResourceBarrier(1, &resourceBarrier);
+        QueueTransition(
+            m_buffers[m_swapChain->GetCurrentBackBufferIndex()].Get(), D3D12_RESOURCE_STATE_RENDER_TARGET,
+            D3D12_RESOURCE_STATE_PRESENT, barriers
+        );
     }
 
     void DXWindow::GetBuffers(ID3D12Device8* device)

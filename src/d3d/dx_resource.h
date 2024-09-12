@@ -19,8 +19,5 @@ namespace Baltic
         ID3D12Resource2* resource, D3D12_RESOURCE_STATES oldState, D3D12_RESOURCE_STATES newState,
         std::vector<D3D12_RESOURCE_BARRIER>& barriers
     );
-    void StageCmdResourceBarrier(
-        ID3D12GraphicsCommandList6* commandList, const std::vector<D3D12_RESOURCE_BARRIER>& barriers
-    );
 
 } // namespace Baltic
