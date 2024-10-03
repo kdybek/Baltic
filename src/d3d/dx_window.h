@@ -42,6 +42,7 @@ namespace Baltic
         {
             return &m_rtvHandles[m_swapChain->GetCurrentBackBufferIndex()];
         }
+        [[nodiscard]] inline const D3D12_CPU_DESCRIPTOR_HANDLE* GetDSVHandlePtr() const { return &m_dsvHandle; }
 
     private:
         friend LRESULT CALLBACK OnWindowMessage(HWND wnd, UINT msg, WPARAM wParam, LPARAM lParam);
@@ -62,10 +63,13 @@ namespace Baltic
         std::queue<Event> m_eventQueue;
 
         ComPtr<IDXGISwapChain4> m_swapChain;
-        ComPtr<ID3D12Resource2> m_buffers[FRAME_COUNT];
-
+        ComPtr<ID3D12Resource2> m_rtBuffers[FRAME_COUNT];
         ComPtr<ID3D12DescriptorHeap> m_rtvDescHeap;
         D3D12_CPU_DESCRIPTOR_HANDLE m_rtvHandles[FRAME_COUNT];
+
+        ComPtr<ID3D12Resource2> m_dsBuffer;
+        ComPtr<ID3D12DescriptorHeap> m_dsvHeapDesc;
+        D3D12_CPU_DESCRIPTOR_HANDLE m_dsvHandle;
     };
 
 } // namespace Baltic

@@ -232,15 +232,22 @@ namespace Baltic
 
         DXThrowIfFailed(swapChain1.As(&m_swapChain));
 
-        D3D12_DESCRIPTOR_HEAP_DESC descriptorHeapDesc{
+        D3D12_DESCRIPTOR_HEAP_DESC rtvDescriptorHeapDesc{
             .Type = D3D12_DESCRIPTOR_HEAP_TYPE_RTV,
             .NumDescriptors = FRAME_COUNT,
             .Flags = D3D12_DESCRIPTOR_HEAP_FLAG_NONE,
             .NodeMask = 0
         };
 
+        D3D12_DESCRIPTOR_HEAP_DESC dsvDescriptorHeapDesc{
+            .Type = D3D12_DESCRIPTOR_HEAP_TYPE_DSV,
+            .NumDescriptors = 1,
+            .Flags = D3D12_DESCRIPTOR_HEAP_FLAG_NONE,
+            .NodeMask = 0
+        };
+
         DXThrowIfFailed(
-            dxContext.GetDeviceComPtr()->CreateDescriptorHeap(&descriptorHeapDesc, IID_PPV_ARGS(&m_rtvDescHeap))
+            dxContext.GetDeviceComPtr()->CreateDescriptorHeap(&rtvDescriptorHeapDesc, IID_PPV_ARGS(&m_rtvDescHeap))
         );
 
         D3D12_CPU_DESCRIPTOR_HANDLE firstHandle = m_rtvDescHeap->GetCPUDescriptorHandleForHeapStart();
@@ -250,6 +257,12 @@ namespace Baltic
             m_rtvHandles[i] = firstHandle;
             m_rtvHandles[i].ptr += handleInc * i;
         }
+
+        DXThrowIfFailed(
+            dxContext.GetDeviceComPtr()->CreateDescriptorHeap(&dsvDescriptorHeapDesc, IID_PPV_ARGS(&m_dsvHeapDesc))
+        );
+
+        m_dsvHandle = m_dsvHeapDesc->GetCPUDescriptorHandleForHeapStart();
 
         GetBuffers(dxContext.GetDeviceComPtr().Get());
 
@@ -414,7 +427,7 @@ namespace Baltic
     void DXWindow::QueuePreRenderingTransitions(std::vector<D3D12_RESOURCE_BARRIER>& barriers)
     {
         QueueTransition(
-            m_buffers[m_swapChain->GetCurrentBackBufferIndex()].Get(), D3D12_RESOURCE_STATE_PRESENT,
+            m_rtBuffers[m_swapChain->GetCurrentBackBufferIndex()].Get(), D3D12_RESOURCE_STATE_PRESENT,
             D3D12_RESOURCE_STATE_RENDER_TARGET, barriers
         );
     }
@@ -422,7 +435,7 @@ namespace Baltic
     void DXWindow::QueuePostRenderingTransitions(std::vector<D3D12_RESOURCE_BARRIER>& barriers)
     {
         QueueTransition(
-            m_buffers[m_swapChain->GetCurrentBackBufferIndex()].Get(), D3D12_RESOURCE_STATE_RENDER_TARGET,
+            m_rtBuffers[m_swapChain->GetCurrentBackBufferIndex()].Get(), D3D12_RESOURCE_STATE_RENDER_TARGET,
             D3D12_RESOURCE_STATE_PRESENT, barriers
         );
     }
@@ -430,7 +443,7 @@ namespace Baltic
     void DXWindow::GetBuffers(ID3D12Device10* device)
     {
         for (UINT i = 0; i < FRAME_COUNT; i++) {
-            DXThrowIfFailed(m_swapChain->GetBuffer(i, IID_PPV_ARGS(&m_buffers[i])));
+            DXThrowIfFailed(m_swapChain->GetBuffer(i, IID_PPV_ARGS(&m_rtBuffers[i])));
 
             D3D12_RENDER_TARGET_VIEW_DESC rtvDesc{
                 .Format = DXGI_FORMAT_R8G8B8A8_UNORM,
@@ -438,15 +451,29 @@ namespace Baltic
                 .Texture2D{.MipSlice = 0, .PlaneSlice = 0}
             };
 
-            device->CreateRenderTargetView(m_buffers[i].Get(), &rtvDesc, m_rtvHandles[i]);
+            device->CreateRenderTargetView(m_rtBuffers[i].Get(), &rtvDesc, m_rtvHandles[i]);
         }
+
+        m_dsBuffer = CreateDepthStencilBuffer(
+            m_width, m_height, DXGI_FORMAT_D32_FLOAT, D3D12_RESOURCE_STATE_DEPTH_WRITE, device
+        );
+
+        D3D12_DEPTH_STENCIL_VIEW_DESC dsvDesc{
+            .Format = DXGI_FORMAT_D32_FLOAT,
+            .ViewDimension = D3D12_DSV_DIMENSION_TEXTURE2D,
+            .Flags = D3D12_DSV_FLAG_NONE
+        };
+
+        device->CreateDepthStencilView(m_dsBuffer.Get(), &dsvDesc, m_dsvHandle);
     }
 
     void DXWindow::ReleaseBuffers()
     {
-        for (auto& m_buffer : m_buffers) {
-            m_buffer.Reset();
+        for (auto& buffer : m_rtBuffers) {
+            buffer.Reset();
         }
+
+        m_dsBuffer.Reset();
     }
 
 } // namespace Baltic

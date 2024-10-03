@@ -109,11 +109,31 @@ int main()
             Shader pixelShader("pixel_shader.cso");
             RootSignature rootSignature("root_signature.cso", dxContext.GetDeviceComPtr().Get());
 
+            D3D12_DEPTH_STENCIL_DESC depthStencilDesc = {
+                .DepthEnable = TRUE,
+                .DepthWriteMask = D3D12_DEPTH_WRITE_MASK_ALL,
+                .DepthFunc = D3D12_COMPARISON_FUNC_LESS,
+                .StencilEnable = FALSE,
+                .StencilReadMask = D3D12_DEFAULT_STENCIL_READ_MASK,
+                .StencilWriteMask = D3D12_DEFAULT_STENCIL_WRITE_MASK,
+                .FrontFace =
+                    {.StencilFailOp = D3D12_STENCIL_OP_KEEP,
+                     .StencilDepthFailOp = D3D12_STENCIL_OP_KEEP,
+                     .StencilPassOp = D3D12_STENCIL_OP_KEEP,
+                     .StencilFunc = D3D12_COMPARISON_FUNC_ALWAYS},
+                .BackFace =
+                    {.StencilFailOp = D3D12_STENCIL_OP_KEEP,
+                     .StencilDepthFailOp = D3D12_STENCIL_OP_KEEP,
+                     .StencilPassOp = D3D12_STENCIL_OP_KEEP,
+                     .StencilFunc = D3D12_COMPARISON_FUNC_ALWAYS}
+            };
+
             D3D12_GRAPHICS_PIPELINE_STATE_DESC pipelineStateDesc = DEFAULT_PIPELINE_STATE_DESC;
             pipelineStateDesc.pRootSignature = rootSignature.GetComPtr().Get();
             pipelineStateDesc.VS = {vertexShader.GetData(), vertexShader.GetSize()};
             pipelineStateDesc.GS = {geometryShader.GetData(), geometryShader.GetSize()};
             pipelineStateDesc.PS = {pixelShader.GetData(), pixelShader.GetSize()};
+            pipelineStateDesc.DepthStencilState = depthStencilDesc;
             pipelineStateDesc.InputLayout = VB_INPUT_LAYOUT_DESC;
             ComPtr<ID3D12PipelineState> pipelineState;
             dxContext.GetDeviceComPtr()->CreateGraphicsPipelineState(&pipelineStateDesc, IID_PPV_ARGS(&pipelineState));
@@ -127,17 +147,17 @@ int main()
                                                     {Key::D, FALSE},  {Key::Space, FALSE}, {Key::Shift, FALSE},
                                                     {Key::F11, FALSE}};
 
-            BOOL stop = FALSE;
+            BOOL end = FALSE;
             POINT lastCursorPos = mainWindow.GetCursorPosition();
             FLOAT xzPlaneAngle = 0.f;
 
-            while (!stop) {
+            while (!end) {
                 mainWindow.Update();
 
                 Event event;
                 while ((event = mainWindow.PollEvent()).type != EventType::None) {
                     if (event.type == EventType::Close) {
-                        stop = TRUE;
+                        end = TRUE;
                     }
                     else if (event.type == EventType::Resize) {
                         dxContext.Flush(FRAME_COUNT);
@@ -174,30 +194,38 @@ int main()
                         FLOAT xTranslation = 0.f;
                         FLOAT yTranslation = 0.f;
                         FLOAT zTranslation = 0.f;
+
                         if (keyStates.at(Key::W)) {
                             zTranslation -= .1f;
                         }
+
                         if (keyStates.at(Key::A)) {
                             xTranslation += .1f;
                         }
+
                         if (keyStates.at(Key::S)) {
                             zTranslation += .1f;
                         }
+
                         if (keyStates.at(Key::D)) {
                             xTranslation -= .1f;
                         }
+
                         if (keyStates.at(Key::Space)) {
                             yTranslation -= .1f;
                         }
+
                         if (keyStates.at(Key::Shift)) {
                             yTranslation += .1f;
                         }
+
                         if (xAngle + xzPlaneAngle > DirectX::XM_PIDIV2) {
                             xAngle = DirectX::XM_PIDIV2 - xzPlaneAngle;
                         }
                         else if (xAngle + xzPlaneAngle < -DirectX::XM_PIDIV2) {
                             xAngle = -DirectX::XM_PIDIV2 - xzPlaneAngle;
                         }
+
                         DirectX::XMMATRIX rotationMatrix1 = DirectX::XMMatrixRotationX(-xzPlaneAngle);
                         DirectX::XMMATRIX translationMatrix =
                             DirectX::XMMatrixTranslation(xTranslation, yTranslation, zTranslation);
@@ -222,7 +250,12 @@ int main()
                 barriers.clear();
                 FLOAT clearColor[]{.1f, .1f, .1f, 1.f};
                 cmdList->ClearRenderTargetView(*mainWindow.GetBackBufferRTVHandlePtr(), clearColor, 0, nullptr);
-                cmdList->OMSetRenderTargets(1, mainWindow.GetBackBufferRTVHandlePtr(), FALSE, nullptr);
+                cmdList->ClearDepthStencilView(
+                    *mainWindow.GetDSVHandlePtr(), D3D12_CLEAR_FLAG_DEPTH, 1.f, 0, 0, nullptr
+                );
+                cmdList->OMSetRenderTargets(
+                    1, mainWindow.GetBackBufferRTVHandlePtr(), FALSE, mainWindow.GetDSVHandlePtr()
+                );
 
                 cmdList->SetPipelineState(pipelineState.Get());
                 cmdList->SetGraphicsRootSignature(rootSignature.GetComPtr().Get());
