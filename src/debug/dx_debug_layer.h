@@ -5,6 +5,7 @@
 // clang-format on
 
 #include "auxiliary/baltic_exception.h"
+#include "auxiliary/types.h"
 
 namespace Baltic
 {
@@ -44,7 +45,7 @@ namespace Baltic
 
     private:
 #ifdef BALTIC_DEBUG
-        ComPtr<ID3D12Debug3> m_d3d12Debug;
+        ComPtr<ID3D12Debug6> m_d3d12Debug;
         ComPtr<IDXGIDebug1> m_dxgiDebug;
 #endif
     };

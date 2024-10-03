@@ -25,7 +25,7 @@ namespace Baltic
         void Update();
         void Present();
         [[nodiscard]] Event PollEvent();
-        void Resize(ID3D12Device8* device);
+        void Resize(ID3D12Device10* device);
         void ConfineCursor();
         void CenterCursor();
         [[nodiscard]] POINT GetCursorPosition();
@@ -46,7 +46,7 @@ namespace Baltic
     private:
         friend LRESULT CALLBACK OnWindowMessage(HWND wnd, UINT msg, WPARAM wParam, LPARAM lParam);
 
-        void GetBuffers(ID3D12Device8* device);
+        void GetBuffers(ID3D12Device10* device);
         void ReleaseBuffers();
 
     private:

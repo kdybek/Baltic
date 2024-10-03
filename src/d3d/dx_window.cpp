@@ -291,7 +291,7 @@ namespace Baltic
         return event;
     }
 
-    void DXWindow::Resize(ID3D12Device8* device)
+    void DXWindow::Resize(ID3D12Device10* device)
     {
         RECT clientRect;
         if (!GetClientRect(m_windowHandle, &clientRect)) {
@@ -427,7 +427,7 @@ namespace Baltic
         );
     }
 
-    void DXWindow::GetBuffers(ID3D12Device8* device)
+    void DXWindow::GetBuffers(ID3D12Device10* device)
     {
         for (UINT i = 0; i < FRAME_COUNT; i++) {
             DXThrowIfFailed(m_swapChain->GetBuffer(i, IID_PPV_ARGS(&m_buffers[i])));
