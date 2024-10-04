@@ -135,6 +135,7 @@ int main()
             pipelineStateDesc.PS = {pixelShader.GetData(), pixelShader.GetSize()};
             pipelineStateDesc.DepthStencilState = depthStencilDesc;
             pipelineStateDesc.InputLayout = VB_INPUT_LAYOUT_DESC;
+            pipelineStateDesc.DSVFormat = DXGI_FORMAT_D32_FLOAT;
             ComPtr<ID3D12PipelineState> pipelineState;
             dxContext.GetDeviceComPtr()->CreateGraphicsPipelineState(&pipelineStateDesc, IID_PPV_ARGS(&pipelineState));
 

@@ -1,6 +1,6 @@
 # Baltic
-
-Graphical sea simulator.
+ 
+Graphical sea simulator (no actual simulation yet, just a cube (you can move around though)).
 
 ## Build
 

@@ -30,7 +30,6 @@ namespace Baltic
         ~DXDebugLayer() = default;
 
         DXDebugLayer(const DXDebugLayer&) = delete;
-
         DXDebugLayer& operator=(const DXDebugLayer&) = delete;
 
         void ReportLiveObjects()
