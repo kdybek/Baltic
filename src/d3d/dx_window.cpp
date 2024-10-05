@@ -210,7 +210,7 @@ namespace Baltic
         DXGI_SWAP_CHAIN_DESC1 swapChainDesc{
             .Width = width,
             .Height = height,
-            .Format = DXGI_FORMAT_R8G8B8A8_UNORM,
+            .Format = RTV_FORMAT,
             .Stereo = false,
             .SampleDesc{.Count = 1, .Quality = 0},
             .BufferUsage = DXGI_USAGE_BACK_BUFFER | DXGI_USAGE_RENDER_TARGET_OUTPUT,
@@ -446,7 +446,7 @@ namespace Baltic
             DXThrowIfFailed(m_swapChain->GetBuffer(i, IID_PPV_ARGS(&m_rtBuffers[i])));
 
             D3D12_RENDER_TARGET_VIEW_DESC rtvDesc{
-                .Format = DXGI_FORMAT_R8G8B8A8_UNORM,
+                .Format = RTV_FORMAT,
                 .ViewDimension = D3D12_RTV_DIMENSION_TEXTURE2D,
                 .Texture2D{.MipSlice = 0, .PlaneSlice = 0}
             };
@@ -455,11 +455,11 @@ namespace Baltic
         }
 
         m_dsBuffer = CreateDepthStencilBuffer(
-            m_width, m_height, DXGI_FORMAT_D32_FLOAT, D3D12_RESOURCE_STATE_DEPTH_WRITE, device
+            m_width, m_height, DSV_FORMAT, D3D12_RESOURCE_STATE_DEPTH_WRITE, device
         );
 
         D3D12_DEPTH_STENCIL_VIEW_DESC dsvDesc{
-            .Format = DXGI_FORMAT_D32_FLOAT,
+            .Format = DSV_FORMAT,
             .ViewDimension = D3D12_DSV_DIMENSION_TEXTURE2D,
             .Flags = D3D12_DSV_FLAG_NONE
         };

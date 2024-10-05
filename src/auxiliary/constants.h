@@ -18,12 +18,14 @@ namespace Baltic
          .InputSlotClass = D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA,
          .InstanceDataStepRate = 0}
     };
-
     inline constexpr D3D12_INPUT_LAYOUT_DESC VB_INPUT_LAYOUT_DESC{
         .pInputElementDescs = VB_INPUT_ELEMENT_DESC, .NumElements = _countof(VB_INPUT_ELEMENT_DESC)
     };
 
-    constexpr D3D12_GRAPHICS_PIPELINE_STATE_DESC DEFAULT_PIPELINE_STATE_DESC{
+    inline constexpr DXGI_FORMAT RTV_FORMAT = DXGI_FORMAT_R8G8B8A8_UNORM;
+    inline constexpr DXGI_FORMAT DSV_FORMAT = DXGI_FORMAT_D32_FLOAT;
+
+    inline constexpr D3D12_GRAPHICS_PIPELINE_STATE_DESC DEFAULT_PIPELINE_STATE_DESC{
         .pRootSignature = nullptr,
         .VS{.pShaderBytecode = nullptr, .BytecodeLength = 0},
         .PS{.pShaderBytecode = nullptr, .BytecodeLength = 0},
@@ -91,11 +93,12 @@ namespace Baltic
         .IBStripCutValue = D3D12_INDEX_BUFFER_STRIP_CUT_VALUE_DISABLED,
         .PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE,
         .NumRenderTargets = 1,
-        .RTVFormats{DXGI_FORMAT_R8G8B8A8_UNORM},
-        .DSVFormat = DXGI_FORMAT_UNKNOWN,
+        .RTVFormats{RTV_FORMAT},
+        .DSVFormat = DSV_FORMAT,
         .SampleDesc{.Count = 1, .Quality = 0},
         .NodeMask = 0,
         .CachedPSO{.pCachedBlob = nullptr, .CachedBlobSizeInBytes = 0},
         .Flags = D3D12_PIPELINE_STATE_FLAG_NONE
     };
+
 } // namespace Baltic

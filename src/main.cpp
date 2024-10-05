@@ -18,6 +18,10 @@
 
 using namespace Baltic;
 
+// Auxiliary functions
+SIZE_T AlignUp(SIZE_T size, SIZE_T alignment) { return (size + alignment - 1) & ~(alignment - 1); }
+
+// Auxiliary state modules
 class Camera
 {
 public:
@@ -99,17 +103,8 @@ int main()
 
         {
             DXContext dxContext;
-            std::vector<D3D12_RESOURCE_BARRIER> barriers;
 
-            ComPtr<ID3D12Resource2> uploadBuffer = CreateUploadBuffer(1024, dxContext.GetDeviceComPtr().Get());
-            ComPtr<ID3D12Resource2> vertexBuffer =
-                CreateGPUBuffer(1024, D3D12_RESOURCE_STATE_COMMON, dxContext.GetDeviceComPtr().Get());
-            ComPtr<ID3D12Resource2> indexBuffer =
-                CreateGPUBuffer(1024, D3D12_RESOURCE_STATE_COMMON, dxContext.GetDeviceComPtr().Get());
-            ComPtr<ID3D12Resource2> cameraCBuffer =
-                CreateUploadBuffer(((sizeof(CameraCBuffer) + 255) & ~255), dxContext.GetDeviceComPtr().Get());
-            ComPtr<ID3D12Resource2> lightCBuffer =
-                CreateUploadBuffer(((sizeof(LightCBuffer) + 255) & ~255), dxContext.GetDeviceComPtr().Get());
+            std::vector<D3D12_RESOURCE_BARRIER> barriers;
 
             VertexBufferElement vertices[12]{{.position{-.5f, -.5f, 1.f}}, {.position{-.5f, .5f, 1.f}},
                                              {.position{.5f, .5f, 1.f}},   {.position{.5f, -.5f, 1.f}},
@@ -117,39 +112,49 @@ int main()
                                              {.position{.5f, .5f, 2.f}},   {.position{.5f, -.5f, 2.f}},
                                              {.position{-.5f, -.5f, 3.f}}, {.position{-.5f, .5f, 3.f}},
                                              {.position{.5f, .5f, 3.f}},   {.position{.5f, -.5f, 3.f}}};
-
             UINT32 indices[39]{0, 1, 3, 1, 2, 3, 4, 5, 0, 5, 1, 0, 7, 6, 4, 6, 5, 4, 3, 2,
                                7, 2, 6, 7, 1, 5, 2, 5, 6, 2, 4, 0, 7, 0, 3, 7, 8, 9, 10};
+            Mesh cube = {
+                .vertices = std::vector<VertexBufferElement>(vertices, vertices + 12),
+                .indices = std::vector<UINT32>(indices, indices + 39)
+            };
 
             LightSource lightSource1{.position{-1.f, 1.f, 0.f}, .color{0.4f, 1.f, 1.f}, .intensity = .9f};
-
             LightSource lightSource2{.position{1.f, -1.f, 3.f}, .color{1.f, 0.4f, 1.f}, .intensity = .9f};
-
             LightCBuffer lightCBufferData{.lightSource{lightSource1, lightSource2}, .lightCount = 2};
 
+            SIZE_T vertexBufferSize = AlignUp(sizeof(cube.vertices), 256);
+            SIZE_T indexBufferSize = AlignUp(sizeof(cube.indices), 256);
+            SIZE_T uploadBufferSize = vertexBufferSize + indexBufferSize;
+            SIZE_T cameraCBufferSize = AlignUp(sizeof(CameraCBuffer), 256);
+            SIZE_T lightCBufferSize = AlignUp(sizeof(LightCBuffer), 256);
+
+            ComPtr<ID3D12Resource2> vertexBuffer =
+                CreateGPUBuffer(vertexBufferSize, D3D12_RESOURCE_STATE_COMMON, dxContext.GetDeviceComPtr().Get());
+            ComPtr<ID3D12Resource2> indexBuffer =
+                CreateGPUBuffer(indexBufferSize, D3D12_RESOURCE_STATE_COMMON, dxContext.GetDeviceComPtr().Get());
+            ComPtr<ID3D12Resource2> uploadBuffer =
+                CreateUploadBuffer(uploadBufferSize, dxContext.GetDeviceComPtr().Get());
+            ComPtr<ID3D12Resource2> cameraCBuffer =
+                CreateUploadBuffer(cameraCBufferSize, dxContext.GetDeviceComPtr().Get());
+            ComPtr<ID3D12Resource2> lightCBuffer =
+                CreateUploadBuffer(lightCBufferSize, dxContext.GetDeviceComPtr().Get());
+
+            CopyDataToResource(uploadBuffer.Get(), vertices, sizeof(vertices));
+            CopyDataToResource(uploadBuffer.Get(), indices, sizeof(indices), vertexBufferSize);
             CopyDataToResource(lightCBuffer.Get(), &lightCBufferData, sizeof(LightCBuffer));
 
             dxContext.ResetCmdList();
-            CopyDataToResource(uploadBuffer.Get(), vertices, sizeof(vertices));
             QueueTransition(vertexBuffer.Get(), D3D12_RESOURCE_STATE_COMMON, D3D12_RESOURCE_STATE_COPY_DEST, barriers);
+            QueueTransition(indexBuffer.Get(), D3D12_RESOURCE_STATE_COMMON, D3D12_RESOURCE_STATE_COPY_DEST, barriers);
             dxContext.GetCmdListComPtr()->ResourceBarrier(barriers.size(), barriers.data());
             barriers.clear();
             dxContext.GetCmdListComPtr()->CopyBufferRegion(
                 vertexBuffer.Get(), 0, uploadBuffer.Get(), 0, sizeof(vertices)
             );
-            dxContext.ExecuteCmdList();
-
-            dxContext.ResetCmdList();
-            CopyDataToResource(uploadBuffer.Get(), indices, sizeof(indices));
-            QueueTransition(indexBuffer.Get(), D3D12_RESOURCE_STATE_COMMON, D3D12_RESOURCE_STATE_COPY_DEST, barriers);
-            dxContext.GetCmdListComPtr()->ResourceBarrier(barriers.size(), barriers.data());
-            barriers.clear();
             dxContext.GetCmdListComPtr()->CopyBufferRegion(
-                indexBuffer.Get(), 0, uploadBuffer.Get(), 0, sizeof(indices)
+                indexBuffer.Get(), 0, uploadBuffer.Get(), vertexBufferSize, sizeof(indices)
             );
-            dxContext.ExecuteCmdList();
-
-            dxContext.ResetCmdList();
             QueueTransition(
                 vertexBuffer.Get(), D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER,
                 barriers
@@ -204,7 +209,7 @@ int main()
             pipelineStateDesc.PS = {pixelShader.GetData(), pixelShader.GetSize()};
             pipelineStateDesc.DepthStencilState = depthStencilDesc;
             pipelineStateDesc.InputLayout = VB_INPUT_LAYOUT_DESC;
-            pipelineStateDesc.DSVFormat = DXGI_FORMAT_D32_FLOAT;
+            pipelineStateDesc.DSVFormat = DSV_FORMAT;
             ComPtr<ID3D12PipelineState> pipelineState;
             dxContext.GetDeviceComPtr()->CreateGraphicsPipelineState(&pipelineStateDesc, IID_PPV_ARGS(&pipelineState));
 
