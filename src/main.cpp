@@ -21,6 +21,35 @@ using namespace Baltic;
 // Auxiliary functions
 SIZE_T AlignUp(SIZE_T size, SIZE_T alignment) { return (size + alignment - 1) & ~(alignment - 1); }
 
+Mesh CreatePlane(FLOAT width, FLOAT height, UINT32 widthSegments, UINT32 heightSegments)
+{
+    std::vector<VertexBufferElement> vertices;
+    std::vector<UINT32> indices;
+
+    FLOAT widthStep = width / widthSegments;
+    FLOAT heightStep = height / heightSegments;
+
+    for (UINT32 i = 0; i <= heightSegments; i++) {
+        for (UINT32 j = 0; j <= widthSegments; j++) {
+            vertices.push_back({.position{j * widthStep, i * heightStep, 0.f}});
+        }
+    }
+
+    for (UINT32 i = 0; i < heightSegments; i++) {
+        for (UINT32 j = 0; j < widthSegments; j++) {
+            UINT32 index = i * (widthSegments + 1) + j;
+            indices.push_back(index);
+            indices.push_back(index + 1);
+            indices.push_back(index + widthSegments + 1);
+            indices.push_back(index + 1);
+            indices.push_back(index + widthSegments + 2);
+            indices.push_back(index + widthSegments + 1);
+        }
+    }
+
+    return {.vertices = vertices, .indices = indices};
+}
+
 // Auxiliary state modules
 class Camera
 {
@@ -75,15 +104,17 @@ public:
         DirectX::XMMATRIX translationMatrix = DirectX::XMMatrixTranslation(xTranslation, yTranslation, zTranslation);
         DirectX::XMMATRIX rotationMatrix2 = DirectX::XMMatrixRotationY(yAngle);
         DirectX::XMMATRIX rotationMatrix3 = DirectX::XMMatrixRotationX(xAngle + m_xzPlaneAngle);
+
         m_viewMatrix = DirectX::XMMatrixMultiply(m_viewMatrix, rotationMatrix1);
         m_viewMatrix = DirectX::XMMatrixMultiply(m_viewMatrix, translationMatrix);
         m_viewMatrix = DirectX::XMMatrixMultiply(m_viewMatrix, rotationMatrix2);
         m_viewMatrix = DirectX::XMMatrixMultiply(m_viewMatrix, rotationMatrix3);
+
         m_xzPlaneAngle += xAngle;
     }
 
-    DirectX::XMMATRIX GetViewMatrix() const { return m_viewMatrix; }
-    DirectX::XMMATRIX GetProjectionMatrix() const { return m_projectionMatrix; }
+    [[nodiscard]] DirectX::XMMATRIX GetViewMatrix() const { return m_viewMatrix; }
+    [[nodiscard]] DirectX::XMMATRIX GetProjectionMatrix() const { return m_projectionMatrix; }
 
 private:
     DirectX::XMMATRIX m_viewMatrix;
@@ -113,8 +144,10 @@ int main()
                                              {.position{.5f, .5f, 2.f}},   {.position{.5f, -.5f, 2.f}},
                                              {.position{-.5f, -.5f, 3.f}}, {.position{-.5f, .5f, 3.f}},
                                              {.position{.5f, .5f, 3.f}},   {.position{.5f, -.5f, 3.f}}};
+
             UINT32 indices[39]{0, 1, 3, 1, 2, 3, 4, 5, 0, 5, 1, 0, 7, 6, 4, 6, 5, 4, 3, 2,
                                7, 2, 6, 7, 1, 5, 2, 5, 6, 2, 4, 0, 7, 0, 3, 7, 8, 9, 10};
+
             Mesh cube = {
                 .vertices = std::vector<VertexBufferElement>(vertices, vertices + 12),
                 .indices = std::vector<UINT32>(indices, indices + 39)
@@ -122,7 +155,7 @@ int main()
 
             LightSource lightSource1{.position{-1.f, 1.f, 0.f}, .color{0.4f, 1.f, 1.f}, .intensity = .9f};
             LightSource lightSource2{.position{1.f, -1.f, 3.f}, .color{1.f, 0.4f, 1.f}, .intensity = .9f};
-            LightCBuffer lightCBufferData{.lightSource{lightSource1, lightSource2}, .lightCount = 2};
+            LightCBuffer lightCBufferData{.lightSources{lightSource1, lightSource2}, .numLights = 2};
 
             SIZE_T vertexBufferSize = AlignUp(sizeof(cube.vertices), 256);
             SIZE_T indexBufferSize = AlignUp(sizeof(cube.indices), 256);

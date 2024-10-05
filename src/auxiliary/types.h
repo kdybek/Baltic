@@ -2,6 +2,8 @@
 
 #include <vector>
 
+#include "auxiliary/constants.h"
+
 namespace Baltic
 {
     using Microsoft::WRL::ComPtr;
@@ -28,11 +30,12 @@ namespace Baltic
         FLOAT intensity;
 
     } __attribute__((packed));
-    
+
     struct LightCBuffer
     {
-        LightSource lightSource[16];
-        UINT16 lightCount;
+        LightSource lightSources[MAX_LIGHTS];
+        UINT32 numLights;
+        FLOAT padding[3];
 
     } __attribute__((packed));
 

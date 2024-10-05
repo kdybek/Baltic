@@ -8,6 +8,7 @@ namespace Baltic
 {
     inline constexpr DWORD EVENT_TIMEOUT = 20000;
     inline constexpr UINT FRAME_COUNT = 2;
+    inline constexpr UINT MAX_LIGHTS = 16;
 
     inline constexpr D3D12_INPUT_ELEMENT_DESC VB_INPUT_ELEMENT_DESC[]{
         {.SemanticName = "POSITION",
