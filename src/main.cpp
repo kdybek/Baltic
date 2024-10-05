@@ -21,29 +21,35 @@ using namespace Baltic;
 // Auxiliary functions
 SIZE_T AlignUp(SIZE_T size, SIZE_T alignment) { return (size + alignment - 1) & ~(alignment - 1); }
 
-Mesh CreatePlane(FLOAT width, FLOAT height, UINT32 widthSegments, UINT32 heightSegments)
+template <typename T>
+SIZE_T VecDataSize(const std::vector<T>& vec)
+{
+    return vec.size() * sizeof(T);
+}
+
+Mesh CreateXZPlane(FLOAT xSize, FLOAT zSize, UINT32 xSegments, UINT32 zSegments, FLOAT y = 0.f)
 {
     std::vector<VertexBufferElement> vertices;
     std::vector<UINT32> indices;
 
-    FLOAT widthStep = width / widthSegments;
-    FLOAT heightStep = height / heightSegments;
+    FLOAT xStep = xSize / xSegments;
+    FLOAT zStep = zSize / zSegments;
 
-    for (UINT32 i = 0; i <= heightSegments; i++) {
-        for (UINT32 j = 0; j <= widthSegments; j++) {
-            vertices.push_back({.position{j * widthStep, i * heightStep, 0.f}});
+    for (UINT32 i = 0; i <= zSegments; i++) {
+        for (UINT32 j = 0; j <= xSegments; j++) {
+            vertices.push_back({.position{j * xStep, y, i * zStep}});
         }
     }
 
-    for (UINT32 i = 0; i < heightSegments; i++) {
-        for (UINT32 j = 0; j < widthSegments; j++) {
-            UINT32 index = i * (widthSegments + 1) + j;
+    for (UINT32 i = 0; i < zSegments; i++) {
+        for (UINT32 j = 0; j < xSegments; j++) {
+            UINT32 index = i * (xSegments + 1) + j;
             indices.push_back(index);
+            indices.push_back(index + xSegments + 1);
             indices.push_back(index + 1);
-            indices.push_back(index + widthSegments + 1);
             indices.push_back(index + 1);
-            indices.push_back(index + widthSegments + 2);
-            indices.push_back(index + widthSegments + 1);
+            indices.push_back(index + xSegments + 1);
+            indices.push_back(index + xSegments + 2);
         }
     }
 
@@ -138,27 +144,14 @@ int main()
 
             std::vector<D3D12_RESOURCE_BARRIER> barriers;
 
-            VertexBufferElement vertices[12]{{.position{-.5f, -.5f, 1.f}}, {.position{-.5f, .5f, 1.f}},
-                                             {.position{.5f, .5f, 1.f}},   {.position{.5f, -.5f, 1.f}},
-                                             {.position{-.5f, -.5f, 2.f}}, {.position{-.5f, .5f, 2.f}},
-                                             {.position{.5f, .5f, 2.f}},   {.position{.5f, -.5f, 2.f}},
-                                             {.position{-.5f, -.5f, 3.f}}, {.position{-.5f, .5f, 3.f}},
-                                             {.position{.5f, .5f, 3.f}},   {.position{.5f, -.5f, 3.f}}};
-
-            UINT32 indices[39]{0, 1, 3, 1, 2, 3, 4, 5, 0, 5, 1, 0, 7, 6, 4, 6, 5, 4, 3, 2,
-                               7, 2, 6, 7, 1, 5, 2, 5, 6, 2, 4, 0, 7, 0, 3, 7, 8, 9, 10};
-
-            Mesh cube = {
-                .vertices = std::vector<VertexBufferElement>(vertices, vertices + 12),
-                .indices = std::vector<UINT32>(indices, indices + 39)
-            };
+            Mesh plane = CreateXZPlane(10.f, 10.f, 10, 10, -4.f);
 
             LightSource lightSource1{.position{-1.f, 1.f, 0.f}, .color{0.4f, 1.f, 1.f}, .intensity = .9f};
             LightSource lightSource2{.position{1.f, -1.f, 3.f}, .color{1.f, 0.4f, 1.f}, .intensity = .9f};
             LightCBuffer lightCBufferData{.lightSources{lightSource1, lightSource2}, .numLights = 2};
 
-            SIZE_T vertexBufferSize = AlignUp(sizeof(cube.vertices), 256);
-            SIZE_T indexBufferSize = AlignUp(sizeof(cube.indices), 256);
+            SIZE_T vertexBufferSize = AlignUp(VecDataSize(plane.vertices), 256);
+            SIZE_T indexBufferSize = AlignUp(VecDataSize(plane.indices), 256);
             SIZE_T uploadBufferSize = vertexBufferSize + indexBufferSize;
             SIZE_T cameraCBufferSize = AlignUp(sizeof(CameraCBuffer), 256);
             SIZE_T lightCBufferSize = AlignUp(sizeof(LightCBuffer), 256);
@@ -174,8 +167,8 @@ int main()
             ComPtr<ID3D12Resource2> lightCBuffer =
                 CreateUploadBuffer(lightCBufferSize, dxContext.GetDeviceComPtr().Get());
 
-            CopyDataToResource(uploadBuffer.Get(), vertices, sizeof(vertices));
-            CopyDataToResource(uploadBuffer.Get(), indices, sizeof(indices), vertexBufferSize);
+            CopyDataToResource(uploadBuffer.Get(), plane.vertices.data(), VecDataSize(plane.vertices));
+            CopyDataToResource(uploadBuffer.Get(), plane.indices.data(), VecDataSize(plane.indices), vertexBufferSize);
             CopyDataToResource(lightCBuffer.Get(), &lightCBufferData, sizeof(LightCBuffer));
 
             dxContext.ResetCmdList();
@@ -184,10 +177,10 @@ int main()
             dxContext.GetCmdListComPtr()->ResourceBarrier(barriers.size(), barriers.data());
             barriers.clear();
             dxContext.GetCmdListComPtr()->CopyBufferRegion(
-                vertexBuffer.Get(), 0, uploadBuffer.Get(), 0, sizeof(vertices)
+                vertexBuffer.Get(), 0, uploadBuffer.Get(), 0, VecDataSize(plane.vertices)
             );
             dxContext.GetCmdListComPtr()->CopyBufferRegion(
-                indexBuffer.Get(), 0, uploadBuffer.Get(), vertexBufferSize, sizeof(indices)
+                indexBuffer.Get(), 0, uploadBuffer.Get(), vertexBufferSize, VecDataSize(plane.indices)
             );
             QueueTransition(
                 vertexBuffer.Get(), D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER,
@@ -202,13 +195,13 @@ int main()
 
             D3D12_VERTEX_BUFFER_VIEW vertexBufferView{
                 .BufferLocation = vertexBuffer->GetGPUVirtualAddress(),
-                .SizeInBytes = sizeof(vertices),
+                .SizeInBytes = static_cast<UINT>(VecDataSize(plane.vertices)),
                 .StrideInBytes = sizeof(VertexBufferElement)
             };
 
             D3D12_INDEX_BUFFER_VIEW indexBufferView{
                 .BufferLocation = indexBuffer->GetGPUVirtualAddress(),
-                .SizeInBytes = sizeof(indices),
+                .SizeInBytes = static_cast<UINT>(VecDataSize(plane.indices)),
                 .Format = DXGI_FORMAT_R32_UINT
             };
 
@@ -352,7 +345,7 @@ int main()
                 cmdList->SetGraphicsRootConstantBufferView(0, cameraCBuffer->GetGPUVirtualAddress());
                 cmdList->SetGraphicsRootConstantBufferView(1, lightCBuffer->GetGPUVirtualAddress());
 
-                cmdList->DrawIndexedInstanced(39, 1, 0, 0, 0);
+                cmdList->DrawIndexedInstanced(plane.indices.size(), 1, 0, 0, 0);
 
                 mainWindow.QueuePostRenderingTransitions(barriers);
                 cmdList->ResourceBarrier(barriers.size(), barriers.data());
