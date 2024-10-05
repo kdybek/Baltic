@@ -15,10 +15,13 @@ namespace Baltic
 
     } __attribute__((packed));
 
-    struct CameraCBuffer
+    struct ConstantBuffer
     {
+        DirectX::XMMATRIX worldMatrix;
         DirectX::XMMATRIX viewMatrix;
         DirectX::XMMATRIX projectionMatrix;
+        DirectX::XMFLOAT3 color;
+        FLOAT padding;
 
     } __attribute__((packed));
 
@@ -31,7 +34,7 @@ namespace Baltic
 
     } __attribute__((packed));
 
-    struct LightCBuffer
+    struct LightBuffer
     {
         LightSource lightSources[MAX_LIGHTS];
         UINT32 numLights;
@@ -43,6 +46,13 @@ namespace Baltic
     {
         std::vector<VertexBufferElement> vertices;
         std::vector<UINT32> indices;
+    };
+
+    struct Model
+    {
+        Mesh mesh;
+        DirectX::XMMATRIX worldMatrix;
+        DirectX::XMFLOAT3 color;
     };
 
     enum class EventType

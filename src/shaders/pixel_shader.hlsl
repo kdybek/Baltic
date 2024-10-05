@@ -19,16 +19,18 @@ struct LightSource
     float intensity;
 };
 
-cbuffer ConstantBuffer : register(b1)
+cbuffer lightBuffer : register(b1)
 {
     LightSource lightSources[16];
     uint numLights;
 };
 
+float3 modelColor : register(b2);
+
 [RootSignature(ROOTSIG)]
 void main(in PS_Input input, out PS_Output output)
 {
-    output.color = float4(0.0f, 0.0f, 0.0f, 1.0f);
+    output.color = float4(modelColor, 1.f);
 
     for (uint i = 0; i < numLights; i++)
     {

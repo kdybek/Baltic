@@ -27,7 +27,7 @@ SIZE_T VecDataSize(const std::vector<T>& vec)
     return vec.size() * sizeof(T);
 }
 
-Mesh CreateXZPlane(FLOAT xSize, FLOAT zSize, UINT32 xSegments, UINT32 zSegments, FLOAT y = 0.f)
+Mesh CreateXZPlane(FLOAT xSize, FLOAT zSize, UINT32 xSegments, UINT32 zSegments)
 {
     std::vector<VertexBufferElement> vertices;
     std::vector<UINT32> indices;
@@ -37,7 +37,7 @@ Mesh CreateXZPlane(FLOAT xSize, FLOAT zSize, UINT32 xSegments, UINT32 zSegments,
 
     for (UINT32 i = 0; i <= zSegments; i++) {
         for (UINT32 j = 0; j <= xSegments; j++) {
-            vertices.push_back({.position{j * xStep, y, i * zStep}});
+            vertices.push_back({.position{j * xStep, 0.f, i * zStep}});
         }
     }
 
@@ -62,10 +62,7 @@ class Camera
 public:
     Camera() = default;
 
-    Camera(const DirectX::XMMATRIX& viewMatrix, const DirectX::XMMATRIX& projectionMatrix)
-        : m_viewMatrix(viewMatrix), m_projectionMatrix(projectionMatrix), m_xzPlaneAngle(0.f)
-    {
-    }
+    Camera(const DirectX::XMMATRIX& viewMatrix) : m_viewMatrix(viewMatrix), m_xzPlaneAngle(0.f) {}
 
     void HandleInput(POINT mouseMovementVec, const std::unordered_map<Key, BOOL>& keyStates)
     {
@@ -120,11 +117,9 @@ public:
     }
 
     [[nodiscard]] DirectX::XMMATRIX GetViewMatrix() const { return m_viewMatrix; }
-    [[nodiscard]] DirectX::XMMATRIX GetProjectionMatrix() const { return m_projectionMatrix; }
 
 private:
     DirectX::XMMATRIX m_viewMatrix;
-    DirectX::XMMATRIX m_projectionMatrix;
     FLOAT m_xzPlaneAngle;
     FLOAT m_mouseSensitivity = .001f;
     FLOAT m_translationSpeed = .1f;
@@ -144,17 +139,21 @@ int main()
 
             std::vector<D3D12_RESOURCE_BARRIER> barriers;
 
-            Mesh plane = CreateXZPlane(10.f, 10.f, 10, 10, -4.f);
+            Model plane = {
+                .mesh = CreateXZPlane(10.f, 10.f, 20, 20),
+                .worldMatrix = DirectX::XMMatrixTranslation(0.f, -4.f, 0.f),
+                .color{1.f, 1.f, 1.f}
+            };
 
             LightSource lightSource1{.position{-1.f, 1.f, 0.f}, .color{0.4f, 1.f, 1.f}, .intensity = .9f};
             LightSource lightSource2{.position{1.f, -1.f, 3.f}, .color{1.f, 0.4f, 1.f}, .intensity = .9f};
-            LightCBuffer lightCBufferData{.lightSources{lightSource1, lightSource2}, .numLights = 2};
+            LightBuffer lightBufferData{.lightSources{lightSource1, lightSource2}, .numLights = 2};
 
-            SIZE_T vertexBufferSize = AlignUp(VecDataSize(plane.vertices), 256);
-            SIZE_T indexBufferSize = AlignUp(VecDataSize(plane.indices), 256);
+            SIZE_T vertexBufferSize = AlignUp(VecDataSize(plane.mesh.vertices), 256);
+            SIZE_T indexBufferSize = AlignUp(VecDataSize(plane.mesh.indices), 256);
             SIZE_T uploadBufferSize = vertexBufferSize + indexBufferSize;
-            SIZE_T cameraCBufferSize = AlignUp(sizeof(CameraCBuffer), 256);
-            SIZE_T lightCBufferSize = AlignUp(sizeof(LightCBuffer), 256);
+            SIZE_T constantBufferSize = AlignUp(sizeof(ConstantBuffer), 256);
+            SIZE_T lightBufferSize = AlignUp(sizeof(LightBuffer), 256);
 
             ComPtr<ID3D12Resource2> vertexBuffer =
                 CreateGPUBuffer(vertexBufferSize, D3D12_RESOURCE_STATE_COMMON, dxContext.GetDeviceComPtr().Get());
@@ -162,14 +161,16 @@ int main()
                 CreateGPUBuffer(indexBufferSize, D3D12_RESOURCE_STATE_COMMON, dxContext.GetDeviceComPtr().Get());
             ComPtr<ID3D12Resource2> uploadBuffer =
                 CreateUploadBuffer(uploadBufferSize, dxContext.GetDeviceComPtr().Get());
-            ComPtr<ID3D12Resource2> cameraCBuffer =
-                CreateUploadBuffer(cameraCBufferSize, dxContext.GetDeviceComPtr().Get());
-            ComPtr<ID3D12Resource2> lightCBuffer =
-                CreateUploadBuffer(lightCBufferSize, dxContext.GetDeviceComPtr().Get());
+            ComPtr<ID3D12Resource2> constantBuffer =
+                CreateUploadBuffer(constantBufferSize, dxContext.GetDeviceComPtr().Get());
+            ComPtr<ID3D12Resource2> lightBuffer =
+                CreateUploadBuffer(lightBufferSize, dxContext.GetDeviceComPtr().Get());
 
-            CopyDataToResource(uploadBuffer.Get(), plane.vertices.data(), VecDataSize(plane.vertices));
-            CopyDataToResource(uploadBuffer.Get(), plane.indices.data(), VecDataSize(plane.indices), vertexBufferSize);
-            CopyDataToResource(lightCBuffer.Get(), &lightCBufferData, sizeof(LightCBuffer));
+            CopyDataToResource(uploadBuffer.Get(), plane.mesh.vertices.data(), VecDataSize(plane.mesh.vertices));
+            CopyDataToResource(
+                uploadBuffer.Get(), plane.mesh.indices.data(), VecDataSize(plane.mesh.indices), vertexBufferSize
+            );
+            CopyDataToResource(lightBuffer.Get(), &lightBufferData, sizeof(LightBuffer));
 
             dxContext.ResetCmdList();
             QueueTransition(vertexBuffer.Get(), D3D12_RESOURCE_STATE_COMMON, D3D12_RESOURCE_STATE_COPY_DEST, barriers);
@@ -177,10 +178,10 @@ int main()
             dxContext.GetCmdListComPtr()->ResourceBarrier(barriers.size(), barriers.data());
             barriers.clear();
             dxContext.GetCmdListComPtr()->CopyBufferRegion(
-                vertexBuffer.Get(), 0, uploadBuffer.Get(), 0, VecDataSize(plane.vertices)
+                vertexBuffer.Get(), 0, uploadBuffer.Get(), 0, VecDataSize(plane.mesh.vertices)
             );
             dxContext.GetCmdListComPtr()->CopyBufferRegion(
-                indexBuffer.Get(), 0, uploadBuffer.Get(), vertexBufferSize, VecDataSize(plane.indices)
+                indexBuffer.Get(), 0, uploadBuffer.Get(), vertexBufferSize, VecDataSize(plane.mesh.indices)
             );
             QueueTransition(
                 vertexBuffer.Get(), D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER,
@@ -195,13 +196,13 @@ int main()
 
             D3D12_VERTEX_BUFFER_VIEW vertexBufferView{
                 .BufferLocation = vertexBuffer->GetGPUVirtualAddress(),
-                .SizeInBytes = static_cast<UINT>(VecDataSize(plane.vertices)),
+                .SizeInBytes = static_cast<UINT>(VecDataSize(plane.mesh.vertices)),
                 .StrideInBytes = sizeof(VertexBufferElement)
             };
 
             D3D12_INDEX_BUFFER_VIEW indexBufferView{
                 .BufferLocation = indexBuffer->GetGPUVirtualAddress(),
-                .SizeInBytes = static_cast<UINT>(VecDataSize(plane.indices)),
+                .SizeInBytes = static_cast<UINT>(VecDataSize(plane.mesh.indices)),
                 .Format = DXGI_FORMAT_R32_UINT
             };
 
@@ -236,7 +237,6 @@ int main()
             pipelineStateDesc.PS = {pixelShader.GetData(), pixelShader.GetSize()};
             pipelineStateDesc.DepthStencilState = depthStencilDesc;
             pipelineStateDesc.InputLayout = VB_INPUT_LAYOUT_DESC;
-            pipelineStateDesc.DSVFormat = DSV_FORMAT;
             ComPtr<ID3D12PipelineState> pipelineState;
             dxContext.GetDeviceComPtr()->CreateGraphicsPipelineState(&pipelineStateDesc, IID_PPV_ARGS(&pipelineState));
 
@@ -250,12 +250,9 @@ int main()
             BOOL end = FALSE;
             POINT lastCursorPos = mainWindow.GetCursorPosition();
             FLOAT xzPlaneAngle = 0.f;
-            Camera camera(
-                DirectX::XMMatrixIdentity(),
-                DirectX::XMMatrixPerspectiveFovLH(
-                    DirectX::XMConvertToRadians(60.f),
-                    static_cast<FLOAT>(mainWindow.GetWidth()) / static_cast<FLOAT>(mainWindow.GetHeight()), .1f, 100.f
-                )
+            Camera camera(DirectX::XMMatrixIdentity());
+            DirectX::XMMATRIX projectionMatrix = DirectX::XMMatrixPerspectiveFovLH(
+                DirectX::XMConvertToRadians(60.f), mainWindow.GetAspectRatio(), .1f, 100.f
             );
 
             while (!end) {
@@ -336,16 +333,19 @@ int main()
                 cmdList->RSSetViewports(1, mainWindow.GetViewportPtr());
                 cmdList->RSSetScissorRects(1, mainWindow.GetScissorRectPtr());
 
-                CameraCBuffer cameraCBufferData{
-                    .viewMatrix = camera.GetViewMatrix(), .projectionMatrix = camera.GetProjectionMatrix()
+                ConstantBuffer constantBufferData{
+                    .worldMatrix = plane.worldMatrix,
+                    .viewMatrix = camera.GetViewMatrix(),
+                    .projectionMatrix = projectionMatrix
                 };
 
-                CopyDataToResource(cameraCBuffer.Get(), &cameraCBufferData, sizeof(CameraCBuffer));
+                CopyDataToResource(constantBuffer.Get(), &constantBufferData, sizeof(ConstantBuffer));
 
-                cmdList->SetGraphicsRootConstantBufferView(0, cameraCBuffer->GetGPUVirtualAddress());
-                cmdList->SetGraphicsRootConstantBufferView(1, lightCBuffer->GetGPUVirtualAddress());
+                cmdList->SetGraphicsRootConstantBufferView(0, constantBuffer->GetGPUVirtualAddress());
+                cmdList->SetGraphicsRootConstantBufferView(1, lightBuffer->GetGPUVirtualAddress());
+                cmdList->SetGraphicsRoot32BitConstants(2, 3, &plane.color, 0);
 
-                cmdList->DrawIndexedInstanced(plane.indices.size(), 1, 0, 0, 0);
+                cmdList->DrawIndexedInstanced(plane.mesh.indices.size(), 1, 0, 0, 0);
 
                 mainWindow.QueuePostRenderingTransitions(barriers);
                 cmdList->ResourceBarrier(barriers.size(), barriers.data());

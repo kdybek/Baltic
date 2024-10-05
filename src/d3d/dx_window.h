@@ -35,6 +35,7 @@ namespace Baltic
 
         [[nodiscard]] inline UINT GetWidth() const { return m_width; }
         [[nodiscard]] inline UINT GetHeight() const { return m_height; }
+        [[nodiscard]] inline FLOAT GetAspectRatio() const { return static_cast<FLOAT>(m_width) / m_height; }
         [[nodiscard]] inline const D3D12_VIEWPORT* GetViewportPtr() const { return &m_viewport; }
         [[nodiscard]] inline const D3D12_RECT* GetScissorRectPtr() const { return &m_scissorRect; }
         [[nodiscard]] inline BOOL isFullscreen() const { return m_isFullscreen; }
