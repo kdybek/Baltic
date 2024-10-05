@@ -82,11 +82,12 @@ public:
         m_xzPlaneAngle += xAngle;
     }
 
-public:
-    DirectX::XMMATRIX m_viewMatrix;
-    DirectX::XMMATRIX m_projectionMatrix;
+    DirectX::XMMATRIX GetViewMatrix() const { return m_viewMatrix; }
+    DirectX::XMMATRIX GetProjectionMatrix() const { return m_projectionMatrix; }
 
 private:
+    DirectX::XMMATRIX m_viewMatrix;
+    DirectX::XMMATRIX m_projectionMatrix;
     FLOAT m_xzPlaneAngle;
     FLOAT m_mouseSensitivity = .001f;
     FLOAT m_translationSpeed = .1f;
@@ -289,6 +290,7 @@ int main()
                 mainWindow.QueuePreRenderingTransitions(barriers);
                 cmdList->ResourceBarrier(barriers.size(), barriers.data());
                 barriers.clear();
+
                 FLOAT clearColor[]{.1f, .1f, .1f, 1.f};
                 cmdList->ClearRenderTargetView(*mainWindow.GetBackBufferRTVHandlePtr(), clearColor, 0, nullptr);
                 cmdList->ClearDepthStencilView(
@@ -306,18 +308,15 @@ int main()
                 cmdList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 
                 cmdList->RSSetViewports(1, mainWindow.GetViewportPtr());
-
                 cmdList->RSSetScissorRects(1, mainWindow.GetScissorRectPtr());
 
                 CameraCBuffer cameraCBufferData{
-                    .viewMatrix = camera.m_viewMatrix,
-                    .projectionMatrix = camera.m_projectionMatrix,
+                    .viewMatrix = camera.GetViewMatrix(), .projectionMatrix = camera.GetProjectionMatrix()
                 };
 
                 CopyDataToResource(cameraCBuffer.Get(), &cameraCBufferData, sizeof(CameraCBuffer));
 
                 cmdList->SetGraphicsRootConstantBufferView(0, cameraCBuffer->GetGPUVirtualAddress());
-
                 cmdList->SetGraphicsRootConstantBufferView(1, lightCBuffer->GetGPUVirtualAddress());
 
                 cmdList->DrawIndexedInstanced(39, 1, 0, 0, 0);
