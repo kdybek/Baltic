@@ -18,6 +18,76 @@
 
 using namespace Baltic;
 
+class Camera
+{
+public:
+    Camera() = default;
+
+    Camera(const DirectX::XMMATRIX& viewMatrix, const DirectX::XMMATRIX& projectionMatrix)
+        : m_viewMatrix(viewMatrix), m_projectionMatrix(projectionMatrix), m_xzPlaneAngle(0.f)
+    {
+    }
+
+    void HandleInput(POINT mouseMovementVec, const std::unordered_map<Key, BOOL>& keyStates)
+    {
+        FLOAT xAngle = mouseMovementVec.y * -m_mouseSensitivity;
+        FLOAT yAngle = mouseMovementVec.x * -m_mouseSensitivity;
+        FLOAT xTranslation = 0.f;
+        FLOAT yTranslation = 0.f;
+        FLOAT zTranslation = 0.f;
+
+        if (keyStates.at(Key::W)) {
+            zTranslation -= m_translationSpeed;
+        }
+
+        if (keyStates.at(Key::A)) {
+            xTranslation += m_translationSpeed;
+        }
+
+        if (keyStates.at(Key::S)) {
+            zTranslation += m_translationSpeed;
+        }
+
+        if (keyStates.at(Key::D)) {
+            xTranslation -= m_translationSpeed;
+        }
+
+        if (keyStates.at(Key::Space)) {
+            yTranslation -= m_translationSpeed;
+        }
+
+        if (keyStates.at(Key::Shift)) {
+            yTranslation += m_translationSpeed;
+        }
+
+        if (xAngle + m_xzPlaneAngle > DirectX::XM_PIDIV2) {
+            xAngle = DirectX::XM_PIDIV2 - m_xzPlaneAngle;
+        }
+        else if (xAngle + m_xzPlaneAngle < -DirectX::XM_PIDIV2) {
+            xAngle = -DirectX::XM_PIDIV2 - m_xzPlaneAngle;
+        }
+
+        DirectX::XMMATRIX rotationMatrix1 = DirectX::XMMatrixRotationX(-m_xzPlaneAngle);
+        DirectX::XMMATRIX translationMatrix = DirectX::XMMatrixTranslation(xTranslation, yTranslation, zTranslation);
+        DirectX::XMMATRIX rotationMatrix2 = DirectX::XMMatrixRotationY(yAngle);
+        DirectX::XMMATRIX rotationMatrix3 = DirectX::XMMatrixRotationX(xAngle + m_xzPlaneAngle);
+        m_viewMatrix = DirectX::XMMatrixMultiply(m_viewMatrix, rotationMatrix1);
+        m_viewMatrix = DirectX::XMMatrixMultiply(m_viewMatrix, translationMatrix);
+        m_viewMatrix = DirectX::XMMatrixMultiply(m_viewMatrix, rotationMatrix2);
+        m_viewMatrix = DirectX::XMMatrixMultiply(m_viewMatrix, rotationMatrix3);
+        m_xzPlaneAngle += xAngle;
+    }
+
+public:
+    DirectX::XMMATRIX m_viewMatrix;
+    DirectX::XMMATRIX m_projectionMatrix;
+
+private:
+    FLOAT m_xzPlaneAngle;
+    FLOAT m_mouseSensitivity = .001f;
+    FLOAT m_translationSpeed = .1f;
+};
+
 int main()
 {
     int ret = 0;
@@ -29,7 +99,6 @@ int main()
 
         {
             DXContext dxContext;
-
             std::vector<D3D12_RESOURCE_BARRIER> barriers;
 
             ComPtr<ID3D12Resource2> uploadBuffer = CreateUploadBuffer(1024, dxContext.GetDeviceComPtr().Get());
@@ -142,8 +211,6 @@ int main()
             DXWindow mainWindow(1920, 1080, dxContext);
             mainWindow.SetFullscreen(TRUE);
 
-            DirectX::XMMATRIX viewMatrix = DirectX::XMMatrixIdentity();
-
             std::unordered_map<Key, BOOL> keyStates{{Key::W, FALSE},  {Key::A, FALSE},     {Key::S, FALSE},
                                                     {Key::D, FALSE},  {Key::Space, FALSE}, {Key::Shift, FALSE},
                                                     {Key::F11, FALSE}};
@@ -151,9 +218,17 @@ int main()
             BOOL end = FALSE;
             POINT lastCursorPos = mainWindow.GetCursorPosition();
             FLOAT xzPlaneAngle = 0.f;
+            Camera camera(
+                DirectX::XMMatrixIdentity(),
+                DirectX::XMMatrixPerspectiveFovLH(
+                    DirectX::XMConvertToRadians(60.f),
+                    static_cast<FLOAT>(mainWindow.GetWidth()) / static_cast<FLOAT>(mainWindow.GetHeight()), .1f, 100.f
+                )
+            );
 
             while (!end) {
                 mainWindow.Update();
+                POINT mouseMovementVec = {.x = 0, .y = 0};
 
                 Event event;
                 while ((event = mainWindow.PollEvent()).type != EventType::None) {
@@ -190,57 +265,17 @@ int main()
                         keyStates[event.key] = FALSE;
                     }
                     else if (event.type == EventType::MouseMove) {
-                        FLOAT xAngle = static_cast<FLOAT>(event.cursorPosition.y - lastCursorPos.y) * -.001f;
-                        FLOAT yAngle = static_cast<FLOAT>(event.cursorPosition.x - lastCursorPos.x) * -.001f;
-                        FLOAT xTranslation = 0.f;
-                        FLOAT yTranslation = 0.f;
-                        FLOAT zTranslation = 0.f;
-
-                        if (keyStates.at(Key::W)) {
-                            zTranslation -= .1f;
-                        }
-
-                        if (keyStates.at(Key::A)) {
-                            xTranslation += .1f;
-                        }
-
-                        if (keyStates.at(Key::S)) {
-                            zTranslation += .1f;
-                        }
-
-                        if (keyStates.at(Key::D)) {
-                            xTranslation -= .1f;
-                        }
-
-                        if (keyStates.at(Key::Space)) {
-                            yTranslation -= .1f;
-                        }
-
-                        if (keyStates.at(Key::Shift)) {
-                            yTranslation += .1f;
-                        }
-
-                        if (xAngle + xzPlaneAngle > DirectX::XM_PIDIV2) {
-                            xAngle = DirectX::XM_PIDIV2 - xzPlaneAngle;
-                        }
-                        else if (xAngle + xzPlaneAngle < -DirectX::XM_PIDIV2) {
-                            xAngle = -DirectX::XM_PIDIV2 - xzPlaneAngle;
-                        }
-
-                        DirectX::XMMATRIX rotationMatrix1 = DirectX::XMMatrixRotationX(-xzPlaneAngle);
-                        DirectX::XMMATRIX translationMatrix =
-                            DirectX::XMMatrixTranslation(xTranslation, yTranslation, zTranslation);
-                        DirectX::XMMATRIX rotationMatrix2 = DirectX::XMMatrixRotationY(yAngle);
-                        DirectX::XMMATRIX rotationMatrix3 = DirectX::XMMatrixRotationX(xAngle + xzPlaneAngle);
-                        viewMatrix = DirectX::XMMatrixMultiply(viewMatrix, rotationMatrix1);
-                        viewMatrix = DirectX::XMMatrixMultiply(viewMatrix, translationMatrix);
-                        viewMatrix = DirectX::XMMatrixMultiply(viewMatrix, rotationMatrix2);
-                        viewMatrix = DirectX::XMMatrixMultiply(viewMatrix, rotationMatrix3);
-                        xzPlaneAngle += xAngle;
+                        POINT mouseMovementVecAux = {
+                            .x = event.cursorPosition.x - lastCursorPos.x, .y = event.cursorPosition.y - lastCursorPos.y
+                        };
+                        mouseMovementVec.x += mouseMovementVecAux.x;
+                        mouseMovementVec.y += mouseMovementVecAux.y;
                         mainWindow.CenterCursor();
                         lastCursorPos = mainWindow.GetCursorPosition();
                     }
                 }
+
+                camera.HandleInput(mouseMovementVec, keyStates);
 
                 dxContext.ResetCmdList();
 
@@ -270,12 +305,8 @@ int main()
                 cmdList->RSSetScissorRects(1, mainWindow.GetScissorRectPtr());
 
                 CameraCBuffer cameraCBufferData{
-                    .viewMatrix = viewMatrix,
-                    .projectionMatrix = DirectX::XMMatrixPerspectiveFovLH(
-                        DirectX::XMConvertToRadians(60.f),
-                        static_cast<FLOAT>(mainWindow.GetWidth()) / static_cast<FLOAT>(mainWindow.GetHeight()), .1f,
-                        100.f
-                    )
+                    .viewMatrix = camera.m_viewMatrix,
+                    .projectionMatrix = camera.m_projectionMatrix,
                 };
 
                 CopyDataToResource(cameraCBuffer.Get(), &cameraCBufferData, sizeof(CameraCBuffer));
