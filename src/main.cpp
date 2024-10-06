@@ -62,38 +62,43 @@ class Camera
 public:
     Camera() = default;
 
-    Camera(const DirectX::XMMATRIX& viewMatrix) : m_viewMatrix(viewMatrix), m_xzPlaneAngle(0.f) {}
-
-    void HandleInput(POINT mouseMovementVec, const std::unordered_map<Key, BOOL>& keyStates)
+    Camera(const DirectX::XMMATRIX& viewMatrix)
+        : m_viewMatrix(viewMatrix), m_xzPlaneAngle(0.f), m_rotationSpeed(.04f), m_movementSpeed(4.f)
     {
-        FLOAT xAngle = mouseMovementVec.y * -m_mouseSensitivity;
-        FLOAT yAngle = mouseMovementVec.x * -m_mouseSensitivity;
+    }
+
+    void HandleInput(POINT mouseMovementVec, const std::unordered_map<Key, BOOL>& keyStates, FLOAT deltaTime)
+    {
+        FLOAT perUnitAngle = m_rotationSpeed * deltaTime;
+        FLOAT perUnitDistance = m_movementSpeed * deltaTime;
+        FLOAT xAngle = mouseMovementVec.y * -perUnitAngle;
+        FLOAT yAngle = mouseMovementVec.x * -perUnitAngle;
         FLOAT xTranslation = 0.f;
         FLOAT yTranslation = 0.f;
         FLOAT zTranslation = 0.f;
 
         if (keyStates.at(Key::W)) {
-            zTranslation -= m_translationSpeed;
+            zTranslation -= perUnitDistance;
         }
 
         if (keyStates.at(Key::A)) {
-            xTranslation += m_translationSpeed;
+            xTranslation += perUnitDistance;
         }
 
         if (keyStates.at(Key::S)) {
-            zTranslation += m_translationSpeed;
+            zTranslation += perUnitDistance;
         }
 
         if (keyStates.at(Key::D)) {
-            xTranslation -= m_translationSpeed;
+            xTranslation -= perUnitDistance;
         }
 
         if (keyStates.at(Key::Space)) {
-            yTranslation -= m_translationSpeed;
+            yTranslation -= perUnitDistance;
         }
 
         if (keyStates.at(Key::Shift)) {
-            yTranslation += m_translationSpeed;
+            yTranslation += perUnitDistance;
         }
 
         if (xAngle + m_xzPlaneAngle > DirectX::XM_PIDIV2) {
@@ -118,11 +123,14 @@ public:
 
     [[nodiscard]] DirectX::XMMATRIX GetViewMatrix() const { return m_viewMatrix; }
 
+    void SetRotationSpeed(FLOAT rotationSpeed) { m_rotationSpeed = rotationSpeed; }
+    void SetMovementSpeed(FLOAT movementSpeed) { m_movementSpeed = movementSpeed; }
+
 private:
     DirectX::XMMATRIX m_viewMatrix;
     FLOAT m_xzPlaneAngle;
-    FLOAT m_mouseSensitivity = .001f;
-    FLOAT m_translationSpeed = .1f;
+    FLOAT m_rotationSpeed;
+    FLOAT m_movementSpeed;
 };
 
 int main()
@@ -247,22 +255,29 @@ int main()
                                                     {Key::D, FALSE},  {Key::Space, FALSE}, {Key::Shift, FALSE},
                                                     {Key::F11, FALSE}};
 
-            BOOL end = FALSE;
+            BOOL close = FALSE;
             POINT lastCursorPos = mainWindow.GetCursorPosition();
             FLOAT xzPlaneAngle = 0.f;
             Camera camera(DirectX::XMMatrixIdentity());
             DirectX::XMMATRIX projectionMatrix = DirectX::XMMatrixPerspectiveFovLH(
                 DirectX::XMConvertToRadians(60.f), mainWindow.GetAspectRatio(), .1f, 100.f
             );
+            FLOAT deltaTime;
+            auto prevFrameAbsTime = std::chrono::steady_clock::now();
 
-            while (!end) {
+            while (!close) {
+                auto currentFrameAbsTime = std::chrono::steady_clock::now();
+                deltaTime = std::chrono::duration<FLOAT>(currentFrameAbsTime - prevFrameAbsTime).count();
+                prevFrameAbsTime = currentFrameAbsTime;
+
                 mainWindow.Update();
+
                 POINT mouseMovementVec = {.x = 0, .y = 0};
 
                 Event event;
                 while ((event = mainWindow.PollEvent()).type != EventType::None) {
                     if (event.type == EventType::Close) {
-                        end = TRUE;
+                        close = TRUE;
                     }
                     else if (event.type == EventType::Resize) {
                         dxContext.Flush(FRAME_COUNT);
@@ -304,7 +319,7 @@ int main()
                     }
                 }
 
-                camera.HandleInput(mouseMovementVec, keyStates);
+                camera.HandleInput(mouseMovementVec, keyStates, deltaTime);
 
                 dxContext.ResetCmdList();
 
@@ -354,8 +369,6 @@ int main()
                 dxContext.ExecuteCmdList();
 
                 mainWindow.Present();
-
-                std::this_thread::sleep_for(std::chrono::milliseconds(30));
             }
 
             dxContext.Flush(FRAME_COUNT);

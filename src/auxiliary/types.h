@@ -8,6 +8,11 @@ namespace Baltic
 {
     using Microsoft::WRL::ComPtr;
 
+    struct VertexBufferElement
+    {
+        DirectX::XMFLOAT3 position;
+    };
+
     struct ConstantBuffer
     {
         DirectX::XMMATRIX worldMatrix;
@@ -34,11 +39,6 @@ namespace Baltic
         FLOAT padding[3];
 
     } __attribute__((packed));
-
-    struct VertexBufferElement
-    {
-        DirectX::XMFLOAT3 position;
-    };
 
     struct Mesh
     {
