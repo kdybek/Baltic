@@ -22,7 +22,7 @@ struct LightSource
 
 cbuffer lightBuffer : register(b1)
 {
-    LightSource lightSources[16];
+    LightSource lightSources[15];
     uint numLights;
 };
 
