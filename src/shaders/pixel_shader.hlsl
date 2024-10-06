@@ -34,15 +34,15 @@ cbuffer modelColorRootConstant : register(b2)
 [RootSignature(ROOTSIG)]
 void main(in PS_Input input, out PS_Output output)
 {
-    output.color = float4(modelColor, 1.f);
+    output.color = float4(0.f, 0.f, 0.f, 1.f);
 
     for (uint i = 0; i < numLights; i++)
     {
         float3 lightDirection = normalize(lightSources[i].position - input.worldPosition);
-        float lightIntensity = max(0, dot(input.normal, lightDirection));
+        float lightIntensity = max(0, dot(input.normal, lightDirection)) / pow(distance(lightSources[i].position, input.worldPosition), 2);
 
-        output.color += float4(lightSources[i].color * lightIntensity, 0.0f) * lightSources[i].intensity;
+        output.color += float4(lightSources[i].color * lightIntensity, 0.f) * lightSources[i].intensity;
     }
 
-    output.color = float4(modelColor, 1.f);
+    output.color = saturate(output.color) * float4(modelColor, 1.f);
 }

@@ -150,11 +150,11 @@ int main()
             Model plane = {
                 .mesh = CreateXZPlane(10.f, 10.f, 20, 20),
                 .worldMatrix = DirectX::XMMatrixTranslation(0.f, -4.f, 0.f),
-                .color{.5f, .1f, 1.f}
+                .color{0.f, .3f, .8f}
             };
 
-            LightSource lightSource1{.position{-1.f, 1.f, 0.f}, .color{0.4f, 1.f, 1.f}, .intensity = .9f};
-            LightSource lightSource2{.position{1.f, -1.f, 3.f}, .color{1.f, 0.4f, 1.f}, .intensity = .9f};
+            LightSource lightSource1{.position{5.f, 10.f, 5.f}, .color{1.f, 1.f, 1.f}, .intensity = 80.f};
+            LightSource lightSource2{.position{3.f, 2.f, 2.f}, .color{1.f, .4f, 0.f}, .intensity = 40.f};
             LightBuffer lightBufferData{.lightSources{lightSource1, lightSource2}, .numLights = 2};
 
             SIZE_T vertexBufferSize = AlignUp(VecDataSize(plane.mesh.vertices), 256);
