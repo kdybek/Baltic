@@ -15,6 +15,7 @@ struct PS_Output
 struct LightSource
 {
     float3 position;
+    float padding;
     float3 color;
     float intensity;
 };
@@ -25,7 +26,10 @@ cbuffer lightBuffer : register(b1)
     uint numLights;
 };
 
-float3 modelColor : register(b2);
+cbuffer modelColorRootConstant : register(b2)
+{
+    float3 modelColor;
+};
 
 [RootSignature(ROOTSIG)]
 void main(in PS_Input input, out PS_Output output)
@@ -40,5 +44,5 @@ void main(in PS_Input input, out PS_Output output)
         output.color += float4(lightSources[i].color * lightIntensity, 0.0f) * lightSources[i].intensity;
     }
 
-    output.color = saturate(output.color);
+    output.color = float4(modelColor, 1.f);
 }

@@ -7,6 +7,6 @@
 
 #define ROOTSIG \
     "RootFlags(ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT), " \
-    "CBV(b0), " \
-    "CBV(b1), " \
-    "RootConstants(num32BitConstants=3, b2)" \
+    "CBV(b0, visibility = SHADER_VISIBILITY_VERTEX), " \
+    "CBV(b1, visibility = SHADER_VISIBILITY_PIXEL), " \
+    "RootConstants(num32BitConstants=3, b2, visibility = SHADER_VISIBILITY_PIXEL), " \

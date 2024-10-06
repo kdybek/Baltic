@@ -142,7 +142,7 @@ int main()
             Model plane = {
                 .mesh = CreateXZPlane(10.f, 10.f, 20, 20),
                 .worldMatrix = DirectX::XMMatrixTranslation(0.f, -4.f, 0.f),
-                .color{1.f, 1.f, 1.f}
+                .color{.5f, .1f, 1.f}
             };
 
             LightSource lightSource1{.position{-1.f, 1.f, 0.f}, .color{0.4f, 1.f, 1.f}, .intensity = .9f};
