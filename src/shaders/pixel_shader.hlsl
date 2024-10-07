@@ -20,13 +20,13 @@ struct LightSource
     float intensity;
 };
 
-cbuffer lightBuffer : register(b1)
+cbuffer lightBuffer : register(b0)
 {
     LightSource lightSources[15];
     uint numLights;
 };
 
-cbuffer modelColorRootConstant : register(b2)
+cbuffer modelColorRootConst : register(b1)
 {
     float3 modelColor;
 };

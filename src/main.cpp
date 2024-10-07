@@ -262,13 +262,15 @@ int main()
             DirectX::XMMATRIX projectionMatrix = DirectX::XMMatrixPerspectiveFovLH(
                 DirectX::XMConvertToRadians(60.f), mainWindow.GetAspectRatio(), .1f, 100.f
             );
-            FLOAT deltaTime;
             auto prevFrameAbsTime = std::chrono::steady_clock::now();
+            FLOAT absTimeMod2Pi = 0.f;
 
             while (!close) {
                 auto currentFrameAbsTime = std::chrono::steady_clock::now();
-                deltaTime = std::chrono::duration<FLOAT>(currentFrameAbsTime - prevFrameAbsTime).count();
+                FLOAT deltaTime = std::chrono::duration<FLOAT>(currentFrameAbsTime - prevFrameAbsTime).count();
                 prevFrameAbsTime = currentFrameAbsTime;
+                absTimeMod2Pi += deltaTime;
+                absTimeMod2Pi = std::fmod(absTimeMod2Pi, DirectX::XM_2PI);
 
                 mainWindow.Update();
 
@@ -357,8 +359,9 @@ int main()
                 CopyDataToResource(constantBuffer.Get(), &constantBufferData, sizeof(ConstantBuffer));
 
                 cmdList->SetGraphicsRootConstantBufferView(0, constantBuffer->GetGPUVirtualAddress());
-                cmdList->SetGraphicsRootConstantBufferView(1, lightBuffer->GetGPUVirtualAddress());
-                cmdList->SetGraphicsRoot32BitConstants(2, 3, &plane.color, 0);
+                cmdList->SetGraphicsRoot32BitConstant(1, std::bit_cast<UINT>(absTimeMod2Pi), 0);
+                cmdList->SetGraphicsRootConstantBufferView(2, lightBuffer->GetGPUVirtualAddress());
+                cmdList->SetGraphicsRoot32BitConstants(3, 3, &plane.color, 0);
 
                 cmdList->DrawIndexedInstanced(plane.mesh.indices.size(), 1, 0, 0, 0);
 
