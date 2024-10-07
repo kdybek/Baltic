@@ -18,7 +18,7 @@ cbuffer constantBuffer : register(b0)
     float4x4 projectionMatrix;
 }
 
-cbuffer absTimeRootConst : register(b1)
+cbuffer absTimeRootConst : register(b2)
 {
     float absTimeMod2Pi;
 }

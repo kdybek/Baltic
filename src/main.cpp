@@ -215,7 +215,6 @@ int main()
             };
 
             Shader vertexShader("vertex_shader.cso");
-            Shader geometryShader("geometry_shader.cso");
             Shader pixelShader("pixel_shader.cso");
             RootSignature rootSignature("root_signature.cso", dxContext.GetDeviceComPtr().Get());
 
@@ -241,7 +240,6 @@ int main()
             D3D12_GRAPHICS_PIPELINE_STATE_DESC pipelineStateDesc = DEFAULT_PIPELINE_STATE_DESC;
             pipelineStateDesc.pRootSignature = rootSignature.GetComPtr().Get();
             pipelineStateDesc.VS = {vertexShader.GetData(), vertexShader.GetSize()};
-            pipelineStateDesc.GS = {geometryShader.GetData(), geometryShader.GetSize()};
             pipelineStateDesc.PS = {pixelShader.GetData(), pixelShader.GetSize()};
             pipelineStateDesc.DepthStencilState = depthStencilDesc;
             pipelineStateDesc.InputLayout = VB_INPUT_LAYOUT_DESC;
@@ -359,9 +357,9 @@ int main()
                 CopyDataToResource(constantBuffer.Get(), &constantBufferData, sizeof(ConstantBuffer));
 
                 cmdList->SetGraphicsRootConstantBufferView(0, constantBuffer->GetGPUVirtualAddress());
-                cmdList->SetGraphicsRoot32BitConstant(1, std::bit_cast<UINT>(absTimeMod2Pi), 0);
-                cmdList->SetGraphicsRootConstantBufferView(2, lightBuffer->GetGPUVirtualAddress());
-                cmdList->SetGraphicsRoot32BitConstants(3, 3, &plane.color, 0);
+                cmdList->SetGraphicsRootConstantBufferView(1, lightBuffer->GetGPUVirtualAddress());
+                cmdList->SetGraphicsRoot32BitConstants(2, 3, &plane.color, 0);
+                cmdList->SetGraphicsRoot32BitConstant(3, std::bit_cast<UINT>(absTimeMod2Pi), 0);
 
                 cmdList->DrawIndexedInstanced(plane.mesh.indices.size(), 1, 0, 0, 0);
 
