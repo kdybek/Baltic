@@ -4,7 +4,6 @@
 
 #include <chrono>
 #include <iostream>
-#include <thread>
 #include <unordered_map>
 
 #include "auxiliary/baltic_exception.h"
@@ -16,9 +15,6 @@
 #include "d3d/shader.h"
 #include "debug/dx_debug_layer.h"
 
-using namespace Baltic;
-
-// Auxiliary functions
 SIZE_T AlignUp(SIZE_T size, SIZE_T alignment) { return (size + alignment - 1) & ~(alignment - 1); }
 
 template <typename T>
@@ -56,7 +52,6 @@ Mesh CreateXZPlane(FLOAT xSize, FLOAT zSize, UINT32 xSegments, UINT32 zSegments)
     return {.vertices = vertices, .indices = indices};
 }
 
-// Auxiliary state modules
 class Camera
 {
 public:
