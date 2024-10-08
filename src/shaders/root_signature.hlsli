@@ -4,6 +4,7 @@
  * slot 1: b0 - Pixel shader light buffer
  * slot 2: b1 - Pixel shader model color
  * slot 3: b2 - Absolute time modulo 2pi
+ * slot 4: b3 - Pixel shader view direction
  */
 
 #define ROOTSIG \

@@ -34,7 +34,7 @@ struct LightBuffer
 {
     LightSource lightSources[MAX_LIGHTS];
     UINT32 numLights;
-    FLOAT padding[3];
+    DirectX::XMFLOAT3 viewDirection;
 
 } __attribute__((packed));
 

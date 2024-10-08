@@ -2,6 +2,7 @@
 #include "auxiliary/pch.h"
 // clang-format on
 
+#include <DirectXMathMatrix.inl>
 #include <chrono>
 #include <iostream>
 #include <unordered_map>
@@ -117,6 +118,15 @@ public:
     }
 
     [[nodiscard]] DirectX::XMMATRIX GetViewMatrix() const { return m_viewMatrix; }
+    [[nodiscard]] DirectX::XMFLOAT3 GetViewDirection() const
+    {
+        DirectX::XMVECTOR viewDirection =
+            DirectX::XMVector4Transform(DirectX::g_XMIdentityR2, DirectX::XMMatrixInverse(nullptr, m_viewMatrix));
+        DirectX::XMFLOAT3 viewDirectionFloat;
+        DirectX::XMStoreFloat3(&viewDirectionFloat, viewDirection);
+
+        return viewDirectionFloat;
+    }
 
     void SetRotationSpeed(FLOAT rotationSpeed) { m_rotationSpeed = rotationSpeed; }
     void SetMovementSpeed(FLOAT movementSpeed) { m_movementSpeed = movementSpeed; }
@@ -150,7 +160,9 @@ int main()
 
             LightSource lightSource1{.position{5.f, 10.f, 5.f}, .color{1.f, 1.f, 1.f}, .intensity = 80.f};
             LightSource lightSource2{.position{3.f, 2.f, 2.f}, .color{1.f, .4f, 0.f}, .intensity = 40.f};
-            LightBuffer lightBufferData{.lightSources{lightSource1, lightSource2}, .numLights = 2};
+            LightBuffer lightBufferData{
+                .lightSources{lightSource1, lightSource2}, .numLights = 2, .viewDirection{0.f, 0.f, 1.f}
+            };
 
             SIZE_T vertexBufferSize = AlignUp(VecDataSize(plane.mesh.vertices), 256);
             SIZE_T indexBufferSize = AlignUp(VecDataSize(plane.mesh.indices), 256);
@@ -351,6 +363,10 @@ int main()
 
                 CopyDataToResource(constantBuffer.Get(), &constantBufferData, sizeof(ConstantBuffer));
 
+                lightBufferData.viewDirection = camera.GetViewDirection();
+
+                CopyDataToResource(lightBuffer.Get(), &lightBufferData, sizeof(LightBuffer));
+
                 cmdList->SetGraphicsRootConstantBufferView(0, constantBuffer->GetGPUVirtualAddress());
                 cmdList->SetGraphicsRootConstantBufferView(1, lightBuffer->GetGPUVirtualAddress());
                 cmdList->SetGraphicsRoot32BitConstants(2, 3, &plane.color, 0);
@@ -365,6 +381,8 @@ int main()
                 dxContext.ExecuteCmdList();
 
                 mainWindow.Present();
+                std::cout << camera.GetViewDirection().x << ' ' << camera.GetViewDirection().y << ' '
+                          << camera.GetViewDirection().z << '\n';
             }
 
             dxContext.Flush(FRAME_COUNT);

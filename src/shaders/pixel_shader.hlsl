@@ -23,6 +23,7 @@ cbuffer lightBuffer : register(b0)
 {
     LightSource lightSources[15];
     uint numLights;
+    float3 viewDirection;
 };
 
 cbuffer modelColorRootConst : register(b1)
@@ -44,10 +45,13 @@ void main(in PS_Input input, out PS_Output output)
     for (uint i = 0; i < numLights; i++)
     {
         float3 lightDirection = normalize(lightSources[i].position - input.worldPosition);
-        float lightIntensity = max(0, dot(normal, lightDirection)) / pow(distance(lightSources[i].position, input.worldPosition), 2);
+        float lightIntensity = 1 / pow(distance(lightSources[i].position, input.worldPosition), 2);
+        float ambient = .1f;
+        float diffuse = max(0, dot(normal, lightDirection)) * .5f;
+        float specular = pow(max(0, dot(normal, normalize(lightDirection + viewDirection))), 3) * 1.5f;
 
-        output.color += float4(lightSources[i].color * lightIntensity, 0.f) * lightSources[i].intensity;
+        output.color += float4(lightSources[i].color * lightIntensity * (specular), 0.f) * lightSources[i].intensity;
     }
 
-    output.color = saturate(output.color) * float4(modelColor, 1.f);
+    output.color = smoothstep(0.f, 1.f, output.color) * float4(modelColor, 1.f);
 }
