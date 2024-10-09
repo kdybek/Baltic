@@ -14,7 +14,7 @@
 class DXWindow
 {
 public:
-    DXWindow(UINT width, UINT height, DXContext& context);
+    DXWindow(UINT width, UINT height, DXContext& context, HINSTANCE instance);
     ~DXWindow();
 
     DXWindow(const DXWindow&) = delete;

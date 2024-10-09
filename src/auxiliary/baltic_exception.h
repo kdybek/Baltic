@@ -7,12 +7,12 @@
 class BalticException : public std::exception
 {
 public:
-    BalticException(const char* message) : msg(message) {}
+    BalticException(const TCHAR* message) : m_messsage(message) {}
 
-    const char* what() const override { return msg; }
+    const TCHAR* GetMsg() const { return m_messsage; }
 
 private:
-    const char* msg;
+    const TCHAR* m_messsage;
 };
 
 class ComException : public std::exception
@@ -20,10 +20,14 @@ class ComException : public std::exception
 public:
     ComException(HRESULT hr) : result(hr) {}
 
-    const char* what() const override
+    const TCHAR* GetMsg() const
     {
-        static char s_str[64] = {0};
+        static TCHAR s_str[64] = {0};
+#ifdef UNICODE
+        swprintf_s(s_str, L"Failure with HRESULT of %08X", result);
+#else
         sprintf_s(s_str, "Failure with HRESULT of %08X", result);
+#endif
         return s_str;
     }
 

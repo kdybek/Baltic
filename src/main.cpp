@@ -4,7 +4,6 @@
 
 #include <DirectXMathMatrix.inl>
 #include <chrono>
-#include <iostream>
 #include <unordered_map>
 
 #include "auxiliary/baltic_exception.h"
@@ -138,9 +137,12 @@ private:
     FLOAT m_movementSpeed;
 };
 
-int main()
+INT WINAPI wWinMain(
+    _In_ [[maybe_unused]] HINSTANCE instance, _In_opt_ [[maybe_unused]] HINSTANCE prev_instance,
+    _In_ [[maybe_unused]] PWSTR cmd_line, _In_ [[maybe_unused]] INT cmd_show
+)
 {
-    int ret = 0;
+    INT ret = 0;
 
     try {
         DXThrowIfFailed(RoInitialize(RO_INIT_SINGLETHREADED));
@@ -253,7 +255,7 @@ int main()
             ComPtr<ID3D12PipelineState> pipelineState;
             dxContext.GetDeviceComPtr()->CreateGraphicsPipelineState(&pipelineStateDesc, IID_PPV_ARGS(&pipelineState));
 
-            DXWindow mainWindow(1920, 1080, dxContext);
+            DXWindow mainWindow(1920, 1080, dxContext, instance);
             mainWindow.SetFullscreen(TRUE);
 
             std::unordered_map<Key, BOOL> keyStates{{Key::W, FALSE},  {Key::A, FALSE},     {Key::S, FALSE},
@@ -381,8 +383,6 @@ int main()
                 dxContext.ExecuteCmdList();
 
                 mainWindow.Present();
-                std::cout << camera.GetViewDirection().x << ' ' << camera.GetViewDirection().y << ' '
-                          << camera.GetViewDirection().z << '\n';
             }
 
             dxContext.Flush(FRAME_COUNT);
@@ -391,7 +391,7 @@ int main()
         dxDebugLayer.ReportLiveObjects();
     }
     catch (const BalticException& e) {
-        std::cout << e.what() << '\n';
+        OutputDebugString(e.GetMsg());
         ret = 1;
     }
 

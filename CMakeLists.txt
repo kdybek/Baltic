@@ -5,6 +5,7 @@ if(NOT WIN32)
     message(FATAL_ERROR "Baltic can only be built on Windows.")
 endif()
 
+set(CMAKE_WIN32_EXECUTABLE ON)
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED True)
 

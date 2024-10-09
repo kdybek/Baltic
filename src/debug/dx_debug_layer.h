@@ -33,7 +33,7 @@ public:
     void ReportLiveObjects()
     {
 #ifdef BALTIC_DEBUG
-        OutputDebugStringW(L"--- DXGI living object report ---\n");
+        OutputDebugString(TEXT("--- DXGI living object report ---\n"));
         DXThrowIfFailed(m_dxgiDebug->ReportLiveObjects(
             DXGI_DEBUG_ALL, DXGI_DEBUG_RLO_FLAGS(DXGI_DEBUG_RLO_DETAIL | DXGI_DEBUG_RLO_IGNORE_INTERNAL)
         ));
