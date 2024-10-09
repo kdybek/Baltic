@@ -21,7 +21,7 @@ DXContext::DXContext() : m_fenceValue(0), m_fenceEvent(nullptr)
     DXThrowIfFailed(m_device->CreateFence(m_fenceValue, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(&m_fence)));
 
     if (!(m_fenceEvent = CreateEvent(nullptr, FALSE, FALSE, nullptr))) {
-        throw BalticException(TEXT("CreateEvent"));
+        throw GenericException(TEXT("CreateEvent"));
     }
 
     DXThrowIfFailed(m_device->CreateCommandAllocator(D3D12_COMMAND_LIST_TYPE_DIRECT, IID_PPV_ARGS(&m_cmdAllocator)));
@@ -45,7 +45,7 @@ void DXContext::SignalAndWait()
     DXThrowIfFailed(m_fence->SetEventOnCompletion(m_fenceValue, m_fenceEvent));
 
     if (WaitForSingleObject(m_fenceEvent, EVENT_TIMEOUT) != WAIT_OBJECT_0) {
-        throw BalticException(TEXT("WaitForSingleObject"));
+        throw GenericException(TEXT("WaitForSingleObject"));
     }
 }
 

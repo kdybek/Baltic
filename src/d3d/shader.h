@@ -4,8 +4,6 @@
 #include "auxiliary/pch.h"
 // clang-format on
 
-#include <string_view>
-
 #include "auxiliary/types.h"
 
 class Shader

@@ -2,10 +2,6 @@
 #include "auxiliary/pch.h"
 // clang-format on
 
-#include <DirectXMathMatrix.inl>
-#include <chrono>
-#include <unordered_map>
-
 #include "auxiliary/baltic_exception.h"
 #include "auxiliary/constants.h"
 #include "auxiliary/types.h"
@@ -391,7 +387,11 @@ INT WINAPI wWinMain(
         dxDebugLayer.ReportLiveObjects();
     }
     catch (const BalticException& e) {
-        OutputDebugString(e.GetMsg());
+#ifdef UNICODE
+        OutputDebugStringW((L"Error: " + std::wstring(e.GetMessage())).c_str());
+#else
+        OutputDebugStringA(("Error: " + std::string(e.GetMessage())).c_str());
+#endif
         ret = 1;
     }
 

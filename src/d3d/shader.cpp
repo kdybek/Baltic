@@ -1,8 +1,5 @@
 #include "shader.h"
 
-#include <filesystem>
-#include <fstream>
-
 #include "auxiliary/baltic_exception.h"
 
 Shader::Shader(std::string_view filename) : m_data(nullptr), m_size(0)
@@ -12,7 +9,7 @@ Shader::Shader(std::string_view filename) : m_data(nullptr), m_size(0)
     if (s_shaderDir.empty()) {
         TCHAR exePath[512];
         if (!GetModuleFileName(nullptr, exePath, 512)) {
-            throw BalticException(TEXT("GetModuleFileName"));
+            throw GenericException(TEXT("GetModuleFileName"));
         }
 
         s_shaderDir = exePath;
@@ -22,14 +19,14 @@ Shader::Shader(std::string_view filename) : m_data(nullptr), m_size(0)
     std::ifstream shaderIn(s_shaderDir / filename, std::ios::binary);
 
     if (!shaderIn.is_open()) {
-        throw BalticException(TEXT("Failed to open shader file"));
+        throw GenericException(TEXT("Failed to open shader file"));
     }
 
     shaderIn.seekg(0, std::ios::end);
     m_size = shaderIn.tellg();
     shaderIn.seekg(0, std::ios::beg);
     if (!(m_data = malloc(m_size))) {
-        throw BalticException(TEXT("malloc"));
+        throw GenericException(TEXT("malloc"));
     }
 
     shaderIn.read(static_cast<char*>(m_data), m_size);

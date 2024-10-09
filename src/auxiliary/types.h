@@ -1,6 +1,8 @@
 #pragma once
 
-#include <vector>
+// clang-format off
+#include "auxiliary/pch.h"
+// clang-format on
 
 #include "auxiliary/constants.h"
 

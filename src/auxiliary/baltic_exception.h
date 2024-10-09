@@ -1,34 +1,40 @@
 #pragma once
 
-#include <stdio.h>
+// clang-format off
+#include "auxiliary/pch.h"
+// clang-format on
 
-#include <exception>
-
-class BalticException : public std::exception
+class BalticException
 {
 public:
-    BalticException(const TCHAR* message) : m_messsage(message) {}
-
-    const TCHAR* GetMsg() const { return m_messsage; }
-
-private:
-    const TCHAR* m_messsage;
+    virtual const TCHAR* GetMessage() const = 0;
 };
 
-class ComException : public std::exception
+class GenericException : public BalticException
+{
+public:
+    GenericException(const TCHAR* message) : m_message(message) {}
+
+    const TCHAR* GetMessage() const override { return m_message; }
+
+private:
+    const TCHAR* m_message;
+};
+
+class ComException : public BalticException
 {
 public:
     ComException(HRESULT hr) : result(hr) {}
 
-    const TCHAR* GetMsg() const
+    const TCHAR* GetMessage() const override
     {
-        static TCHAR s_str[64] = {0};
+        static TCHAR s_message[64] = {0};
 #ifdef UNICODE
-        swprintf_s(s_str, L"Failure with HRESULT of %08X", result);
+        swprintf_s(s_message, L"Failure with HRESULT of %08X", result);
 #else
-        sprintf_s(s_str, "Failure with HRESULT of %08X", result);
+        sprintf_s(s_message, "Failure with HRESULT of %08X", result);
 #endif
-        return s_str;
+        return s_message;
     }
 
 private:

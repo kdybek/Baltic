@@ -4,9 +4,6 @@
 #include "auxiliary/pch.h"
 // clang-format on
 
-#include <mutex>
-#include <queue>
-
 #include "auxiliary/constants.h"
 #include "auxiliary/types.h"
 #include "d3d/dx_context.h"
