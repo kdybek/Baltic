@@ -31,8 +31,9 @@
 *.out
 *.app
 
-**/compile_commands.json
-build/
-.cache/
-.log/
-local-init.lua
+/compile_commands.json
+/local-init.lua
+/build/
+/vendor/
+**/.cache/
+**/.log/
