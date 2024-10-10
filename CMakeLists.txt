@@ -5,6 +5,8 @@ if(NOT WIN32)
     message(FATAL_ERROR "Baltic can only be built on Windows.")
 endif()
 
+option(UNICODE "Use Unicode" ON)
+
 set(CMAKE_WIN32_EXECUTABLE ON)
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED True)
@@ -90,3 +92,10 @@ target_include_directories(baltic PRIVATE ${SOURCE_DIR})
 target_precompile_headers(baltic PRIVATE ${SOURCE_DIR}/auxiliary/pch.h)
 
 target_compile_definitions(baltic PRIVATE $<$<CONFIG:Debug>:BALTIC_DEBUG>)
+
+if(UNICODE)
+    target_compile_definitions(baltic PRIVATE UNICODE _UNICODE)
+    message(STATUS "Unicode is enabled")
+else()
+    message(STATUS "Unicode is disabled")
+endif()

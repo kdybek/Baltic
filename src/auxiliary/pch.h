@@ -1,7 +1,6 @@
 #pragma once
 
 #define NOMINMAX
-#define UNICODE
 
 #include <Windows.h>
 #include <d3d12.h>
