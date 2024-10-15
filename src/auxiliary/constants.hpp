@@ -1,7 +1,7 @@
 #pragma once
 
 // clang-format off
-#include "auxiliary/pch.h"
+#include "auxiliary/pch.hpp"
 // clang-format on
 
 inline constexpr DWORD EVENT_TIMEOUT = 20000;

@@ -18,18 +18,18 @@ set(SOURCE_DIR src)
 set(SOURCES
     ${SOURCE_DIR}/main.cpp
     ${SOURCE_DIR}/d3d/dx_context.cpp
-    ${SOURCE_DIR}/d3d/dx_context.h
+    ${SOURCE_DIR}/d3d/dx_context.hpp
     ${SOURCE_DIR}/d3d/dx_window.cpp
-    ${SOURCE_DIR}/d3d/dx_window.h
+    ${SOURCE_DIR}/d3d/dx_window.hpp
     ${SOURCE_DIR}/d3d/shader.cpp
-    ${SOURCE_DIR}/d3d/shader.h
+    ${SOURCE_DIR}/d3d/shader.hpp
     ${SOURCE_DIR}/d3d/dx_resource.cpp
-    ${SOURCE_DIR}/d3d/dx_resource.h
-    ${SOURCE_DIR}/auxiliary/pch.h
-    ${SOURCE_DIR}/auxiliary/baltic_exception.h
-    ${SOURCE_DIR}/auxiliary/constants.h
-    ${SOURCE_DIR}/auxiliary/types.h
-    ${SOURCE_DIR}/debug/dx_debug_layer.h
+    ${SOURCE_DIR}/d3d/dx_resource.hpp
+    ${SOURCE_DIR}/auxiliary/pch.hpp
+    ${SOURCE_DIR}/auxiliary/baltic_exception.hpp
+    ${SOURCE_DIR}/auxiliary/constants.hpp
+    ${SOURCE_DIR}/auxiliary/types.hpp
+    ${SOURCE_DIR}/debug/dx_debug_layer.hpp
 )
 
 set(SHADER_DIR src/shaders)
@@ -89,7 +89,7 @@ target_link_libraries(baltic
 
 target_include_directories(baltic PRIVATE ${SOURCE_DIR})
 
-target_precompile_headers(baltic PRIVATE ${SOURCE_DIR}/auxiliary/pch.h)
+target_precompile_headers(baltic PRIVATE ${SOURCE_DIR}/auxiliary/pch.hpp)
 
 target_compile_definitions(baltic PRIVATE $<$<CONFIG:Debug>:BALTIC_DEBUG>)
 

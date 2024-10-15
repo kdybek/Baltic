@@ -1,15 +1,15 @@
 // clang-format off
-#include "auxiliary/pch.h"
+#include "auxiliary/pch.hpp"
 // clang-format on
 
-#include "auxiliary/baltic_exception.h"
-#include "auxiliary/constants.h"
-#include "auxiliary/types.h"
-#include "d3d/dx_context.h"
-#include "d3d/dx_resource.h"
-#include "d3d/dx_window.h"
-#include "d3d/shader.h"
-#include "debug/dx_debug_layer.h"
+#include "auxiliary/baltic_exception.hpp"
+#include "auxiliary/constants.hpp"
+#include "auxiliary/types.hpp"
+#include "d3d/dx_context.hpp"
+#include "d3d/dx_resource.hpp"
+#include "d3d/dx_window.hpp"
+#include "d3d/shader.hpp"
+#include "debug/dx_debug_layer.hpp"
 
 SIZE_T AlignUp(SIZE_T size, SIZE_T alignment) { return (size + alignment - 1) & ~(alignment - 1); }
 

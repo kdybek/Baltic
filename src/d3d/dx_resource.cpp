@@ -1,6 +1,6 @@
-#include "d3d/dx_resource.h"
+#include "d3d/dx_resource.hpp"
 
-#include "auxiliary/baltic_exception.h"
+#include "auxiliary/baltic_exception.hpp"
 
 ComPtr<ID3D12Resource2> CreateUploadBuffer(UINT64 size, ID3D12Device5* device)
 {

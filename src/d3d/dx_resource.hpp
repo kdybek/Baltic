@@ -1,10 +1,10 @@
 #pragma once
 
 // clang-format off
-#include "auxiliary/pch.h"
+#include "auxiliary/pch.hpp"
 // clang-format on
 
-#include "auxiliary/types.h"
+#include "auxiliary/types.hpp"
 
 ComPtr<ID3D12Resource2> CreateUploadBuffer(UINT64 size, ID3D12Device5* device);
 ComPtr<ID3D12Resource2> CreateGPUBuffer(UINT64 size, D3D12_RESOURCE_STATES resourceState, ID3D12Device5* device);

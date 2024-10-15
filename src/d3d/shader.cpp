@@ -1,6 +1,6 @@
-#include "shader.h"
+#include "shader.hpp"
 
-#include "auxiliary/baltic_exception.h"
+#include "auxiliary/baltic_exception.hpp"
 
 Shader::Shader(std::string_view filename) : m_data(nullptr), m_size(0)
 {

@@ -1,10 +1,10 @@
 #pragma once
 
 // clang-format off
-#include "auxiliary/pch.h"
+#include "auxiliary/pch.hpp"
 // clang-format on
 
-#include "auxiliary/types.h"
+#include "auxiliary/types.hpp"
 
 class Shader
 {

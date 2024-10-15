@@ -1,8 +1,8 @@
-#include "dx_window.h"
+#include "dx_window.hpp"
 
-#include "auxiliary/baltic_exception.h"
-#include "d3d/dx_context.h"
-#include "d3d/dx_resource.h"
+#include "auxiliary/baltic_exception.hpp"
+#include "d3d/dx_context.hpp"
+#include "d3d/dx_resource.hpp"
 
 LRESULT OnWindowMessage(HWND wnd, UINT msg, WPARAM wParam, LPARAM lParam)
 {

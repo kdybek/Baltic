@@ -1,11 +1,11 @@
 #pragma once
 
 // clang-format off
-#include "auxiliary/pch.h"
+#include "auxiliary/pch.hpp"
 // clang-format on
 
-#include "auxiliary/baltic_exception.h"
-#include "auxiliary/types.h"
+#include "auxiliary/baltic_exception.hpp"
+#include "auxiliary/types.hpp"
 
 class DXDebugLayer
 {

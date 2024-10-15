@@ -1,12 +1,12 @@
 #pragma once
 
 // clang-format off
-#include "auxiliary/pch.h"
+#include "auxiliary/pch.hpp"
 // clang-format on
 
-#include "auxiliary/constants.h"
-#include "auxiliary/types.h"
-#include "d3d/dx_context.h"
+#include "auxiliary/constants.hpp"
+#include "auxiliary/types.hpp"
+#include "d3d/dx_context.hpp"
 
 class DXWindow
 {

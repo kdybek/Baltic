@@ -1,7 +1,7 @@
-#include "dx_context.h"
+#include "dx_context.hpp"
 
-#include "auxiliary/baltic_exception.h"
-#include "auxiliary/constants.h"
+#include "auxiliary/baltic_exception.hpp"
+#include "auxiliary/constants.hpp"
 
 DXContext::DXContext() : m_fenceValue(0), m_fenceEvent(nullptr)
 {
