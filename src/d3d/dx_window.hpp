@@ -55,7 +55,6 @@ private:
     D3D12_RECT m_scissorRect;
     BOOL m_isFullscreen;
 
-    std::mutex m_eventQueueMutex;
     std::queue<Event> m_eventQueue;
 
     ComPtr<IDXGISwapChain4> m_swapChain;

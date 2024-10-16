@@ -13,11 +13,9 @@ LRESULT OnWindowMessage(HWND wnd, UINT msg, WPARAM wParam, LPARAM lParam)
                 throw GenericException(TEXT("GetWindowLongPtr"));
             }
 
-            std::unique_lock<std::mutex> lock(windowPtr->m_eventQueueMutex);
             windowPtr->m_eventQueue.push(
                 {.type = EventType::MouseMove, .cursorPosition = {.x = LOWORD(lParam), .y = HIWORD(lParam)}}
             );
-            lock.unlock();
 
             return DefWindowProc(wnd, msg, wParam, lParam);
         }
@@ -27,7 +25,6 @@ LRESULT OnWindowMessage(HWND wnd, UINT msg, WPARAM wParam, LPARAM lParam)
                 throw GenericException(TEXT("GetWindowLongPtr"));
             }
 
-            std::unique_lock<std::mutex> lock(windowPtr->m_eventQueueMutex);
             switch (wParam) {
                 case 'W':
                     windowPtr->m_eventQueue.push({.type = EventType::KeyDown, .key = Key::W});
@@ -51,7 +48,6 @@ LRESULT OnWindowMessage(HWND wnd, UINT msg, WPARAM wParam, LPARAM lParam)
                     windowPtr->m_eventQueue.push({.type = EventType::KeyDown, .key = Key::F11});
                     break;
             }
-            lock.unlock();
 
             return DefWindowProc(wnd, msg, wParam, lParam);
         }
@@ -61,7 +57,6 @@ LRESULT OnWindowMessage(HWND wnd, UINT msg, WPARAM wParam, LPARAM lParam)
                 throw GenericException(TEXT("GetWindowLongPtr"));
             }
 
-            std::unique_lock<std::mutex> lock(windowPtr->m_eventQueueMutex);
             switch (wParam) {
                 case 'W':
                     windowPtr->m_eventQueue.push({.type = EventType::KeyUp, .key = Key::W});
@@ -85,7 +80,6 @@ LRESULT OnWindowMessage(HWND wnd, UINT msg, WPARAM wParam, LPARAM lParam)
                     windowPtr->m_eventQueue.push({.type = EventType::KeyUp, .key = Key::F11});
                     break;
             }
-            lock.unlock();
 
             return DefWindowProc(wnd, msg, wParam, lParam);
         }
@@ -97,7 +91,6 @@ LRESULT OnWindowMessage(HWND wnd, UINT msg, WPARAM wParam, LPARAM lParam)
 
             if (LOWORD(lParam) && HIWORD(lParam) &&
                 (LOWORD(lParam) != windowPtr->m_width || HIWORD(lParam) != windowPtr->m_height)) {
-                std::unique_lock<std::mutex> lock(windowPtr->m_eventQueueMutex);
                 windowPtr->m_eventQueue.push({.type = EventType::Resize});
             }
 
@@ -109,9 +102,7 @@ LRESULT OnWindowMessage(HWND wnd, UINT msg, WPARAM wParam, LPARAM lParam)
                 throw GenericException(TEXT("GetWindowLongPtr"));
             }
 
-            std::unique_lock<std::mutex> lock(windowPtr->m_eventQueueMutex);
             windowPtr->m_eventQueue.push({.type = EventType::Move});
-            lock.unlock();
 
             return DefWindowProc(wnd, msg, wParam, lParam);
         }
@@ -121,9 +112,7 @@ LRESULT OnWindowMessage(HWND wnd, UINT msg, WPARAM wParam, LPARAM lParam)
                 throw GenericException(TEXT("GetWindowLongPtr"));
             }
 
-            std::unique_lock<std::mutex> lock(windowPtr->m_eventQueueMutex);
             windowPtr->m_eventQueue.push({.type = EventType::Focus});
-            lock.unlock();
 
             return DefWindowProc(wnd, msg, wParam, lParam);
         }
@@ -133,9 +122,7 @@ LRESULT OnWindowMessage(HWND wnd, UINT msg, WPARAM wParam, LPARAM lParam)
                 throw GenericException(TEXT("GetWindowLongPtr"));
             }
 
-            std::unique_lock<std::mutex> lock(windowPtr->m_eventQueueMutex);
             windowPtr->m_eventQueue.push({.type = EventType::Close});
-            lock.unlock();
 
             return TRUE;
         }
@@ -290,7 +277,6 @@ void DXWindow::Present() { DXThrowIfFailed(m_swapChain->Present(1, 0)); }
 
 Event DXWindow::PollEvent()
 {
-    std::unique_lock<std::mutex> lock(m_eventQueueMutex);
     if (m_eventQueue.empty()) {
         return {.type = EventType::None};
     }
