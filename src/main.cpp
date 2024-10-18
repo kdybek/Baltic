@@ -48,6 +48,13 @@ Mesh CreateXZPlane(FLOAT xSize, FLOAT zSize, UINT32 xSegments, UINT32 zSegments)
     return {.vertices = vertices, .indices = indices};
 }
 
+void ResetKeyStates(std::unordered_map<Key, BOOL>& keyStates)
+{
+    for (auto& [key, state] : keyStates) {
+        state = FALSE;
+    }
+}
+
 class Camera
 {
 public:
@@ -254,9 +261,10 @@ INT WINAPI wWinMain(
             DXWindow mainWindow(1920, 1080, dxContext, instance);
             mainWindow.SetFullscreen(TRUE);
 
-            std::unordered_map<Key, BOOL> keyStates{{Key::W, FALSE},  {Key::A, FALSE},     {Key::S, FALSE},
-                                                    {Key::D, FALSE},  {Key::Space, FALSE}, {Key::Shift, FALSE},
-                                                    {Key::F11, FALSE}};
+            std::unordered_map<Key, BOOL> keyStates{
+                {Key::W, FALSE}, {Key::A, FALSE},     {Key::S, FALSE},
+                {Key::D, FALSE}, {Key::Space, FALSE}, {Key::Shift, FALSE},
+            };
 
             BOOL close = FALSE;
             POINT lastCursorPos = mainWindow.GetCursorPosition();
@@ -267,13 +275,20 @@ INT WINAPI wWinMain(
             );
             auto prevFrameAbsTime = std::chrono::steady_clock::now();
             FLOAT absTimeMod2Pi = 0.f;
+            BOOL pause = FALSE;
 
             while (!close) {
+                FLOAT deltaTime = 0.f;
                 auto currentFrameAbsTime = std::chrono::steady_clock::now();
-                FLOAT deltaTime = std::chrono::duration<FLOAT>(currentFrameAbsTime - prevFrameAbsTime).count();
-                prevFrameAbsTime = currentFrameAbsTime;
-                absTimeMod2Pi += deltaTime;
-                absTimeMod2Pi = std::fmod(absTimeMod2Pi, DirectX::XM_2PI);
+                if (!pause) {
+                    deltaTime = std::chrono::duration<FLOAT>(currentFrameAbsTime - prevFrameAbsTime).count();
+                    prevFrameAbsTime = currentFrameAbsTime;
+                    absTimeMod2Pi += deltaTime;
+                    absTimeMod2Pi = std::fmod(absTimeMod2Pi, DirectX::XM_2PI);
+                }
+                else {
+                    prevFrameAbsTime = currentFrameAbsTime;
+                }
 
                 mainWindow.Update();
 
@@ -287,40 +302,70 @@ INT WINAPI wWinMain(
                     else if (event.type == EventType::Resize) {
                         dxContext.Flush(FRAME_COUNT);
                         mainWindow.Resize(dxContext.GetDeviceComPtr().Get());
-                        mainWindow.ConfineCursor();
-                        mainWindow.CenterCursor();
-                        lastCursorPos = mainWindow.GetCursorPosition();
-                    }
-                    else if (event.type == EventType::Focus) {
-                        mainWindow.ConfineCursor();
-                        mainWindow.CenterCursor();
-                        lastCursorPos = mainWindow.GetCursorPosition();
-                    }
-                    else if (event.type == EventType::Move) {
-                        mainWindow.ConfineCursor();
-                        mainWindow.CenterCursor();
-                        lastCursorPos = mainWindow.GetCursorPosition();
-                    }
-                    else if (event.type == EventType::KeyDown) {
-                        if (event.key == Key::F11) {
-                            mainWindow.SetFullscreen(!mainWindow.isFullscreen());
+                        if (!pause) {
                             mainWindow.ConfineCursor();
                             mainWindow.CenterCursor();
                             lastCursorPos = mainWindow.GetCursorPosition();
                         }
-                        keyStates[event.key] = TRUE;
+                    }
+                    else if (event.type == EventType::Focus) {
+                        if (!pause) {
+                            mainWindow.ConfineCursor();
+                            mainWindow.CenterCursor();
+                            lastCursorPos = mainWindow.GetCursorPosition();
+                        }
+                    }
+                    else if (event.type == EventType::Blur) {
+                        ResetKeyStates(keyStates);
+                    }
+                    else if (event.type == EventType::Move) {
+                        if (!pause) {
+                            mainWindow.ConfineCursor();
+                            mainWindow.CenterCursor();
+                            lastCursorPos = mainWindow.GetCursorPosition();
+                        }
+                    }
+                    else if (event.type == EventType::KeyDown) {
+                        if (event.key == Key::F11) {
+                            mainWindow.SetFullscreen(!mainWindow.isFullscreen());
+                            if (!pause) {
+                                mainWindow.ConfineCursor();
+                                mainWindow.CenterCursor();
+                                lastCursorPos = mainWindow.GetCursorPosition();
+                            }
+                        }
+                        else if (event.key == Key::Escape) {
+                            pause = !pause;
+                            if (!pause) {
+                                mainWindow.SetCursorVisibility(FALSE);
+                                mainWindow.ConfineCursor();
+                                mainWindow.CenterCursor();
+                                lastCursorPos = mainWindow.GetCursorPosition();
+                            }
+                            else {
+                                mainWindow.SetCursorVisibility(TRUE);
+                                mainWindow.FreeCursor();
+                                ResetKeyStates(keyStates);
+                            }
+                        }
+                        else if (!pause) {
+                            keyStates[event.key] = TRUE;
+                        }
                     }
                     else if (event.type == EventType::KeyUp) {
                         keyStates[event.key] = FALSE;
                     }
                     else if (event.type == EventType::MouseMove) {
-                        POINT mouseMovementVecAux = {
-                            .x = event.cursorPosition.x - lastCursorPos.x, .y = event.cursorPosition.y - lastCursorPos.y
-                        };
-                        mouseMovementVec.x += mouseMovementVecAux.x;
-                        mouseMovementVec.y += mouseMovementVecAux.y;
-                        mainWindow.CenterCursor();
-                        lastCursorPos = mainWindow.GetCursorPosition();
+                        if (!pause) {
+                            POINT mouseMovementVecAux = {
+                                .x = event.cursorPosition.x - lastCursorPos.x,
+                                .y = event.cursorPosition.y - lastCursorPos.y
+                            };
+                            mouseMovementVec.x += mouseMovementVecAux.x;
+                            mouseMovementVec.y += mouseMovementVecAux.y;
+                            mainWindow.CenterCursor();
+                            lastCursorPos = mainWindow.GetCursorPosition();
+                        }
                     }
                 }
 

@@ -2,6 +2,18 @@
  
 Graphical sea simulator.
 
+## Controls
+
+- `W` - Move forward
+- `S` - Move backward
+- `A` - Move left
+- `D` - Move right
+- `Shift` - Move down
+- `Space` - Move up
+- `Mouse` - Look around
+- `Escape` - Pause/Resume
+- `F11` - Toggle fullscreen
+
 ## Build
 
 ### Prerequisites

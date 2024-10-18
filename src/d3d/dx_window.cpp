@@ -47,6 +47,9 @@ LRESULT OnWindowMessage(HWND wnd, UINT msg, WPARAM wParam, LPARAM lParam)
                 case VK_F11:
                     windowPtr->m_eventQueue.push({.type = EventType::KeyDown, .key = Key::F11});
                     break;
+                case VK_ESCAPE:
+                    windowPtr->m_eventQueue.push({.type = EventType::KeyDown, .key = Key::Escape});
+                    break;
             }
 
             return DefWindowProc(wnd, msg, wParam, lParam);
@@ -78,6 +81,9 @@ LRESULT OnWindowMessage(HWND wnd, UINT msg, WPARAM wParam, LPARAM lParam)
                     break;
                 case VK_F11:
                     windowPtr->m_eventQueue.push({.type = EventType::KeyUp, .key = Key::F11});
+                    break;
+                case VK_ESCAPE:
+                    windowPtr->m_eventQueue.push({.type = EventType::KeyUp, .key = Key::Escape});
                     break;
             }
 
@@ -113,6 +119,16 @@ LRESULT OnWindowMessage(HWND wnd, UINT msg, WPARAM wParam, LPARAM lParam)
             }
 
             windowPtr->m_eventQueue.push({.type = EventType::Focus});
+
+            return DefWindowProc(wnd, msg, wParam, lParam);
+        }
+        else if (msg == WM_KILLFOCUS) {
+            DXWindow* windowPtr;
+            if (!(windowPtr = reinterpret_cast<DXWindow*>(GetWindowLongPtr(wnd, GWLP_USERDATA)))) {
+                throw GenericException(TEXT("GetWindowLongPtr"));
+            }
+
+            windowPtr->m_eventQueue.push({.type = EventType::Blur});
 
             return DefWindowProc(wnd, msg, wParam, lParam);
         }
@@ -161,7 +177,8 @@ DXWindow::DXWindow(UINT width, UINT height, DXContext& dxContext, HINSTANCE inst
           .MaxDepth = 1.f
       },
       m_scissorRect{.left = 0, .top = 0, .right = static_cast<LONG>(width), .bottom = static_cast<LONG>(height)},
-      m_isFullscreen(FALSE)
+      m_isFullscreen(FALSE),
+      m_cursorVisible(TRUE)
 {
     WNDCLASSEX wcex{
         .cbSize = sizeof(wcex),
@@ -250,7 +267,7 @@ DXWindow::DXWindow(UINT width, UINT height, DXContext& dxContext, HINSTANCE inst
 
     GetBuffers(dxContext.GetDeviceComPtr().Get());
 
-    ShowCursor(FALSE);
+    SetCursorVisibility(FALSE);
 }
 
 DXWindow::~DXWindow()
@@ -337,6 +354,13 @@ void DXWindow::ConfineCursor()
     }
 }
 
+void DXWindow::FreeCursor()
+{
+    if (!ClipCursor(nullptr)) {
+        throw GenericException(TEXT("ClipCursor"));
+    }
+}
+
 void DXWindow::CenterCursor()
 {
     RECT clientRect;
@@ -355,6 +379,14 @@ void DXWindow::CenterCursor()
 
     if (!SetCursorPos(center.x, center.y)) {
         throw GenericException(TEXT("SetCursorPos"));
+    }
+}
+
+void DXWindow::SetCursorVisibility(BOOL visible)
+{
+    if (m_cursorVisible != visible) {
+        ShowCursor(visible);
+        m_cursorVisible = visible;
     }
 }
 

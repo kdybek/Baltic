@@ -22,7 +22,9 @@ public:
     [[nodiscard]] Event PollEvent();
     void Resize(ID3D12Device10* device);
     void ConfineCursor();
+    void FreeCursor();
     void CenterCursor();
+    void SetCursorVisibility(BOOL visible);
     [[nodiscard]] POINT GetCursorPosition();
     void SetFullscreen(BOOL enable);
     void QueuePreRenderingTransitions(std::vector<D3D12_RESOURCE_BARRIER>& barriers);
@@ -54,6 +56,7 @@ private:
     D3D12_VIEWPORT m_viewport;
     D3D12_RECT m_scissorRect;
     BOOL m_isFullscreen;
+    BOOL m_cursorVisible;
 
     std::queue<Event> m_eventQueue;
 

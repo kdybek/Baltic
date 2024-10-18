@@ -74,7 +74,8 @@ enum class Key
     D,
     Space,
     Shift,
-    F11
+    F11,
+    Escape
 };
 
 struct Event
