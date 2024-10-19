@@ -3,8 +3,9 @@
 #include "auxiliary/baltic_exception.hpp"
 #include "d3d/dx_context.hpp"
 #include "d3d/dx_resource.hpp"
+#include "imgui.h"
 
-LRESULT OnWindowMessage(HWND wnd, UINT msg, WPARAM wParam, LPARAM lParam)
+LRESULT EventQueueWindowProc(HWND wnd, UINT msg, WPARAM wParam, LPARAM lParam)
 {
     try {
         if (msg == WM_MOUSEMOVE) {
@@ -163,8 +164,21 @@ LRESULT OnWindowMessage(HWND wnd, UINT msg, WPARAM wParam, LPARAM lParam)
     }
 }
 
-DXWindow::DXWindow(HINSTANCE instance, UINT width, UINT height, DXContext& dxContext)
-    : m_wndClass(0),
+extern IMGUI_IMPL_API LRESULT ImGui_ImplWin32_WndProcHandler(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
+
+LRESULT CALLBACK ImGuiWindowProc(HWND wnd, UINT msg, WPARAM wParam, LPARAM lParam)
+{
+    if (ImGui_ImplWin32_WndProcHandler(wnd, msg, wParam, lParam)) {
+        return TRUE;
+    }
+
+    return EventQueueWindowProc(wnd, msg, wParam, lParam);
+}
+
+DXWindow::DXWindow(
+    HINSTANCE instance, ATOM wndClass, const TCHAR* wndName, UINT width, UINT height, DXContext& dxContext
+)
+    : m_wndClass(wndClass),
       m_windowHandle(nullptr),
       m_width(width),
       m_height(height),
@@ -180,28 +194,10 @@ DXWindow::DXWindow(HINSTANCE instance, UINT width, UINT height, DXContext& dxCon
       m_isFullscreen(FALSE),
       m_cursorVisible(TRUE)
 {
-    WNDCLASSEX wcex{
-        .cbSize = sizeof(wcex),
-        .style = CS_OWNDC,
-        .lpfnWndProc = &OnWindowMessage,
-        .cbClsExtra = 0,
-        .cbWndExtra = sizeof(LONG_PTR),
-        .hInstance = instance,
-        .hIcon = LoadIcon(nullptr, IDI_APPLICATION),
-        .hCursor = LoadCursor(nullptr, IDC_ARROW),
-        .hbrBackground = nullptr,
-        .lpszMenuName = nullptr,
-        .lpszClassName = TEXT("BalticWndCls"),
-        .hIconSm = LoadIcon(nullptr, IDI_APPLICATION)
-    };
-
-    if (!(m_wndClass = RegisterClassEx(&wcex))) {
-        throw GenericException(TEXT("RegisterClassEx"));
-    }
-
     if (!(m_windowHandle = CreateWindowEx(
-              WS_EX_OVERLAPPEDWINDOW | WS_EX_APPWINDOW, MAKEINTATOM(m_wndClass), TEXT("Baltic"),
-              WS_OVERLAPPEDWINDOW | WS_VISIBLE, 100, 100, 1920, 1080, nullptr, nullptr, wcex.hInstance, this
+              WS_EX_OVERLAPPEDWINDOW | WS_EX_APPWINDOW, MAKEINTATOM(m_wndClass), wndName,
+              WS_OVERLAPPEDWINDOW | WS_VISIBLE, CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, nullptr,
+              nullptr, instance, this
           ))) {
         throw GenericException(TEXT("CreateWindowEx"));
     }
@@ -272,10 +268,6 @@ DXWindow::~DXWindow()
 {
     if (m_windowHandle) {
         DestroyWindow(m_windowHandle);
-    }
-
-    if (m_wndClass) {
-        UnregisterClass(MAKEINTATOM(m_wndClass), GetModuleHandleW(nullptr));
     }
 }
 
@@ -483,4 +475,83 @@ void DXWindow::ReleaseBuffers()
     }
 
     m_dsBuffer.Reset();
+}
+
+ATOM GetEventQueueWndClass(HINSTANCE instance)
+{
+    static ATOM atom = 0;
+    static BOOL initialized = FALSE;
+
+    if (initialized) {
+        return atom;
+    }
+
+    WNDCLASSEX wcex{
+        .cbSize = sizeof(wcex),
+        .style = CS_OWNDC,
+        .lpfnWndProc = EventQueueWindowProc,
+        .cbClsExtra = 0,
+        .cbWndExtra = sizeof(LONG_PTR),
+        .hInstance = instance,
+        .hIcon = LoadIcon(nullptr, IDI_APPLICATION),
+        .hCursor = LoadCursor(nullptr, IDC_ARROW),
+        .hbrBackground = nullptr,
+        .lpszMenuName = nullptr,
+        .lpszClassName = TEXT("EventQueueWndClass"),
+        .hIconSm = LoadIcon(nullptr, IDI_APPLICATION)
+    };
+
+    atom = RegisterClassEx(&wcex);
+    if (!atom) {
+        throw GenericException(TEXT("RegisterClassEx"));
+    }
+
+    initialized = TRUE;
+
+    return atom;
+}
+
+ATOM GetImGuiWndClass(HINSTANCE instance)
+{
+    static ATOM atom = 0;
+    static BOOL initialized = FALSE;
+
+    if (initialized) {
+        return atom;
+    }
+
+    WNDCLASSEX wcex{
+        .cbSize = sizeof(wcex),
+        .style = CS_OWNDC,
+        .lpfnWndProc = ImGuiWindowProc,
+        .cbClsExtra = 0,
+        .cbWndExtra = sizeof(LONG_PTR),
+        .hInstance = instance,
+        .hIcon = LoadIcon(nullptr, IDI_APPLICATION),
+        .hCursor = LoadCursor(nullptr, IDC_ARROW),
+        .hbrBackground = nullptr,
+        .lpszMenuName = nullptr,
+        .lpszClassName = TEXT("ImGuiWndClass"),
+        .hIconSm = LoadIcon(nullptr, IDI_APPLICATION)
+    };
+
+    atom = RegisterClassEx(&wcex);
+    if (!atom) {
+        throw GenericException(TEXT("RegisterClassEx"));
+    }
+
+    initialized = TRUE;
+
+    return atom;
+}
+
+void UnregisterWndClasses(HINSTANCE instance)
+{
+    if (!UnregisterClass(MAKEINTATOM(GetEventQueueWndClass(instance)), instance)) {
+        throw GenericException(TEXT("UnregisterClass"));
+    }
+
+    if (!UnregisterClass(MAKEINTATOM(GetImGuiWndClass(instance)), instance)) {
+        throw GenericException(TEXT("UnregisterClass"));
+    }
 }

@@ -3,9 +3,10 @@
 // clang-format on
 
 #include "auxiliary/baltic_exception.hpp"
-#include "auxiliary/constants.hpp"
-#include "auxiliary/types.hpp"
 #include "auxiliary/camera.hpp"
+#include "auxiliary/constants.hpp"
+#include "auxiliary/control_panel.hpp"
+#include "auxiliary/types.hpp"
 #include "d3d/dx_context.hpp"
 #include "d3d/dx_resource.hpp"
 #include "d3d/dx_window.hpp"
@@ -138,7 +139,7 @@ INT WINAPI wWinMain(
             ComPtr<ID3D12PipelineState> pipelineState;
             dxContext.GetDeviceComPtr()->CreateGraphicsPipelineState(&pipelineStateDesc, IID_PPV_ARGS(&pipelineState));
 
-            DXWindow mainWindow(instance, 1920, 1080, dxContext);
+            DXWindow mainWindow(instance, GetEventQueueWndClass(instance), TEXT("Baltic"), 1920, 1080, dxContext);
             mainWindow.SetFullscreen(TRUE);
 
             std::unordered_map<Key, BOOL> keyStates{
@@ -315,6 +316,7 @@ INT WINAPI wWinMain(
             dxContext.Flush(FRAME_COUNT);
         }
 
+        UnregisterWndClasses(instance);
         dxDebugLayer.ReportLiveObjects();
     }
     catch (const BalticException& e) {

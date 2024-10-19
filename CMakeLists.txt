@@ -83,7 +83,7 @@ target_link_libraries(baltic
     runtimeobject.lib
 )
 
-target_include_directories(baltic PRIVATE ${SOURCE_DIR} ${IMGUI_DIR} ${IMGUI_DIR}/backends)
+target_include_directories(baltic PRIVATE ${SOURCE_DIR} ${IMGUI_DIR})
 
 target_precompile_headers(baltic PRIVATE ${SOURCE_DIR}/auxiliary/pch.hpp)
 

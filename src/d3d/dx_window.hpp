@@ -8,10 +8,14 @@
 #include "auxiliary/types.hpp"
 #include "d3d/dx_context.hpp"
 
+ATOM GetEventQueueWndClass(HINSTANCE instance);
+ATOM GetImGuiWndClass(HINSTANCE instance);
+void UnregisterWndClasses(HINSTANCE instance);
+
 class DXWindow
 {
 public:
-    DXWindow(HINSTANCE instance, UINT width, UINT height, DXContext& context);
+    DXWindow(HINSTANCE instance, ATOM wndClass, const TCHAR* wndName, UINT width, UINT height, DXContext& context);
     ~DXWindow();
 
     DXWindow(const DXWindow&) = delete;
@@ -38,12 +42,13 @@ public:
         return &m_rtvHandles[m_swapChain->GetCurrentBackBufferIndex()];
     }
     [[nodiscard]] inline const D3D12_CPU_DESCRIPTOR_HANDLE* GetDSVHandlePtr() const { return &m_dsvHandle; }
+    [[nodiscard]] inline HWND GetWindowHandle() const { return m_windowHandle; }
     [[nodiscard]] POINT GetCursorPosition() const;
     void QueuePreRenderingTransitions(std::vector<D3D12_RESOURCE_BARRIER>& barriers) const;
     void QueuePostRenderingTransitions(std::vector<D3D12_RESOURCE_BARRIER>& barriers) const;
 
 private:
-    friend LRESULT CALLBACK OnWindowMessage(HWND wnd, UINT msg, WPARAM wParam, LPARAM lParam);
+    friend LRESULT CALLBACK EventQueueWindowProc(HWND wnd, UINT msg, WPARAM wParam, LPARAM lParam);
 
     void GetBuffers(ID3D12Device10* device);
     void ReleaseBuffers();
@@ -57,6 +62,7 @@ private:
     D3D12_RECT m_scissorRect;
     BOOL m_isFullscreen;
     BOOL m_cursorVisible;
+    BOOL m_depthStencilBuffer;
 
     std::queue<Event> m_eventQueue;
 
