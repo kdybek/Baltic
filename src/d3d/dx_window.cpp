@@ -7,26 +7,23 @@
 LRESULT MsgQueueWindowProc(HWND wnd, UINT msg, WPARAM wParam, LPARAM lParam)
 {
     try {
+        static BOOL windowPtrInitialized = FALSE;
         if (msg == WM_NCCREATE) {
             auto* createPtr = reinterpret_cast<CREATESTRUCT*>(lParam);
             auto* windowPtr = reinterpret_cast<DXWindow*>(createPtr->lpCreateParams);
             SetWindowLongPtr(wnd, GWLP_USERDATA, reinterpret_cast<LONG_PTR>(windowPtr));
-
-            return TRUE;
+            windowPtrInitialized = TRUE;
         }
-        else if (GetHandledMessages().contains(msg)) {
+        else if (windowPtrInitialized) {
             DXWindow* windowPtr;
             if (!(windowPtr = reinterpret_cast<DXWindow*>(GetWindowLongPtr(wnd, GWLP_USERDATA)))) {
                 throw GenericException(TEXT("GetWindowLongPtr"));
             }
 
             windowPtr->m_messageQueue.push({.msg = msg, .wParam = wParam, .lParam = lParam, .empty = FALSE});
-
-            return TRUE;
         }
-        else {
-            return DefWindowProc(wnd, msg, wParam, lParam);
-        }
+        
+        return DefWindowProc(wnd, msg, wParam, lParam);
     }
     catch (const BalticException& e) {
 #ifdef UNICODE
