@@ -5,141 +5,21 @@
 #include "auxiliary/baltic_exception.hpp"
 #include "auxiliary/constants.hpp"
 #include "auxiliary/types.hpp"
+#include "auxiliary/camera.hpp"
 #include "d3d/dx_context.hpp"
 #include "d3d/dx_resource.hpp"
 #include "d3d/dx_window.hpp"
 #include "d3d/shader.hpp"
 #include "debug/dx_debug_layer.hpp"
 
-SIZE_T AlignUp(SIZE_T size, SIZE_T alignment) { return (size + alignment - 1) & ~(alignment - 1); }
-
+// Forward declarations of auxiliary functions
+SIZE_T AlignUp(SIZE_T size, SIZE_T alignment);
+Mesh CreateXZPlane(FLOAT xSize, FLOAT zSize, UINT32 xSegments, UINT32 zSegments);
+void ResetKeyStates(std::unordered_map<Key, BOOL>& keyStates);
 template <typename T>
-SIZE_T VecDataSize(const std::vector<T>& vec)
-{
-    return vec.size() * sizeof(T);
-}
+SIZE_T VecDataSize(const std::vector<T>& vec);
 
-Mesh CreateXZPlane(FLOAT xSize, FLOAT zSize, UINT32 xSegments, UINT32 zSegments)
-{
-    std::vector<VertexBufferElement> vertices;
-    std::vector<UINT32> indices;
-
-    FLOAT xStep = xSize / xSegments;
-    FLOAT zStep = zSize / zSegments;
-
-    for (UINT32 i = 0; i <= zSegments; i++) {
-        for (UINT32 j = 0; j <= xSegments; j++) {
-            vertices.push_back({.position{j * xStep, 0.f, i * zStep}});
-        }
-    }
-
-    for (UINT32 i = 0; i < zSegments; i++) {
-        for (UINT32 j = 0; j < xSegments; j++) {
-            UINT32 index = i * (xSegments + 1) + j;
-            indices.push_back(index);
-            indices.push_back(index + xSegments + 1);
-            indices.push_back(index + 1);
-            indices.push_back(index + 1);
-            indices.push_back(index + xSegments + 1);
-            indices.push_back(index + xSegments + 2);
-        }
-    }
-
-    return {.vertices = vertices, .indices = indices};
-}
-
-void ResetKeyStates(std::unordered_map<Key, BOOL>& keyStates)
-{
-    for (auto& [key, state] : keyStates) {
-        state = FALSE;
-    }
-}
-
-class Camera
-{
-public:
-    Camera() = default;
-
-    Camera(const DirectX::XMMATRIX& viewMatrix)
-        : m_viewMatrix(viewMatrix), m_xzPlaneAngle(0.f), m_rotationSpeed(.04f), m_movementSpeed(4.f)
-    {
-    }
-
-    void HandleInput(POINT mouseMovementVec, const std::unordered_map<Key, BOOL>& keyStates, FLOAT deltaTime)
-    {
-        FLOAT perUnitAngle = m_rotationSpeed * deltaTime;
-        FLOAT perUnitDistance = m_movementSpeed * deltaTime;
-        FLOAT xAngle = mouseMovementVec.y * -perUnitAngle;
-        FLOAT yAngle = mouseMovementVec.x * -perUnitAngle;
-        FLOAT xTranslation = 0.f;
-        FLOAT yTranslation = 0.f;
-        FLOAT zTranslation = 0.f;
-
-        if (keyStates.at(Key::W)) {
-            zTranslation -= perUnitDistance;
-        }
-
-        if (keyStates.at(Key::A)) {
-            xTranslation += perUnitDistance;
-        }
-
-        if (keyStates.at(Key::S)) {
-            zTranslation += perUnitDistance;
-        }
-
-        if (keyStates.at(Key::D)) {
-            xTranslation -= perUnitDistance;
-        }
-
-        if (keyStates.at(Key::Space)) {
-            yTranslation -= perUnitDistance;
-        }
-
-        if (keyStates.at(Key::Shift)) {
-            yTranslation += perUnitDistance;
-        }
-
-        if (xAngle + m_xzPlaneAngle > DirectX::XM_PIDIV2) {
-            xAngle = DirectX::XM_PIDIV2 - m_xzPlaneAngle;
-        }
-        else if (xAngle + m_xzPlaneAngle < -DirectX::XM_PIDIV2) {
-            xAngle = -DirectX::XM_PIDIV2 - m_xzPlaneAngle;
-        }
-
-        DirectX::XMMATRIX rotationMatrix1 = DirectX::XMMatrixRotationX(-m_xzPlaneAngle);
-        DirectX::XMMATRIX translationMatrix = DirectX::XMMatrixTranslation(xTranslation, yTranslation, zTranslation);
-        DirectX::XMMATRIX rotationMatrix2 = DirectX::XMMatrixRotationY(yAngle);
-        DirectX::XMMATRIX rotationMatrix3 = DirectX::XMMatrixRotationX(xAngle + m_xzPlaneAngle);
-
-        m_viewMatrix = DirectX::XMMatrixMultiply(m_viewMatrix, rotationMatrix1);
-        m_viewMatrix = DirectX::XMMatrixMultiply(m_viewMatrix, translationMatrix);
-        m_viewMatrix = DirectX::XMMatrixMultiply(m_viewMatrix, rotationMatrix2);
-        m_viewMatrix = DirectX::XMMatrixMultiply(m_viewMatrix, rotationMatrix3);
-
-        m_xzPlaneAngle += xAngle;
-    }
-
-    [[nodiscard]] DirectX::XMMATRIX GetViewMatrix() const { return m_viewMatrix; }
-    [[nodiscard]] DirectX::XMFLOAT3 GetViewDirection() const
-    {
-        DirectX::XMVECTOR viewDirection =
-            DirectX::XMVector4Transform(DirectX::g_XMIdentityR2, DirectX::XMMatrixInverse(nullptr, m_viewMatrix));
-        DirectX::XMFLOAT3 viewDirectionFloat;
-        DirectX::XMStoreFloat3(&viewDirectionFloat, viewDirection);
-
-        return viewDirectionFloat;
-    }
-
-    void SetRotationSpeed(FLOAT rotationSpeed) { m_rotationSpeed = rotationSpeed; }
-    void SetMovementSpeed(FLOAT movementSpeed) { m_movementSpeed = movementSpeed; }
-
-private:
-    DirectX::XMMATRIX m_viewMatrix;
-    FLOAT m_xzPlaneAngle;
-    FLOAT m_rotationSpeed;
-    FLOAT m_movementSpeed;
-};
-
+// Entry point
 INT WINAPI wWinMain(
     _In_ [[maybe_unused]] HINSTANCE instance, _In_opt_ [[maybe_unused]] HINSTANCE prev_instance,
     _In_ [[maybe_unused]] PWSTR cmd_line, _In_ [[maybe_unused]] INT cmd_show
@@ -258,7 +138,7 @@ INT WINAPI wWinMain(
             ComPtr<ID3D12PipelineState> pipelineState;
             dxContext.GetDeviceComPtr()->CreateGraphicsPipelineState(&pipelineStateDesc, IID_PPV_ARGS(&pipelineState));
 
-            DXWindow mainWindow(1920, 1080, dxContext, instance);
+            DXWindow mainWindow(instance, 1920, 1080, dxContext);
             mainWindow.SetFullscreen(TRUE);
 
             std::unordered_map<Key, BOOL> keyStates{
@@ -449,4 +329,49 @@ INT WINAPI wWinMain(
     RoUninitialize();
 
     return ret;
+}
+
+// Implementations of auxiliary functions
+SIZE_T AlignUp(SIZE_T size, SIZE_T alignment) { return (size + alignment - 1) & ~(alignment - 1); }
+
+Mesh CreateXZPlane(FLOAT xSize, FLOAT zSize, UINT32 xSegments, UINT32 zSegments)
+{
+    std::vector<VertexBufferElement> vertices;
+    std::vector<UINT32> indices;
+
+    FLOAT xStep = xSize / xSegments;
+    FLOAT zStep = zSize / zSegments;
+
+    for (UINT32 i = 0; i <= zSegments; i++) {
+        for (UINT32 j = 0; j <= xSegments; j++) {
+            vertices.push_back({.position{j * xStep, 0.f, i * zStep}});
+        }
+    }
+
+    for (UINT32 i = 0; i < zSegments; i++) {
+        for (UINT32 j = 0; j < xSegments; j++) {
+            UINT32 index = i * (xSegments + 1) + j;
+            indices.push_back(index);
+            indices.push_back(index + xSegments + 1);
+            indices.push_back(index + 1);
+            indices.push_back(index + 1);
+            indices.push_back(index + xSegments + 1);
+            indices.push_back(index + xSegments + 2);
+        }
+    }
+
+    return {.vertices = vertices, .indices = indices};
+}
+
+void ResetKeyStates(std::unordered_map<Key, BOOL>& keyStates)
+{
+    for (auto& [key, state] : keyStates) {
+        state = FALSE;
+    }
+}
+
+template <typename T>
+SIZE_T VecDataSize(const std::vector<T>& vec)
+{
+    return vec.size() * sizeof(T);
 }

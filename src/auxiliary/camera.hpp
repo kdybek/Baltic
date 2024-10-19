@@ -1,0 +1,90 @@
+#pragma once
+
+// clang-format off
+#include "auxiliary/pch.hpp"
+// clang-format on
+
+#include "auxiliary/types.hpp"
+
+class Camera
+{
+public:
+    Camera(const DirectX::XMMATRIX& viewMatrix)
+        : m_viewMatrix(viewMatrix), m_xzPlaneAngle(0.f), m_rotationSpeed(.04f), m_movementSpeed(4.f)
+    {
+    }
+
+    void HandleInput(POINT mouseMovementVec, const std::unordered_map<Key, BOOL>& keyStates, FLOAT deltaTime)
+    {
+        FLOAT perUnitAngle = m_rotationSpeed * deltaTime;
+        FLOAT perUnitDistance = m_movementSpeed * deltaTime;
+        FLOAT xAngle = mouseMovementVec.y * -perUnitAngle;
+        FLOAT yAngle = mouseMovementVec.x * -perUnitAngle;
+        FLOAT xTranslation = 0.f;
+        FLOAT yTranslation = 0.f;
+        FLOAT zTranslation = 0.f;
+
+        if (keyStates.at(Key::W)) {
+            zTranslation -= perUnitDistance;
+        }
+
+        if (keyStates.at(Key::A)) {
+            xTranslation += perUnitDistance;
+        }
+
+        if (keyStates.at(Key::S)) {
+            zTranslation += perUnitDistance;
+        }
+
+        if (keyStates.at(Key::D)) {
+            xTranslation -= perUnitDistance;
+        }
+
+        if (keyStates.at(Key::Space)) {
+            yTranslation -= perUnitDistance;
+        }
+
+        if (keyStates.at(Key::Shift)) {
+            yTranslation += perUnitDistance;
+        }
+
+        if (xAngle + m_xzPlaneAngle > DirectX::XM_PIDIV2) {
+            xAngle = DirectX::XM_PIDIV2 - m_xzPlaneAngle;
+        }
+        else if (xAngle + m_xzPlaneAngle < -DirectX::XM_PIDIV2) {
+            xAngle = -DirectX::XM_PIDIV2 - m_xzPlaneAngle;
+        }
+
+        DirectX::XMMATRIX rotationMatrix1 = DirectX::XMMatrixRotationX(-m_xzPlaneAngle);
+        DirectX::XMMATRIX translationMatrix = DirectX::XMMatrixTranslation(xTranslation, yTranslation, zTranslation);
+        DirectX::XMMATRIX rotationMatrix2 = DirectX::XMMatrixRotationY(yAngle);
+        DirectX::XMMATRIX rotationMatrix3 = DirectX::XMMatrixRotationX(xAngle + m_xzPlaneAngle);
+
+        m_viewMatrix = DirectX::XMMatrixMultiply(m_viewMatrix, rotationMatrix1);
+        m_viewMatrix = DirectX::XMMatrixMultiply(m_viewMatrix, translationMatrix);
+        m_viewMatrix = DirectX::XMMatrixMultiply(m_viewMatrix, rotationMatrix2);
+        m_viewMatrix = DirectX::XMMatrixMultiply(m_viewMatrix, rotationMatrix3);
+
+        m_xzPlaneAngle += xAngle;
+    }
+
+    [[nodiscard]] DirectX::XMMATRIX GetViewMatrix() const { return m_viewMatrix; }
+    [[nodiscard]] DirectX::XMFLOAT3 GetViewDirection() const
+    {
+        DirectX::XMVECTOR viewDirection =
+            DirectX::XMVector4Transform(DirectX::g_XMIdentityR2, DirectX::XMMatrixInverse(nullptr, m_viewMatrix));
+        DirectX::XMFLOAT3 viewDirectionFloat;
+        DirectX::XMStoreFloat3(&viewDirectionFloat, viewDirection);
+
+        return viewDirectionFloat;
+    }
+
+    void SetRotationSpeed(FLOAT rotationSpeed) { m_rotationSpeed = rotationSpeed; }
+    void SetMovementSpeed(FLOAT movementSpeed) { m_movementSpeed = movementSpeed; }
+
+private:
+    DirectX::XMMATRIX m_viewMatrix;
+    FLOAT m_xzPlaneAngle;
+    FLOAT m_rotationSpeed;
+    FLOAT m_movementSpeed;
+};
