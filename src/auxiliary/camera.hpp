@@ -9,12 +9,12 @@
 class Camera
 {
 public:
-    Camera(const DirectX::XMMATRIX& viewMatrix)
+    inline Camera(const DirectX::XMMATRIX& viewMatrix)
         : m_viewMatrix(viewMatrix), m_xzPlaneAngle(0.f), m_rotationSpeed(.04f), m_movementSpeed(4.f)
     {
     }
 
-    void HandleInput(POINT mouseMovementVec, const std::unordered_map<Key, BOOL>& keyStates, FLOAT deltaTime)
+    void inline HandleInput(POINT mouseMovementVec, const std::unordered_map<Key, BOOL>& keyStates, FLOAT deltaTime)
     {
         FLOAT perUnitAngle = m_rotationSpeed * deltaTime;
         FLOAT perUnitDistance = m_movementSpeed * deltaTime;
@@ -68,8 +68,11 @@ public:
         m_xzPlaneAngle += xAngle;
     }
 
-    [[nodiscard]] DirectX::XMMATRIX GetViewMatrix() const { return m_viewMatrix; }
-    [[nodiscard]] DirectX::XMFLOAT3 GetViewDirection() const
+    void inline SetRotationSpeed(FLOAT rotationSpeed) { m_rotationSpeed = rotationSpeed; }
+    void inline SetMovementSpeed(FLOAT movementSpeed) { m_movementSpeed = movementSpeed; }
+
+    [[nodiscard]] inline DirectX::XMMATRIX GetViewMatrix() const { return m_viewMatrix; }
+    [[nodiscard]] inline DirectX::XMFLOAT3 GetViewDirection() const
     {
         DirectX::XMVECTOR viewDirection =
             DirectX::XMVector4Transform(DirectX::g_XMIdentityR2, DirectX::XMMatrixInverse(nullptr, m_viewMatrix));
@@ -78,9 +81,6 @@ public:
 
         return viewDirectionFloat;
     }
-
-    void SetRotationSpeed(FLOAT rotationSpeed) { m_rotationSpeed = rotationSpeed; }
-    void SetMovementSpeed(FLOAT movementSpeed) { m_movementSpeed = movementSpeed; }
 
 private:
     DirectX::XMMATRIX m_viewMatrix;

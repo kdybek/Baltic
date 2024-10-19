@@ -24,11 +24,8 @@ public:
     void ConfineCursor();
     void FreeCursor();
     void CenterCursor();
-    void SetCursorVisibility(BOOL visible);
-    [[nodiscard]] POINT GetCursorPosition();
+    void SetCursorVisibility(BOOL enable);
     void SetFullscreen(BOOL enable);
-    void QueuePreRenderingTransitions(std::vector<D3D12_RESOURCE_BARRIER>& barriers);
-    void QueuePostRenderingTransitions(std::vector<D3D12_RESOURCE_BARRIER>& barriers);
 
     [[nodiscard]] inline UINT GetWidth() const { return m_width; }
     [[nodiscard]] inline UINT GetHeight() const { return m_height; }
@@ -41,6 +38,9 @@ public:
         return &m_rtvHandles[m_swapChain->GetCurrentBackBufferIndex()];
     }
     [[nodiscard]] inline const D3D12_CPU_DESCRIPTOR_HANDLE* GetDSVHandlePtr() const { return &m_dsvHandle; }
+    [[nodiscard]] POINT GetCursorPosition() const;
+    void QueuePreRenderingTransitions(std::vector<D3D12_RESOURCE_BARRIER>& barriers) const;
+    void QueuePostRenderingTransitions(std::vector<D3D12_RESOURCE_BARRIER>& barriers) const;
 
 private:
     friend LRESULT CALLBACK OnWindowMessage(HWND wnd, UINT msg, WPARAM wParam, LPARAM lParam);
@@ -61,6 +61,7 @@ private:
     std::queue<Event> m_eventQueue;
 
     ComPtr<IDXGISwapChain4> m_swapChain;
+
     ComPtr<ID3D12Resource2> m_rtBuffers[FRAME_COUNT];
     ComPtr<ID3D12DescriptorHeap> m_rtvDescHeap;
     D3D12_CPU_DESCRIPTOR_HANDLE m_rtvHandles[FRAME_COUNT];

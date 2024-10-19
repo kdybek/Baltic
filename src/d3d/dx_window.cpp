@@ -163,7 +163,7 @@ LRESULT OnWindowMessage(HWND wnd, UINT msg, WPARAM wParam, LPARAM lParam)
     }
 }
 
-DXWindow::DXWindow(UINT width, UINT height, DXContext& dxContext, HINSTANCE instance)
+DXWindow::DXWindow(HINSTANCE instance, UINT width, UINT height, DXContext& dxContext)
     : m_wndClass(0),
       m_windowHandle(nullptr),
       m_width(width),
@@ -380,26 +380,12 @@ void DXWindow::CenterCursor()
     }
 }
 
-void DXWindow::SetCursorVisibility(BOOL visible)
+void DXWindow::SetCursorVisibility(BOOL enable)
 {
-    if (m_cursorVisible != visible) {
-        ShowCursor(visible);
-        m_cursorVisible = visible;
+    if (m_cursorVisible != enable) {
+        ShowCursor(enable);
+        m_cursorVisible = enable;
     }
-}
-
-POINT DXWindow::GetCursorPosition()
-{
-    POINT cursorPos;
-    if (!GetCursorPos(&cursorPos)) {
-        throw GenericException(TEXT("GetCursorPos"));
-    }
-
-    if (!ScreenToClient(m_windowHandle, &cursorPos)) {
-        throw GenericException(TEXT("ScreenToClient"));
-    }
-
-    return cursorPos;
 }
 
 void DXWindow::SetFullscreen(BOOL enable)
@@ -437,7 +423,21 @@ void DXWindow::SetFullscreen(BOOL enable)
     }
 }
 
-void DXWindow::QueuePreRenderingTransitions(std::vector<D3D12_RESOURCE_BARRIER>& barriers)
+POINT DXWindow::GetCursorPosition() const
+{
+    POINT cursorPos;
+    if (!GetCursorPos(&cursorPos)) {
+        throw GenericException(TEXT("GetCursorPos"));
+    }
+
+    if (!ScreenToClient(m_windowHandle, &cursorPos)) {
+        throw GenericException(TEXT("ScreenToClient"));
+    }
+
+    return cursorPos;
+}
+
+void DXWindow::QueuePreRenderingTransitions(std::vector<D3D12_RESOURCE_BARRIER>& barriers) const
 {
     QueueTransition(
         m_rtBuffers[m_swapChain->GetCurrentBackBufferIndex()].Get(), D3D12_RESOURCE_STATE_PRESENT,
@@ -445,7 +445,7 @@ void DXWindow::QueuePreRenderingTransitions(std::vector<D3D12_RESOURCE_BARRIER>&
     );
 }
 
-void DXWindow::QueuePostRenderingTransitions(std::vector<D3D12_RESOURCE_BARRIER>& barriers)
+void DXWindow::QueuePostRenderingTransitions(std::vector<D3D12_RESOURCE_BARRIER>& barriers) const
 {
     QueueTransition(
         m_rtBuffers[m_swapChain->GetCurrentBackBufferIndex()].Get(), D3D12_RESOURCE_STATE_RENDER_TARGET,
