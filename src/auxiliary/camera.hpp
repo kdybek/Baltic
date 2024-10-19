@@ -14,7 +14,7 @@ public:
     {
     }
 
-    void inline HandleInput(POINT mouseMovementVec, const std::unordered_map<Key, BOOL>& keyStates, FLOAT deltaTime)
+    void inline HandleInput(POINT mouseMovementVec, const std::unordered_map<WPARAM, BOOL>& keyStates, FLOAT deltaTime)
     {
         FLOAT perUnitAngle = m_rotationSpeed * deltaTime;
         FLOAT perUnitDistance = m_movementSpeed * deltaTime;
@@ -24,27 +24,27 @@ public:
         FLOAT yTranslation = 0.f;
         FLOAT zTranslation = 0.f;
 
-        if (keyStates.at(Key::W)) {
+        if (keyStates.at('W')) {
             zTranslation -= perUnitDistance;
         }
 
-        if (keyStates.at(Key::A)) {
+        if (keyStates.at('A')) {
             xTranslation += perUnitDistance;
         }
 
-        if (keyStates.at(Key::S)) {
+        if (keyStates.at('S')) {
             zTranslation += perUnitDistance;
         }
 
-        if (keyStates.at(Key::D)) {
+        if (keyStates.at('D')) {
             xTranslation -= perUnitDistance;
         }
 
-        if (keyStates.at(Key::Space)) {
+        if (keyStates.at(VK_SPACE)) {
             yTranslation -= perUnitDistance;
         }
 
-        if (keyStates.at(Key::Shift)) {
+        if (keyStates.at(VK_SHIFT)) {
             yTranslation += perUnitDistance;
         }
 

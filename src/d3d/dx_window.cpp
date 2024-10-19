@@ -3,152 +3,26 @@
 #include "auxiliary/baltic_exception.hpp"
 #include "d3d/dx_context.hpp"
 #include "d3d/dx_resource.hpp"
-#include "imgui.h"
 
-LRESULT EventQueueWindowProc(HWND wnd, UINT msg, WPARAM wParam, LPARAM lParam)
+LRESULT MsgQueueWindowProc(HWND wnd, UINT msg, WPARAM wParam, LPARAM lParam)
 {
     try {
-        if (msg == WM_MOUSEMOVE) {
-            DXWindow* windowPtr;
-            if (!(windowPtr = reinterpret_cast<DXWindow*>(GetWindowLongPtr(wnd, GWLP_USERDATA)))) {
-                throw GenericException(TEXT("GetWindowLongPtr"));
-            }
-
-            windowPtr->m_eventQueue.push(
-                {.type = EventType::MouseMove, .cursorPosition = {.x = LOWORD(lParam), .y = HIWORD(lParam)}}
-            );
-
-            return DefWindowProc(wnd, msg, wParam, lParam);
-        }
-        else if (msg == WM_KEYDOWN) {
-            DXWindow* windowPtr;
-            if (!(windowPtr = reinterpret_cast<DXWindow*>(GetWindowLongPtr(wnd, GWLP_USERDATA)))) {
-                throw GenericException(TEXT("GetWindowLongPtr"));
-            }
-
-            switch (wParam) {
-                case 'W':
-                    windowPtr->m_eventQueue.push({.type = EventType::KeyDown, .key = Key::W});
-                    break;
-                case 'A':
-                    windowPtr->m_eventQueue.push({.type = EventType::KeyDown, .key = Key::A});
-                    break;
-                case 'S':
-                    windowPtr->m_eventQueue.push({.type = EventType::KeyDown, .key = Key::S});
-                    break;
-                case 'D':
-                    windowPtr->m_eventQueue.push({.type = EventType::KeyDown, .key = Key::D});
-                    break;
-                case VK_SPACE:
-                    windowPtr->m_eventQueue.push({.type = EventType::KeyDown, .key = Key::Space});
-                    break;
-                case VK_SHIFT:
-                    windowPtr->m_eventQueue.push({.type = EventType::KeyDown, .key = Key::Shift});
-                    break;
-                case VK_F11:
-                    windowPtr->m_eventQueue.push({.type = EventType::KeyDown, .key = Key::F11});
-                    break;
-                case VK_ESCAPE:
-                    windowPtr->m_eventQueue.push({.type = EventType::KeyDown, .key = Key::Escape});
-                    break;
-            }
-
-            return DefWindowProc(wnd, msg, wParam, lParam);
-        }
-        else if (msg == WM_KEYUP) {
-            DXWindow* windowPtr;
-            if (!(windowPtr = reinterpret_cast<DXWindow*>(GetWindowLongPtr(wnd, GWLP_USERDATA)))) {
-                throw GenericException(TEXT("GetWindowLongPtr"));
-            }
-
-            switch (wParam) {
-                case 'W':
-                    windowPtr->m_eventQueue.push({.type = EventType::KeyUp, .key = Key::W});
-                    break;
-                case 'A':
-                    windowPtr->m_eventQueue.push({.type = EventType::KeyUp, .key = Key::A});
-                    break;
-                case 'S':
-                    windowPtr->m_eventQueue.push({.type = EventType::KeyUp, .key = Key::S});
-                    break;
-                case 'D':
-                    windowPtr->m_eventQueue.push({.type = EventType::KeyUp, .key = Key::D});
-                    break;
-                case VK_SPACE:
-                    windowPtr->m_eventQueue.push({.type = EventType::KeyUp, .key = Key::Space});
-                    break;
-                case VK_SHIFT:
-                    windowPtr->m_eventQueue.push({.type = EventType::KeyUp, .key = Key::Shift});
-                    break;
-                case VK_F11:
-                    windowPtr->m_eventQueue.push({.type = EventType::KeyUp, .key = Key::F11});
-                    break;
-                case VK_ESCAPE:
-                    windowPtr->m_eventQueue.push({.type = EventType::KeyUp, .key = Key::Escape});
-                    break;
-            }
-
-            return DefWindowProc(wnd, msg, wParam, lParam);
-        }
-        if (msg == WM_SIZE) {
-            DXWindow* windowPtr;
-            if (!(windowPtr = reinterpret_cast<DXWindow*>(GetWindowLongPtr(wnd, GWLP_USERDATA)))) {
-                throw GenericException(TEXT("GetWindowLongPtr"));
-            }
-
-            if (LOWORD(lParam) && HIWORD(lParam) &&
-                (LOWORD(lParam) != windowPtr->m_width || HIWORD(lParam) != windowPtr->m_height)) {
-                windowPtr->m_eventQueue.push({.type = EventType::Resize});
-            }
-
-            return DefWindowProc(wnd, msg, wParam, lParam);
-        }
-        else if (msg == WM_MOVE) {
-            DXWindow* windowPtr;
-            if (!(windowPtr = reinterpret_cast<DXWindow*>(GetWindowLongPtr(wnd, GWLP_USERDATA)))) {
-                throw GenericException(TEXT("GetWindowLongPtr"));
-            }
-
-            windowPtr->m_eventQueue.push({.type = EventType::Move});
-
-            return DefWindowProc(wnd, msg, wParam, lParam);
-        }
-        else if (msg == WM_SETFOCUS) {
-            DXWindow* windowPtr;
-            if (!(windowPtr = reinterpret_cast<DXWindow*>(GetWindowLongPtr(wnd, GWLP_USERDATA)))) {
-                throw GenericException(TEXT("GetWindowLongPtr"));
-            }
-
-            windowPtr->m_eventQueue.push({.type = EventType::Focus});
-
-            return DefWindowProc(wnd, msg, wParam, lParam);
-        }
-        else if (msg == WM_KILLFOCUS) {
-            DXWindow* windowPtr;
-            if (!(windowPtr = reinterpret_cast<DXWindow*>(GetWindowLongPtr(wnd, GWLP_USERDATA)))) {
-                throw GenericException(TEXT("GetWindowLongPtr"));
-            }
-
-            windowPtr->m_eventQueue.push({.type = EventType::Blur});
-
-            return DefWindowProc(wnd, msg, wParam, lParam);
-        }
-        else if (msg == WM_CLOSE) {
-            DXWindow* windowPtr;
-            if (!(windowPtr = reinterpret_cast<DXWindow*>(GetWindowLongPtr(wnd, GWLP_USERDATA)))) {
-                throw GenericException(TEXT("GetWindowLongPtr"));
-            }
-
-            windowPtr->m_eventQueue.push({.type = EventType::Close});
-
-            return TRUE;
-        }
-        else if (msg == WM_NCCREATE) {
+        if (msg == WM_NCCREATE) {
             auto* createPtr = reinterpret_cast<CREATESTRUCT*>(lParam);
             auto* windowPtr = reinterpret_cast<DXWindow*>(createPtr->lpCreateParams);
             SetWindowLongPtr(wnd, GWLP_USERDATA, reinterpret_cast<LONG_PTR>(windowPtr));
 
-            return DefWindowProc(wnd, msg, wParam, lParam);
+            return TRUE;
+        }
+        else if (GetHandledMessages().contains(msg)) {
+            DXWindow* windowPtr;
+            if (!(windowPtr = reinterpret_cast<DXWindow*>(GetWindowLongPtr(wnd, GWLP_USERDATA)))) {
+                throw GenericException(TEXT("GetWindowLongPtr"));
+            }
+
+            windowPtr->m_messageQueue.push({.msg = msg, .wParam = wParam, .lParam = lParam, .empty = FALSE});
+
+            return TRUE;
         }
         else {
             return DefWindowProc(wnd, msg, wParam, lParam);
@@ -164,15 +38,38 @@ LRESULT EventQueueWindowProc(HWND wnd, UINT msg, WPARAM wParam, LPARAM lParam)
     }
 }
 
-extern IMGUI_IMPL_API LRESULT ImGui_ImplWin32_WndProcHandler(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
-
-LRESULT CALLBACK ImGuiWindowProc(HWND wnd, UINT msg, WPARAM wParam, LPARAM lParam)
+ATOM GetBalticWndClass(HINSTANCE instance)
 {
-    if (ImGui_ImplWin32_WndProcHandler(wnd, msg, wParam, lParam)) {
-        return TRUE;
+    static ATOM atom = 0;
+    static BOOL initialized = FALSE;
+
+    if (initialized) {
+        return atom;
     }
 
-    return EventQueueWindowProc(wnd, msg, wParam, lParam);
+    WNDCLASSEX wcex{
+        .cbSize = sizeof(wcex),
+        .style = CS_OWNDC,
+        .lpfnWndProc = MsgQueueWindowProc,
+        .cbClsExtra = 0,
+        .cbWndExtra = sizeof(LONG_PTR),
+        .hInstance = instance,
+        .hIcon = LoadIcon(nullptr, IDI_APPLICATION),
+        .hCursor = LoadCursor(nullptr, IDC_ARROW),
+        .hbrBackground = nullptr,
+        .lpszMenuName = nullptr,
+        .lpszClassName = TEXT("BalticWndClass"),
+        .hIconSm = LoadIcon(nullptr, IDI_APPLICATION)
+    };
+
+    atom = RegisterClassEx(&wcex);
+    if (!atom) {
+        throw GenericException(TEXT("RegisterClassEx"));
+    }
+
+    initialized = TRUE;
+
+    return atom;
 }
 
 DXWindow::DXWindow(
@@ -236,13 +133,6 @@ DXWindow::DXWindow(
         .NodeMask = 0
     };
 
-    D3D12_DESCRIPTOR_HEAP_DESC dsvDescriptorHeapDesc{
-        .Type = D3D12_DESCRIPTOR_HEAP_TYPE_DSV,
-        .NumDescriptors = 1,
-        .Flags = D3D12_DESCRIPTOR_HEAP_FLAG_NONE,
-        .NodeMask = 0
-    };
-
     DXThrowIfFailed(
         dxContext.GetDeviceComPtr()->CreateDescriptorHeap(&rtvDescriptorHeapDesc, IID_PPV_ARGS(&m_rtvDescHeap))
     );
@@ -254,12 +144,6 @@ DXWindow::DXWindow(
         m_rtvHandles[i] = firstHandle;
         m_rtvHandles[i].ptr += handleInc * i;
     }
-
-    DXThrowIfFailed(
-        dxContext.GetDeviceComPtr()->CreateDescriptorHeap(&dsvDescriptorHeapDesc, IID_PPV_ARGS(&m_dsvHeapDesc))
-    );
-
-    m_dsvHandle = m_dsvHeapDesc->GetCPUDescriptorHandleForHeapStart();
 
     GetBuffers(dxContext.GetDeviceComPtr().Get());
 }
@@ -282,16 +166,16 @@ void DXWindow::Update()
 
 void DXWindow::Present() { DXThrowIfFailed(m_swapChain->Present(1, 0)); }
 
-Event DXWindow::PollEvent()
+WindowsMessage DXWindow::PollMsg()
 {
-    if (m_eventQueue.empty()) {
-        return {.type = EventType::None};
+    if (m_messageQueue.empty()) {
+        return {.empty = TRUE};
     }
 
-    Event event = m_eventQueue.front();
-    m_eventQueue.pop();
+    WindowsMessage msg = m_messageQueue.front();
+    m_messageQueue.pop();
 
-    return event;
+    return msg;
 }
 
 void DXWindow::Resize(ID3D12Device10* device)
@@ -458,100 +342,11 @@ void DXWindow::GetBuffers(ID3D12Device10* device)
 
         device->CreateRenderTargetView(m_rtBuffers[i].Get(), &rtvDesc, m_rtvHandles[i]);
     }
-
-    m_dsBuffer = CreateDepthStencilBuffer(m_width, m_height, DSV_FORMAT, D3D12_RESOURCE_STATE_DEPTH_WRITE, device);
-
-    D3D12_DEPTH_STENCIL_VIEW_DESC dsvDesc{
-        .Format = DSV_FORMAT, .ViewDimension = D3D12_DSV_DIMENSION_TEXTURE2D, .Flags = D3D12_DSV_FLAG_NONE
-    };
-
-    device->CreateDepthStencilView(m_dsBuffer.Get(), &dsvDesc, m_dsvHandle);
 }
 
 void DXWindow::ReleaseBuffers()
 {
     for (auto& buffer : m_rtBuffers) {
         buffer.Reset();
-    }
-
-    m_dsBuffer.Reset();
-}
-
-ATOM GetEventQueueWndClass(HINSTANCE instance)
-{
-    static ATOM atom = 0;
-    static BOOL initialized = FALSE;
-
-    if (initialized) {
-        return atom;
-    }
-
-    WNDCLASSEX wcex{
-        .cbSize = sizeof(wcex),
-        .style = CS_OWNDC,
-        .lpfnWndProc = EventQueueWindowProc,
-        .cbClsExtra = 0,
-        .cbWndExtra = sizeof(LONG_PTR),
-        .hInstance = instance,
-        .hIcon = LoadIcon(nullptr, IDI_APPLICATION),
-        .hCursor = LoadCursor(nullptr, IDC_ARROW),
-        .hbrBackground = nullptr,
-        .lpszMenuName = nullptr,
-        .lpszClassName = TEXT("EventQueueWndClass"),
-        .hIconSm = LoadIcon(nullptr, IDI_APPLICATION)
-    };
-
-    atom = RegisterClassEx(&wcex);
-    if (!atom) {
-        throw GenericException(TEXT("RegisterClassEx"));
-    }
-
-    initialized = TRUE;
-
-    return atom;
-}
-
-ATOM GetImGuiWndClass(HINSTANCE instance)
-{
-    static ATOM atom = 0;
-    static BOOL initialized = FALSE;
-
-    if (initialized) {
-        return atom;
-    }
-
-    WNDCLASSEX wcex{
-        .cbSize = sizeof(wcex),
-        .style = CS_OWNDC,
-        .lpfnWndProc = ImGuiWindowProc,
-        .cbClsExtra = 0,
-        .cbWndExtra = sizeof(LONG_PTR),
-        .hInstance = instance,
-        .hIcon = LoadIcon(nullptr, IDI_APPLICATION),
-        .hCursor = LoadCursor(nullptr, IDC_ARROW),
-        .hbrBackground = nullptr,
-        .lpszMenuName = nullptr,
-        .lpszClassName = TEXT("ImGuiWndClass"),
-        .hIconSm = LoadIcon(nullptr, IDI_APPLICATION)
-    };
-
-    atom = RegisterClassEx(&wcex);
-    if (!atom) {
-        throw GenericException(TEXT("RegisterClassEx"));
-    }
-
-    initialized = TRUE;
-
-    return atom;
-}
-
-void UnregisterWndClasses(HINSTANCE instance)
-{
-    if (!UnregisterClass(MAKEINTATOM(GetEventQueueWndClass(instance)), instance)) {
-        throw GenericException(TEXT("UnregisterClass"));
-    }
-
-    if (!UnregisterClass(MAKEINTATOM(GetImGuiWndClass(instance)), instance)) {
-        throw GenericException(TEXT("UnregisterClass"));
     }
 }

@@ -17,7 +17,7 @@ class ControlPanel
 {
 public:
     inline ControlPanel(HINSTANCE instance, DXContext& context)
-        : m_window(instance, GetImGuiWndClass(instance), TEXT("Control Panel"), 1920, 1080, context)
+        : m_window(instance, GetBalticWndClass(instance), TEXT("Control Panel"), 1920, 1080, context)
     {
         IMGUI_CHECKVERSION();
         ImGui::CreateContext();

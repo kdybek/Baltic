@@ -8,9 +8,7 @@
 #include "auxiliary/types.hpp"
 #include "d3d/dx_context.hpp"
 
-ATOM GetEventQueueWndClass(HINSTANCE instance);
-ATOM GetImGuiWndClass(HINSTANCE instance);
-void UnregisterWndClasses(HINSTANCE instance);
+ATOM GetBalticWndClass(HINSTANCE instance);
 
 class DXWindow
 {
@@ -23,7 +21,7 @@ public:
 
     void Update();
     void Present();
-    [[nodiscard]] Event PollEvent();
+    [[nodiscard]] WindowsMessage PollMsg();
     void Resize(ID3D12Device10* device);
     void ConfineCursor();
     void FreeCursor();
@@ -41,14 +39,13 @@ public:
     {
         return &m_rtvHandles[m_swapChain->GetCurrentBackBufferIndex()];
     }
-    [[nodiscard]] inline const D3D12_CPU_DESCRIPTOR_HANDLE* GetDSVHandlePtr() const { return &m_dsvHandle; }
     [[nodiscard]] inline HWND GetWindowHandle() const { return m_windowHandle; }
     [[nodiscard]] POINT GetCursorPosition() const;
     void QueuePreRenderingTransitions(std::vector<D3D12_RESOURCE_BARRIER>& barriers) const;
     void QueuePostRenderingTransitions(std::vector<D3D12_RESOURCE_BARRIER>& barriers) const;
 
 private:
-    friend LRESULT CALLBACK EventQueueWindowProc(HWND wnd, UINT msg, WPARAM wParam, LPARAM lParam);
+    friend LRESULT CALLBACK MsgQueueWindowProc(HWND wnd, UINT msg, WPARAM wParam, LPARAM lParam);
 
     void GetBuffers(ID3D12Device10* device);
     void ReleaseBuffers();
@@ -64,15 +61,11 @@ private:
     BOOL m_cursorVisible;
     BOOL m_depthStencilBuffer;
 
-    std::queue<Event> m_eventQueue;
+    std::queue<WindowsMessage> m_messageQueue;
 
     ComPtr<IDXGISwapChain4> m_swapChain;
 
     ComPtr<ID3D12Resource2> m_rtBuffers[FRAME_COUNT];
     ComPtr<ID3D12DescriptorHeap> m_rtvDescHeap;
     D3D12_CPU_DESCRIPTOR_HANDLE m_rtvHandles[FRAME_COUNT];
-
-    ComPtr<ID3D12Resource2> m_dsBuffer;
-    ComPtr<ID3D12DescriptorHeap> m_dsvHeapDesc;
-    D3D12_CPU_DESCRIPTOR_HANDLE m_dsvHandle;
 };

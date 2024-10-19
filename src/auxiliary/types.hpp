@@ -53,37 +53,11 @@ struct Model
     DirectX::XMFLOAT3 color;
 };
 
-enum class EventType
+struct WindowsMessage
 {
-    None,
-    Close,
-    Resize,
-    Focus,
-    Blur,
-    Move,
-    KeyDown,
-    KeyUp,
-    MouseMove
-};
-
-enum class Key
-{
-    W,
-    A,
-    S,
-    D,
-    Space,
-    Shift,
-    F11,
-    Escape
-};
-
-struct Event
-{
-    EventType type;
-    union
-    {
-        Key key;
-        POINT cursorPosition;
-    };
+    HWND wnd;
+    UINT msg;
+    WPARAM wParam;
+    LPARAM lParam;
+    BOOL empty;
 };

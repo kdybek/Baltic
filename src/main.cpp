@@ -16,7 +16,7 @@
 // Forward declarations of auxiliary functions
 SIZE_T AlignUp(SIZE_T size, SIZE_T alignment);
 Mesh CreateXZPlane(FLOAT xSize, FLOAT zSize, UINT32 xSegments, UINT32 zSegments);
-void ResetKeyStates(std::unordered_map<Key, BOOL>& keyStates);
+void ResetKeyStates(std::unordered_map<WPARAM, BOOL>& keyStates);
 template <typename T>
 SIZE_T VecDataSize(const std::vector<T>& vec);
 
@@ -139,12 +139,36 @@ INT WINAPI wWinMain(
             ComPtr<ID3D12PipelineState> pipelineState;
             dxContext.GetDeviceComPtr()->CreateGraphicsPipelineState(&pipelineStateDesc, IID_PPV_ARGS(&pipelineState));
 
-            DXWindow mainWindow(instance, GetEventQueueWndClass(instance), TEXT("Baltic"), 1920, 1080, dxContext);
+            DXWindow mainWindow(instance, GetBalticWndClass(instance), TEXT("Baltic"), 1920, 1080, dxContext);
             mainWindow.SetFullscreen(TRUE);
 
-            std::unordered_map<Key, BOOL> keyStates{
-                {Key::W, FALSE}, {Key::A, FALSE},     {Key::S, FALSE},
-                {Key::D, FALSE}, {Key::Space, FALSE}, {Key::Shift, FALSE},
+            D3D12_DESCRIPTOR_HEAP_DESC dsvDescriptorHeapDesc{
+                .Type = D3D12_DESCRIPTOR_HEAP_TYPE_DSV,
+                .NumDescriptors = 1,
+                .Flags = D3D12_DESCRIPTOR_HEAP_FLAG_NONE,
+                .NodeMask = 0
+            };
+
+            ComPtr<ID3D12DescriptorHeap> dsvHeapDesc;
+            DXThrowIfFailed(
+                dxContext.GetDeviceComPtr()->CreateDescriptorHeap(&dsvDescriptorHeapDesc, IID_PPV_ARGS(&dsvHeapDesc))
+            );
+
+            D3D12_CPU_DESCRIPTOR_HANDLE dsvHandle = dsvHeapDesc->GetCPUDescriptorHandleForHeapStart();
+
+            ComPtr<ID3D12Resource2> dsBuffer = CreateDepthStencilBuffer(
+                mainWindow.GetWidth(), mainWindow.GetHeight(), DSV_FORMAT, D3D12_RESOURCE_STATE_DEPTH_WRITE,
+                dxContext.GetDeviceComPtr().Get()
+            );
+
+            D3D12_DEPTH_STENCIL_VIEW_DESC dsvDesc{
+                .Format = DSV_FORMAT, .ViewDimension = D3D12_DSV_DIMENSION_TEXTURE2D, .Flags = D3D12_DSV_FLAG_NONE
+            };
+
+            dxContext.GetDeviceComPtr().Get()->CreateDepthStencilView(dsBuffer.Get(), &dsvDesc, dsvHandle);
+
+            std::unordered_map<WPARAM, BOOL> keyStates{
+                {'W', FALSE}, {'A', FALSE}, {'S', FALSE}, {'D', FALSE}, {VK_SPACE, FALSE}, {VK_SHIFT, FALSE},
             };
 
             POINT lastCursorPos = mainWindow.GetCursorPosition();
@@ -176,21 +200,30 @@ INT WINAPI wWinMain(
 
                 POINT mouseMovementVec = {.x = 0, .y = 0};
 
-                Event event;
-                while ((event = mainWindow.PollEvent()).type != EventType::None) {
-                    if (event.type == EventType::Close) {
+                WindowsMessage winMsg;
+                while (!(winMsg = mainWindow.PollMsg()).empty) {
+                    if (winMsg.msg == WM_CLOSE) {
                         close = TRUE;
                     }
-                    else if (event.type == EventType::Resize) {
+                    else if (winMsg.msg == WM_SIZE && LOWORD(winMsg.lParam) && HIWORD(winMsg.lParam) &&
+                             (LOWORD(winMsg.lParam) != mainWindow.GetWidth() ||
+                              HIWORD(winMsg.lParam) != mainWindow.GetHeight())) {
                         dxContext.Flush(FRAME_COUNT);
                         mainWindow.Resize(dxContext.GetDeviceComPtr().Get());
+
+                        dsBuffer = CreateDepthStencilBuffer(
+                            mainWindow.GetWidth(), mainWindow.GetHeight(), DSV_FORMAT, D3D12_RESOURCE_STATE_DEPTH_WRITE,
+                            dxContext.GetDeviceComPtr().Get()
+                        );
+                        dxContext.GetDeviceComPtr().Get()->CreateDepthStencilView(dsBuffer.Get(), &dsvDesc, dsvHandle);
+
                         if (!pause && focus) {
                             mainWindow.ConfineCursor();
                             mainWindow.CenterCursor();
                             lastCursorPos = mainWindow.GetCursorPosition();
                         }
                     }
-                    else if (event.type == EventType::Focus) {
+                    else if (winMsg.msg == WM_SETFOCUS) {
                         focus = TRUE;
                         if (!pause) {
                             mainWindow.SetCursorVisibility(FALSE);
@@ -199,21 +232,21 @@ INT WINAPI wWinMain(
                             lastCursorPos = mainWindow.GetCursorPosition();
                         }
                     }
-                    else if (event.type == EventType::Blur) {
+                    else if (winMsg.msg == WM_KILLFOCUS) {
                         focus = FALSE;
                         mainWindow.SetCursorVisibility(TRUE);
                         mainWindow.FreeCursor();
                         ResetKeyStates(keyStates);
                     }
-                    else if (event.type == EventType::Move) {
+                    else if (winMsg.msg == WM_MOVE) {
                         if (!pause && focus) {
                             mainWindow.ConfineCursor();
                             mainWindow.CenterCursor();
                             lastCursorPos = mainWindow.GetCursorPosition();
                         }
                     }
-                    else if (event.type == EventType::KeyDown) {
-                        if (event.key == Key::F11) {
+                    else if (winMsg.msg == WM_KEYDOWN) {
+                        if (winMsg.wParam == VK_F11) {
                             mainWindow.SetFullscreen(!mainWindow.isFullscreen());
                             if (!pause) {
                                 mainWindow.ConfineCursor();
@@ -221,7 +254,7 @@ INT WINAPI wWinMain(
                                 lastCursorPos = mainWindow.GetCursorPosition();
                             }
                         }
-                        else if (event.key == Key::Escape) {
+                        else if (winMsg.wParam == VK_ESCAPE) {
                             pause = !pause;
                             if (!pause) {
                                 mainWindow.SetCursorVisibility(FALSE);
@@ -235,18 +268,18 @@ INT WINAPI wWinMain(
                                 ResetKeyStates(keyStates);
                             }
                         }
-                        else if (!pause && focus) {
-                            keyStates[event.key] = TRUE;
+                        else if (!pause && focus && keyStates.contains(winMsg.wParam)) {
+                            keyStates[winMsg.wParam] = TRUE;
                         }
                     }
-                    else if (event.type == EventType::KeyUp) {
-                        keyStates[event.key] = FALSE;
+                    else if (winMsg.msg == WM_KEYUP && keyStates.contains(winMsg.wParam)) {
+                        keyStates[winMsg.wParam] = FALSE;
                     }
-                    else if (event.type == EventType::MouseMove) {
+                    else if (winMsg.msg == WM_MOUSEMOVE) {
                         if (!pause && focus) {
                             POINT mouseMovementVecAux = {
-                                .x = event.cursorPosition.x - lastCursorPos.x,
-                                .y = event.cursorPosition.y - lastCursorPos.y
+                                .x = LOWORD(winMsg.lParam) - lastCursorPos.x,
+                                .y = HIWORD(winMsg.lParam) - lastCursorPos.y
                             };
                             mouseMovementVec.x += mouseMovementVecAux.x;
                             mouseMovementVec.y += mouseMovementVecAux.y;
@@ -268,12 +301,8 @@ INT WINAPI wWinMain(
 
                 FLOAT clearColor[]{.1f, .1f, .1f, 1.f};
                 cmdList->ClearRenderTargetView(*mainWindow.GetBackBufferRTVHandlePtr(), clearColor, 0, nullptr);
-                cmdList->ClearDepthStencilView(
-                    *mainWindow.GetDSVHandlePtr(), D3D12_CLEAR_FLAG_DEPTH, 1.f, 0, 0, nullptr
-                );
-                cmdList->OMSetRenderTargets(
-                    1, mainWindow.GetBackBufferRTVHandlePtr(), FALSE, mainWindow.GetDSVHandlePtr()
-                );
+                cmdList->ClearDepthStencilView(dsvHandle, D3D12_CLEAR_FLAG_DEPTH, 1.f, 0, 0, nullptr);
+                cmdList->OMSetRenderTargets(1, mainWindow.GetBackBufferRTVHandlePtr(), FALSE, &dsvHandle);
 
                 cmdList->SetPipelineState(pipelineState.Get());
                 cmdList->SetGraphicsRootSignature(rootSignature.GetComPtr().Get());
@@ -316,7 +345,10 @@ INT WINAPI wWinMain(
             dxContext.Flush(FRAME_COUNT);
         }
 
-        UnregisterWndClasses(instance);
+        if (!UnregisterClass(MAKEINTATOM(GetBalticWndClass(instance)), instance)) {
+            throw GenericException(TEXT("UnregisterClass"));
+        }
+
         dxDebugLayer.ReportLiveObjects();
     }
     catch (const BalticException& e) {
@@ -365,7 +397,7 @@ Mesh CreateXZPlane(FLOAT xSize, FLOAT zSize, UINT32 xSegments, UINT32 zSegments)
     return {.vertices = vertices, .indices = indices};
 }
 
-void ResetKeyStates(std::unordered_map<Key, BOOL>& keyStates)
+void ResetKeyStates(std::unordered_map<WPARAM, BOOL>& keyStates)
 {
     for (auto& [key, state] : keyStates) {
         state = FALSE;

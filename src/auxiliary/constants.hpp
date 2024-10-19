@@ -95,3 +95,11 @@ inline constexpr D3D12_GRAPHICS_PIPELINE_STATE_DESC DEFAULT_PIPELINE_STATE_DESC{
     .CachedPSO{.pCachedBlob = nullptr, .CachedBlobSizeInBytes = 0},
     .Flags = D3D12_PIPELINE_STATE_FLAG_NONE
 };
+
+// Stack allocated array could be faster
+inline const std::unordered_set<UINT>& GetHandledMessages()
+{
+    static const std::unordered_set<UINT> handledMessages{WM_CLOSE, WM_SIZE,    WM_SETFOCUS, WM_KILLFOCUS,
+                                                          WM_MOVE,  WM_KEYDOWN, WM_KEYUP,    WM_MOUSEMOVE};
+    return handledMessages;
+}
