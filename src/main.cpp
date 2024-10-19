@@ -266,7 +266,6 @@ INT WINAPI wWinMain(
                 {Key::D, FALSE}, {Key::Space, FALSE}, {Key::Shift, FALSE},
             };
 
-            BOOL close = FALSE;
             POINT lastCursorPos = mainWindow.GetCursorPosition();
             FLOAT xzPlaneAngle = 0.f;
             Camera camera(DirectX::XMMatrixIdentity());
@@ -276,6 +275,8 @@ INT WINAPI wWinMain(
             auto prevFrameAbsTime = std::chrono::steady_clock::now();
             FLOAT absTimeMod2Pi = 0.f;
             BOOL pause = FALSE;
+            BOOL focus = FALSE;
+            BOOL close = FALSE;
 
             while (!close) {
                 FLOAT deltaTime = 0.f;
@@ -302,24 +303,29 @@ INT WINAPI wWinMain(
                     else if (event.type == EventType::Resize) {
                         dxContext.Flush(FRAME_COUNT);
                         mainWindow.Resize(dxContext.GetDeviceComPtr().Get());
-                        if (!pause) {
+                        if (!pause && focus) {
                             mainWindow.ConfineCursor();
                             mainWindow.CenterCursor();
                             lastCursorPos = mainWindow.GetCursorPosition();
                         }
                     }
                     else if (event.type == EventType::Focus) {
+                        focus = TRUE;
                         if (!pause) {
+                            mainWindow.SetCursorVisibility(FALSE);
                             mainWindow.ConfineCursor();
                             mainWindow.CenterCursor();
                             lastCursorPos = mainWindow.GetCursorPosition();
                         }
                     }
                     else if (event.type == EventType::Blur) {
+                        focus = FALSE;
+                        mainWindow.SetCursorVisibility(TRUE);
+                        mainWindow.FreeCursor();
                         ResetKeyStates(keyStates);
                     }
                     else if (event.type == EventType::Move) {
-                        if (!pause) {
+                        if (!pause && focus) {
                             mainWindow.ConfineCursor();
                             mainWindow.CenterCursor();
                             lastCursorPos = mainWindow.GetCursorPosition();
@@ -348,7 +354,7 @@ INT WINAPI wWinMain(
                                 ResetKeyStates(keyStates);
                             }
                         }
-                        else if (!pause) {
+                        else if (!pause && focus) {
                             keyStates[event.key] = TRUE;
                         }
                     }
@@ -356,7 +362,7 @@ INT WINAPI wWinMain(
                         keyStates[event.key] = FALSE;
                     }
                     else if (event.type == EventType::MouseMove) {
-                        if (!pause) {
+                        if (!pause && focus) {
                             POINT mouseMovementVecAux = {
                                 .x = event.cursorPosition.x - lastCursorPos.x,
                                 .y = event.cursorPosition.y - lastCursorPos.y

@@ -9,36 +9,23 @@ option(UNICODE "Use Unicode" ON)
 
 set(CMAKE_WIN32_EXECUTABLE ON)
 set(CMAKE_CXX_STANDARD 20)
-set(CMAKE_CXX_STANDARD_REQUIRED True)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 set(CMAKE_CONFIGURATION_TYPES "Debug;Release" CACHE STRING "Configurations" FORCE)
 
-set(SOURCE_DIR src)
+set(SOURCE_DIR "src")
+set(SHADER_DIR "${SOURCE_DIR}/shaders")
+set(VENDOR_DIR "vendor")
+set(IMGUI_DIR "${VENDOR_DIR}/imgui")
 
-set(SOURCES
-    ${SOURCE_DIR}/main.cpp
-    ${SOURCE_DIR}/d3d/dx_context.cpp
-    ${SOURCE_DIR}/d3d/dx_context.hpp
-    ${SOURCE_DIR}/d3d/dx_window.cpp
-    ${SOURCE_DIR}/d3d/dx_window.hpp
-    ${SOURCE_DIR}/d3d/shader.cpp
-    ${SOURCE_DIR}/d3d/shader.hpp
-    ${SOURCE_DIR}/d3d/dx_resource.cpp
-    ${SOURCE_DIR}/d3d/dx_resource.hpp
-    ${SOURCE_DIR}/auxiliary/pch.hpp
-    ${SOURCE_DIR}/auxiliary/baltic_exception.hpp
-    ${SOURCE_DIR}/auxiliary/constants.hpp
-    ${SOURCE_DIR}/auxiliary/types.hpp
-    ${SOURCE_DIR}/debug/dx_debug_layer.hpp
+file(GLOB_RECURSE SOURCES
+    "${SOURCE_DIR}/*.cpp"
+    "${SOURCE_DIR}/*.hpp"
 )
 
-set(SHADER_DIR src/shaders)
-
-set(VERTEX_SHADERS ${SHADER_DIR}/vertex_shader.hlsl)
-
-set(PIXEL_SHADERS ${SHADER_DIR}/pixel_shader.hlsl)
-
-set(ROOT_SIGNATURES ${SHADER_DIR}/root_signature.hlsli)
+set(VERTEX_SHADERS "${SHADER_DIR}/vertex_shader.hlsl")
+set(PIXEL_SHADERS "${SHADER_DIR}/pixel_shader.hlsl")
+set(ROOT_SIGNATURES "${SHADER_DIR}/root_signature.hlsli")
 
 set(SHADERS
     ${VERTEX_SHADERS}
@@ -76,7 +63,16 @@ endforeach()
 
 add_custom_target(shaders ALL DEPENDS ${COMPILED_SHADERS})
 
-add_executable(baltic ${SOURCES})
+file(GLOB IMGUI_SOURCES 
+    "${IMGUI_DIR}/*.cpp" 
+    "${IMGUI_DIR}/*.h"
+    "${IMGUI_DIR}/backends/imgui_impl_dx12.cpp"
+    "${IMGUI_DIR}/backends/imgui_impl_dx12.h"
+    "${IMGUI_DIR}/backends/imgui_impl_win32.cpp"
+    "${IMGUI_DIR}/backends/imgui_impl_win32.h"
+)
+
+add_executable(baltic ${SOURCES} ${IMGUI_SOURCES})
 
 add_dependencies(baltic shaders)
 
@@ -87,7 +83,7 @@ target_link_libraries(baltic
     runtimeobject.lib
 )
 
-target_include_directories(baltic PRIVATE ${SOURCE_DIR})
+target_include_directories(baltic PRIVATE ${SOURCE_DIR} ${IMGUI_DIR} ${IMGUI_DIR}/backends)
 
 target_precompile_headers(baltic PRIVATE ${SOURCE_DIR}/auxiliary/pch.hpp)
 

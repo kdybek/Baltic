@@ -266,8 +266,6 @@ DXWindow::DXWindow(UINT width, UINT height, DXContext& dxContext, HINSTANCE inst
     m_dsvHandle = m_dsvHeapDesc->GetCPUDescriptorHandleForHeapStart();
 
     GetBuffers(dxContext.GetDeviceComPtr().Get());
-
-    SetCursorVisibility(FALSE);
 }
 
 DXWindow::~DXWindow()
