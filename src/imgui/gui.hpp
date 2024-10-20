@@ -15,7 +15,10 @@ public:
     GUI(const GUI&) = delete;
     GUI& operator=(const GUI&) = delete;
 
+    void BeginFrame();
+    void QueueDrawData(ID3D12GraphicsCommandList* commandList);
     [[nodiscard]] inline DXWindow& GetWindow() { return m_window; }
+    [[nodiscard]] inline const ComPtr<ID3D12DescriptorHeap>& GetSRVHeapComPtr() { return m_srvHeap; }
 
 private:
     DXWindow m_window;

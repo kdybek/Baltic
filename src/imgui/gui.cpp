@@ -36,6 +36,24 @@ GUI::~GUI()
     ImGui::DestroyContext();
 }
 
+void GUI::BeginFrame()
+{
+    ImGui_ImplDX12_NewFrame();
+    ImGui_ImplWin32_NewFrame();
+    ImGui::NewFrame();
+
+    ImGui::Begin("Control Panel");
+    ImGui::Text("Hello, world!");
+    ImGui::End();
+
+    ImGui::Render();
+}
+
+void GUI::QueueDrawData(ID3D12GraphicsCommandList* commandList)
+{
+    ImGui_ImplDX12_RenderDrawData(ImGui::GetDrawData(), commandList);
+}
+
 extern IMGUI_IMPL_API LRESULT ImGui_ImplWin32_WndProcHandler(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
 
 LRESULT CALLBACK GUIWindowProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)

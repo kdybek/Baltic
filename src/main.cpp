@@ -349,6 +349,32 @@ INT WINAPI wWinMain(
                 mainWindow.Present();
 
                 dxContext.Flush(FRAME_COUNT);
+
+                gui.BeginFrame();
+                dxContext.ResetCmdList();
+
+                gui.GetWindow().QueuePreRenderingTransitions(barriers);
+                cmdList->ResourceBarrier(barriers.size(), barriers.data());
+                barriers.clear();
+
+                cmdList->ClearRenderTargetView(*gui.GetWindow().GetBackBufferRTVHandlePtr(), clearColor, 0, nullptr);
+
+                cmdList->OMSetRenderTargets(1, gui.GetWindow().GetBackBufferRTVHandlePtr(), FALSE, nullptr);
+
+                ID3D12DescriptorHeap* descriptorHeaps[] = {gui.GetSRVHeapComPtr().Get()};
+                cmdList->SetDescriptorHeaps(1, descriptorHeaps);
+
+                gui.QueueDrawData(cmdList.Get());
+
+                gui.GetWindow().QueuePostRenderingTransitions(barriers);
+                cmdList->ResourceBarrier(barriers.size(), barriers.data());
+                barriers.clear();
+
+                dxContext.ExecuteCmdList();
+
+                gui.GetWindow().Present();
+
+                dxContext.Flush(FRAME_COUNT);
             }
         }
 
