@@ -364,14 +364,13 @@ void DXWindow::ReleaseBuffers()
 LRESULT CALLBACK BalticWindowProc(HWND wnd, UINT msg, WPARAM wParam, LPARAM lParam)
 {
     try {
-        static BOOL windowPtrInitialized = FALSE;
         if (msg == WM_NCCREATE) {
             auto* createPtr = reinterpret_cast<CREATESTRUCT*>(lParam);
             auto* windowPtr = reinterpret_cast<DXWindow*>(createPtr->lpCreateParams);
             SetWindowLongPtr(wnd, GWLP_USERDATA, reinterpret_cast<LONG_PTR>(windowPtr));
-            windowPtrInitialized = TRUE;
         }
-        else if (windowPtrInitialized) {
+        // TODO: Replace with binary search
+        else if (std::find(HANDLED_MESSAGES.begin(), HANDLED_MESSAGES.end(), msg) != HANDLED_MESSAGES.end()) {
             DXWindow* windowPtr;
             if (!(windowPtr = reinterpret_cast<DXWindow*>(GetWindowLongPtr(wnd, GWLP_USERDATA)))) {
                 throw GenericException(TEXT("GetWindowLongPtr"));

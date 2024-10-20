@@ -95,3 +95,6 @@ inline constexpr D3D12_GRAPHICS_PIPELINE_STATE_DESC DEFAULT_PIPELINE_STATE_DESC{
     .CachedPSO{.pCachedBlob = nullptr, .CachedBlobSizeInBytes = 0},
     .Flags = D3D12_PIPELINE_STATE_FLAG_NONE
 };
+
+inline constexpr std::array<UINT, 8> HANDLED_MESSAGES{WM_CLOSE, WM_SIZE,    WM_SETFOCUS, WM_KILLFOCUS,
+                                                      WM_MOVE,  WM_KEYDOWN, WM_KEYUP,    WM_MOUSEMOVE};
