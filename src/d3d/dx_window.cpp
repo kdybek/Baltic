@@ -371,6 +371,8 @@ LRESULT CALLBACK BalticWindowProc(HWND wnd, UINT msg, WPARAM wParam, LPARAM lPar
             auto* createPtr = reinterpret_cast<CREATESTRUCT*>(lParam);
             auto* windowPtr = reinterpret_cast<DXWindow*>(createPtr->lpCreateParams);
             SetWindowLongPtr(wnd, GWLP_USERDATA, reinterpret_cast<LONG_PTR>(windowPtr));
+            
+            return TRUE;
         }
         // TODO: Replace with binary search
         else if (std::find(HANDLED_MESSAGES.begin(), HANDLED_MESSAGES.end(), msg) != HANDLED_MESSAGES.end()) {
@@ -380,9 +382,12 @@ LRESULT CALLBACK BalticWindowProc(HWND wnd, UINT msg, WPARAM wParam, LPARAM lPar
             }
 
             windowPtr->m_messageQueue.push({.msg = msg, .wParam = wParam, .lParam = lParam, .empty = FALSE});
-        }
 
-        return DefWindowProc(wnd, msg, wParam, lParam);
+            return TRUE;
+        }
+        else {
+            return DefWindowProc(wnd, msg, wParam, lParam);
+        }
     }
     catch (const BalticException& e) {
 #ifdef UNICODE

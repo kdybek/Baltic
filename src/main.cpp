@@ -210,11 +210,11 @@ INT WINAPI wWinMain(
                 while (!(winMsg = mainWindow.PollMsg()).empty) {
                     if (winMsg.msg == WM_CLOSE) {
                         close = TRUE;
+                        break;
                     }
                     else if (winMsg.msg == WM_SIZE && LOWORD(winMsg.lParam) && HIWORD(winMsg.lParam) &&
                              (LOWORD(winMsg.lParam) != mainWindow.GetWidth() ||
                               HIWORD(winMsg.lParam) != mainWindow.GetHeight())) {
-                        dxContext.Flush(FRAME_COUNT);
                         mainWindow.Resize(dxContext.GetDeviceComPtr().Get());
 
                         dsBuffer = CreateDepthStencilBuffer(
@@ -308,6 +308,7 @@ INT WINAPI wWinMain(
                 FLOAT clearColor[]{.1f, .1f, .1f, 1.f};
                 cmdList->ClearRenderTargetView(*mainWindow.GetBackBufferRTVHandlePtr(), clearColor, 0, nullptr);
                 cmdList->ClearDepthStencilView(dsvHandle, D3D12_CLEAR_FLAG_DEPTH, 1.f, 0, 0, nullptr);
+
                 cmdList->OMSetRenderTargets(1, mainWindow.GetBackBufferRTVHandlePtr(), FALSE, &dsvHandle);
 
                 cmdList->SetPipelineState(pipelineState.Get());
@@ -347,12 +348,10 @@ INT WINAPI wWinMain(
 
                 mainWindow.Present();
 
-                if (close) {
-                    // Flush before objects defined in this scope are destroyed
-                    dxContext.Flush(FRAME_COUNT);
-                }
+                dxContext.Flush(FRAME_COUNT);
             }
         }
+
         dxDebugLayer.ReportLiveObjects();
     }
     catch (const BalticException& e) {
