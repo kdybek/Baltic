@@ -113,7 +113,6 @@ DXWindow::~DXWindow()
 {
     if (m_windowHandle) {
         DestroyWindow(m_windowHandle);
-        OutputDebugString(TEXT("Window destroyed\n"));
     }
 }
 
@@ -136,8 +135,8 @@ DXWindow::DXWindow(DXWindow&& other) noexcept
     }
 
     other.m_windowHandle = nullptr;
-    other.m_swapChain.Reset();
-    other.m_rtvDescHeap.Reset();
+
+    SetWindowLongPtr(m_windowHandle, GWLP_USERDATA, reinterpret_cast<LONG_PTR>(this));
 }
 
 DXWindow& DXWindow::operator=(DXWindow&& other) noexcept
@@ -163,6 +162,8 @@ DXWindow& DXWindow::operator=(DXWindow&& other) noexcept
             m_rtvHandles[i] = other.m_rtvHandles[i];
         }
     }
+
+    SetWindowLongPtr(m_windowHandle, GWLP_USERDATA, reinterpret_cast<LONG_PTR>(this));
 
     return *this;
 }

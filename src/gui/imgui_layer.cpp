@@ -7,7 +7,6 @@
 
 GUI::GUI(DXWindow window, ID3D12Device10* device) : m_window(std::move(window))
 {
-    OutputDebugString(TEXT("GUI created\n"));
     D3D12_DESCRIPTOR_HEAP_DESC srvHeapDesc{
         .Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV,
         .NumDescriptors = 1,

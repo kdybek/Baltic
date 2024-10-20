@@ -29,8 +29,6 @@ INT WINAPI wWinMain(
     INT ret = 0;
 
     try {
-        DXThrowIfFailed(RoInitialize(RO_INIT_SINGLETHREADED));
-
         DXDebugLayer dxDebugLayer;
 
         {
@@ -360,8 +358,6 @@ INT WINAPI wWinMain(
 #endif
         ret = 1;
     }
-
-    RoUninitialize();
 
     return ret;
 }
