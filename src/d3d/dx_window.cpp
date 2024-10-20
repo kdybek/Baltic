@@ -4,50 +4,12 @@
 #include "d3d/dx_context.hpp"
 #include "d3d/dx_resource.hpp"
 
-LRESULT MsgQueueWindowProc(HWND wnd, UINT msg, WPARAM wParam, LPARAM lParam)
+WindowClass::WindowClass(HINSTANCE instance, const TCHAR* className, WNDPROC wndProc) : m_instance(instance), m_atom(0)
 {
-    try {
-        static BOOL windowPtrInitialized = FALSE;
-        if (msg == WM_NCCREATE) {
-            auto* createPtr = reinterpret_cast<CREATESTRUCT*>(lParam);
-            auto* windowPtr = reinterpret_cast<DXWindow*>(createPtr->lpCreateParams);
-            SetWindowLongPtr(wnd, GWLP_USERDATA, reinterpret_cast<LONG_PTR>(windowPtr));
-            windowPtrInitialized = TRUE;
-        }
-        else if (windowPtrInitialized) {
-            DXWindow* windowPtr;
-            if (!(windowPtr = reinterpret_cast<DXWindow*>(GetWindowLongPtr(wnd, GWLP_USERDATA)))) {
-                throw GenericException(TEXT("GetWindowLongPtr"));
-            }
-
-            windowPtr->m_messageQueue.push({.msg = msg, .wParam = wParam, .lParam = lParam, .empty = FALSE});
-        }
-        
-        return DefWindowProc(wnd, msg, wParam, lParam);
-    }
-    catch (const BalticException& e) {
-#ifdef UNICODE
-        OutputDebugStringW((L"WinProc error: " + std::wstring(e.GetMessage())).c_str());
-#else
-        OutputDebugStringA(("WinProc error: " + std::string(e.GetMessage())).c_str());
-#endif
-        return FALSE;
-    }
-}
-
-ATOM GetBalticWndClass(HINSTANCE instance)
-{
-    static ATOM atom = 0;
-    static BOOL initialized = FALSE;
-
-    if (initialized) {
-        return atom;
-    }
-
     WNDCLASSEX wcex{
         .cbSize = sizeof(wcex),
         .style = CS_OWNDC,
-        .lpfnWndProc = MsgQueueWindowProc,
+        .lpfnWndProc = wndProc,
         .cbClsExtra = 0,
         .cbWndExtra = sizeof(LONG_PTR),
         .hInstance = instance,
@@ -55,25 +17,27 @@ ATOM GetBalticWndClass(HINSTANCE instance)
         .hCursor = LoadCursor(nullptr, IDC_ARROW),
         .hbrBackground = nullptr,
         .lpszMenuName = nullptr,
-        .lpszClassName = TEXT("BalticWndClass"),
+        .lpszClassName = className,
         .hIconSm = LoadIcon(nullptr, IDI_APPLICATION)
     };
 
-    atom = RegisterClassEx(&wcex);
-    if (!atom) {
+    m_atom = RegisterClassEx(&wcex);
+    if (!m_atom) {
         throw GenericException(TEXT("RegisterClassEx"));
     }
+}
 
-    initialized = TRUE;
-
-    return atom;
+WindowClass::~WindowClass()
+{
+    if (m_atom) {
+        UnregisterClass(MAKEINTATOM(m_atom), m_instance);
+    }
 }
 
 DXWindow::DXWindow(
     HINSTANCE instance, ATOM wndClass, const TCHAR* wndName, UINT width, UINT height, DXContext& dxContext
 )
-    : m_wndClass(wndClass),
-      m_windowHandle(nullptr),
+    : m_windowHandle(nullptr),
       m_width(width),
       m_height(height),
       m_viewport{
@@ -89,7 +53,7 @@ DXWindow::DXWindow(
       m_cursorVisible(TRUE)
 {
     if (!(m_windowHandle = CreateWindowEx(
-              WS_EX_OVERLAPPEDWINDOW | WS_EX_APPWINDOW, MAKEINTATOM(m_wndClass), wndName,
+              WS_EX_OVERLAPPEDWINDOW | WS_EX_APPWINDOW, MAKEINTATOM(wndClass), wndName,
               WS_OVERLAPPEDWINDOW | WS_VISIBLE, CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, nullptr,
               nullptr, instance, this
           ))) {
@@ -150,6 +114,55 @@ DXWindow::~DXWindow()
     if (m_windowHandle) {
         DestroyWindow(m_windowHandle);
     }
+}
+
+DXWindow::DXWindow(DXWindow&& other) noexcept
+    : m_windowHandle(other.m_windowHandle),
+      m_width(other.m_width),
+      m_height(other.m_height),
+      m_viewport(other.m_viewport),
+      m_scissorRect(other.m_scissorRect),
+      m_isFullscreen(other.m_isFullscreen),
+      m_cursorVisible(other.m_cursorVisible),
+      m_messageQueue(std::move(other.m_messageQueue)),
+      m_swapChain(std::move(other.m_swapChain)),
+      m_rtvDescHeap(std::move(other.m_rtvDescHeap))
+{
+    for (UINT i = 0; i < FRAME_COUNT; i++) {
+        m_rtBuffers[i] = std::move(other.m_rtBuffers[i]);
+        m_rtvHandles[i] = other.m_rtvHandles[i];
+    }
+
+    other.m_windowHandle = nullptr;
+}
+
+DXWindow& DXWindow::operator=(DXWindow&& other) noexcept
+{
+    if (this != &other) {
+        if (m_windowHandle) {
+            DestroyWindow(m_windowHandle);
+        }
+
+        m_windowHandle = other.m_windowHandle;
+        m_width = other.m_width;
+        m_height = other.m_height;
+        m_viewport = other.m_viewport;
+        m_scissorRect = other.m_scissorRect;
+        m_isFullscreen = other.m_isFullscreen;
+        m_cursorVisible = other.m_cursorVisible;
+        m_messageQueue = std::move(other.m_messageQueue);
+        m_swapChain = std::move(other.m_swapChain);
+        m_rtvDescHeap = std::move(other.m_rtvDescHeap);
+
+        for (UINT i = 0; i < FRAME_COUNT; i++) {
+            m_rtBuffers[i] = std::move(other.m_rtBuffers[i]);
+            m_rtvHandles[i] = other.m_rtvHandles[i];
+        }
+
+        other.m_windowHandle = nullptr;
+    }
+
+    return *this;
 }
 
 void DXWindow::Update()
@@ -345,5 +358,36 @@ void DXWindow::ReleaseBuffers()
 {
     for (auto& buffer : m_rtBuffers) {
         buffer.Reset();
+    }
+}
+
+LRESULT CALLBACK BalticWindowProc(HWND wnd, UINT msg, WPARAM wParam, LPARAM lParam)
+{
+    try {
+        static BOOL windowPtrInitialized = FALSE;
+        if (msg == WM_NCCREATE) {
+            auto* createPtr = reinterpret_cast<CREATESTRUCT*>(lParam);
+            auto* windowPtr = reinterpret_cast<DXWindow*>(createPtr->lpCreateParams);
+            SetWindowLongPtr(wnd, GWLP_USERDATA, reinterpret_cast<LONG_PTR>(windowPtr));
+            windowPtrInitialized = TRUE;
+        }
+        else if (windowPtrInitialized) {
+            DXWindow* windowPtr;
+            if (!(windowPtr = reinterpret_cast<DXWindow*>(GetWindowLongPtr(wnd, GWLP_USERDATA)))) {
+                throw GenericException(TEXT("GetWindowLongPtr"));
+            }
+
+            windowPtr->m_messageQueue.push({.msg = msg, .wParam = wParam, .lParam = lParam, .empty = FALSE});
+        }
+
+        return DefWindowProc(wnd, msg, wParam, lParam);
+    }
+    catch (const BalticException& e) {
+#ifdef UNICODE
+        OutputDebugStringW((L"WinProc error: " + std::wstring(e.GetMessage())).c_str());
+#else
+        OutputDebugStringA(("WinProc error: " + std::string(e.GetMessage())).c_str());
+#endif
+        return FALSE;
     }
 }

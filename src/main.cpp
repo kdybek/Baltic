@@ -5,13 +5,14 @@
 #include "auxiliary/baltic_exception.hpp"
 #include "auxiliary/camera.hpp"
 #include "auxiliary/constants.hpp"
-#include "auxiliary/control_panel.hpp"
 #include "auxiliary/types.hpp"
 #include "d3d/dx_context.hpp"
 #include "d3d/dx_resource.hpp"
 #include "d3d/dx_window.hpp"
 #include "d3d/shader.hpp"
 #include "debug/dx_debug_layer.hpp"
+#include "imgui/control_panel.hpp"
+#include "imgui/imgui_layer.hpp"
 
 // Forward declarations of auxiliary functions
 SIZE_T AlignUp(SIZE_T size, SIZE_T alignment);
@@ -139,7 +140,14 @@ INT WINAPI wWinMain(
             ComPtr<ID3D12PipelineState> pipelineState;
             dxContext.GetDeviceComPtr()->CreateGraphicsPipelineState(&pipelineStateDesc, IID_PPV_ARGS(&pipelineState));
 
-            DXWindow mainWindow(instance, GetBalticWndClass(instance), TEXT("Baltic"), 1920, 1080, dxContext);
+            ImGuiLayer imGuiLayer(instance);
+            ControlPanel controlPanel(
+                DXWindow(instance, imGuiLayer.GetWindowClass().GetAtom(), TEXT("Control Panel"), 800, 600, dxContext),
+                dxContext.GetDeviceComPtr().Get()
+            );
+
+            WindowClass balticWndClass(instance, TEXT("BalticWndClass"), BalticWindowProc);
+            DXWindow mainWindow(instance, balticWndClass.GetAtom(), TEXT("Baltic"), 1920, 1080, dxContext);
             mainWindow.SetFullscreen(TRUE);
 
             D3D12_DESCRIPTOR_HEAP_DESC dsvDescriptorHeapDesc{
@@ -343,10 +351,6 @@ INT WINAPI wWinMain(
             }
 
             dxContext.Flush(FRAME_COUNT);
-        }
-
-        if (!UnregisterClass(MAKEINTATOM(GetBalticWndClass(instance)), instance)) {
-            throw GenericException(TEXT("UnregisterClass"));
         }
 
         dxDebugLayer.ReportLiveObjects();

@@ -8,7 +8,21 @@
 #include "auxiliary/types.hpp"
 #include "d3d/dx_context.hpp"
 
-ATOM GetBalticWndClass(HINSTANCE instance);
+class WindowClass
+{
+public:
+    WindowClass(HINSTANCE instance, const TCHAR* className, WNDPROC wndProc);
+    ~WindowClass();
+
+    WindowClass(const WindowClass&) = delete;
+    WindowClass& operator=(const WindowClass&) = delete;
+
+    [[nodiscard]] inline ATOM GetAtom() const { return m_atom; }
+    
+private:
+    ATOM m_atom;
+    HINSTANCE m_instance;
+};
 
 class DXWindow
 {
@@ -18,6 +32,9 @@ public:
 
     DXWindow(const DXWindow&) = delete;
     DXWindow& operator=(const DXWindow&) = delete;
+
+    DXWindow(DXWindow&& other) noexcept;
+    DXWindow& operator=(DXWindow&& other) noexcept;
 
     void Update();
     void Present();
@@ -45,13 +62,12 @@ public:
     void QueuePostRenderingTransitions(std::vector<D3D12_RESOURCE_BARRIER>& barriers) const;
 
 private:
-    friend LRESULT CALLBACK MsgQueueWindowProc(HWND wnd, UINT msg, WPARAM wParam, LPARAM lParam);
+    friend LRESULT CALLBACK BalticWindowProc(HWND wnd, UINT msg, WPARAM wParam, LPARAM lParam);
 
     void GetBuffers(ID3D12Device10* device);
     void ReleaseBuffers();
 
 private:
-    ATOM m_wndClass;
     HWND m_windowHandle;
     UINT m_width;
     UINT m_height;
@@ -59,7 +75,6 @@ private:
     D3D12_RECT m_scissorRect;
     BOOL m_isFullscreen;
     BOOL m_cursorVisible;
-    BOOL m_depthStencilBuffer;
 
     std::queue<WindowsMessage> m_messageQueue;
 
@@ -69,3 +84,5 @@ private:
     ComPtr<ID3D12DescriptorHeap> m_rtvDescHeap;
     D3D12_CPU_DESCRIPTOR_HANDLE m_rtvHandles[FRAME_COUNT];
 };
+
+LRESULT CALLBACK BalticWindowProc(HWND wnd, UINT msg, WPARAM wParam, LPARAM lParam);
