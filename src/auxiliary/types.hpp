@@ -55,7 +55,6 @@ struct Model
 
 struct WindowsMessage
 {
-    HWND wnd;
     UINT msg;
     WPARAM wParam;
     LPARAM lParam;

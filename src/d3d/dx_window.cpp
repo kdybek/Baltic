@@ -113,6 +113,7 @@ DXWindow::~DXWindow()
 {
     if (m_windowHandle) {
         DestroyWindow(m_windowHandle);
+        OutputDebugString(TEXT("Window destroyed\n"));
     }
 }
 
@@ -125,15 +126,18 @@ DXWindow::DXWindow(DXWindow&& other) noexcept
       m_isFullscreen(other.m_isFullscreen),
       m_cursorVisible(other.m_cursorVisible),
       m_messageQueue(std::move(other.m_messageQueue)),
-      m_swapChain(std::move(other.m_swapChain)),
-      m_rtvDescHeap(std::move(other.m_rtvDescHeap))
+      m_swapChain(other.m_swapChain),
+      m_rtvDescHeap(other.m_rtvDescHeap)
 {
     for (UINT i = 0; i < FRAME_COUNT; i++) {
         m_rtBuffers[i] = std::move(other.m_rtBuffers[i]);
+        other.m_rtBuffers[i] = nullptr;
         m_rtvHandles[i] = other.m_rtvHandles[i];
     }
 
     other.m_windowHandle = nullptr;
+    other.m_swapChain.Reset();
+    other.m_rtvDescHeap.Reset();
 }
 
 DXWindow& DXWindow::operator=(DXWindow&& other) noexcept
@@ -158,8 +162,6 @@ DXWindow& DXWindow::operator=(DXWindow&& other) noexcept
             m_rtBuffers[i] = std::move(other.m_rtBuffers[i]);
             m_rtvHandles[i] = other.m_rtvHandles[i];
         }
-
-        other.m_windowHandle = nullptr;
     }
 
     return *this;

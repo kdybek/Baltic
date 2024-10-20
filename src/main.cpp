@@ -11,8 +11,7 @@
 #include "d3d/dx_window.hpp"
 #include "d3d/shader.hpp"
 #include "debug/dx_debug_layer.hpp"
-#include "imgui/control_panel.hpp"
-#include "imgui/imgui_layer.hpp"
+#include "gui/imgui_layer.hpp"
 
 // Forward declarations of auxiliary functions
 SIZE_T AlignUp(SIZE_T size, SIZE_T alignment);
@@ -141,10 +140,7 @@ INT WINAPI wWinMain(
             dxContext.GetDeviceComPtr()->CreateGraphicsPipelineState(&pipelineStateDesc, IID_PPV_ARGS(&pipelineState));
 
             ImGuiLayer imGuiLayer(instance);
-            ControlPanel controlPanel(
-                DXWindow(instance, imGuiLayer.GetWindowClass().GetAtom(), TEXT("Control Panel"), 800, 600, dxContext),
-                dxContext.GetDeviceComPtr().Get()
-            );
+            GUI gui = imGuiLayer.CreateGUI(instance, TEXT("Control Panel"), 600, 800, dxContext);
 
             WindowClass balticWndClass(instance, TEXT("BalticWndClass"), BalticWindowProc);
             DXWindow mainWindow(instance, balticWndClass.GetAtom(), TEXT("Baltic"), 1920, 1080, dxContext);
@@ -204,6 +200,7 @@ INT WINAPI wWinMain(
                     prevFrameAbsTime = currentFrameAbsTime;
                 }
 
+                gui.GetWindow().Update();
                 mainWindow.Update();
 
                 POINT mouseMovementVec = {.x = 0, .y = 0};
