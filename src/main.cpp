@@ -11,7 +11,7 @@
 #include "d3d/dx_window.hpp"
 #include "d3d/shader.hpp"
 #include "debug/dx_debug_layer.hpp"
-#include "gui/imgui_layer.hpp"
+#include "imgui/gui.hpp"
 
 // Forward declarations of auxiliary functions
 SIZE_T AlignUp(SIZE_T size, SIZE_T alignment);
@@ -137,11 +137,14 @@ INT WINAPI wWinMain(
             ComPtr<ID3D12PipelineState> pipelineState;
             dxContext.GetDeviceComPtr()->CreateGraphicsPipelineState(&pipelineStateDesc, IID_PPV_ARGS(&pipelineState));
 
-            ImGuiLayer imGuiLayer(instance);
-            GUI gui = imGuiLayer.CreateGUI(instance, TEXT("Control Panel"), 600, 800, dxContext);
-
             WindowClass balticWndClass(instance, TEXT("BalticWndClass"), BalticWindowProc);
+            WindowClass guiWndClass(instance, TEXT("GUIWndClass"), GUIWindowProc);
+
             DXWindow mainWindow(instance, balticWndClass.GetAtom(), TEXT("Baltic"), 1920, 1080, dxContext);
+            GUI gui(
+                DXWindow(instance, guiWndClass.GetAtom(), TEXT("Control Panel"), 600, 800, dxContext),
+                dxContext.GetDeviceComPtr().Get()
+            );
             mainWindow.SetFullscreen(TRUE);
 
             D3D12_DESCRIPTOR_HEAP_DESC dsvDescriptorHeapDesc{
