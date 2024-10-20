@@ -383,7 +383,7 @@ LRESULT CALLBACK BalticWindowProc(HWND wnd, UINT msg, WPARAM wParam, LPARAM lPar
 
             windowPtr->m_messageQueue.push({.msg = msg, .wParam = wParam, .lParam = lParam, .empty = FALSE});
 
-            return TRUE;
+            return 0;
         }
         else {
             return DefWindowProc(wnd, msg, wParam, lParam);
