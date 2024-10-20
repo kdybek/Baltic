@@ -184,9 +184,9 @@ INT WINAPI wWinMain(
             );
             auto prevFrameAbsTime = std::chrono::steady_clock::now();
             FLOAT absTimeMod2Pi = 0.f;
+            BOOL close = FALSE;
             BOOL pause = FALSE;
             BOOL focus = FALSE;
-            BOOL close = FALSE;
 
             while (!close) {
                 FLOAT deltaTime = 0.f;
@@ -346,11 +346,13 @@ INT WINAPI wWinMain(
                 dxContext.ExecuteCmdList();
 
                 mainWindow.Present();
+
+                if (close) {
+                    // Flush before objects defined in this scope are destroyed
+                    dxContext.Flush(FRAME_COUNT);
+                }
             }
-
-            dxContext.Flush(FRAME_COUNT);
         }
-
         dxDebugLayer.ReportLiveObjects();
     }
     catch (const BalticException& e) {
