@@ -5,7 +5,7 @@
 #include "backends/imgui_impl_win32.h"
 #include "imgui.h"
 
-GUI::GUI(DXWindow window, ID3D12Device10* device) : m_window(std::move(window))
+GUI::GUI(HWND windowHandle, ID3D12Device10* device)
 {
     IMGUI_CHECKVERSION();
     ImGui::CreateContext();
@@ -22,7 +22,7 @@ GUI::GUI(DXWindow window, ID3D12Device10* device) : m_window(std::move(window))
 
     DXThrowIfFailed(device->CreateDescriptorHeap(&srvHeapDesc, IID_PPV_ARGS(&m_srvHeap)));
 
-    ImGui_ImplWin32_Init(m_window.GetWindowHandle());
+    ImGui_ImplWin32_Init(windowHandle);
     ImGui_ImplDX12_Init(
         device, FRAME_COUNT, DXGI_FORMAT_R8G8B8A8_UNORM, m_srvHeap.Get(),
         m_srvHeap->GetCPUDescriptorHandleForHeapStart(), m_srvHeap->GetGPUDescriptorHandleForHeapStart()
@@ -56,11 +56,11 @@ void GUI::QueueDrawData(ID3D12GraphicsCommandList* commandList)
 
 extern IMGUI_IMPL_API LRESULT ImGui_ImplWin32_WndProcHandler(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
 
-LRESULT CALLBACK GUIWindowProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
+LRESULT CALLBACK GUIMsgQueueWindowProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 {
     if (ImGui_ImplWin32_WndProcHandler(hWnd, msg, wParam, lParam)) {
         return TRUE;
     }
 
-    return BalticWindowProc(hWnd, msg, wParam, lParam);
+    return MsgQueueWindowProc(hWnd, msg, wParam, lParam);
 }

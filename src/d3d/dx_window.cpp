@@ -364,7 +364,7 @@ void DXWindow::ReleaseBuffers()
     }
 }
 
-LRESULT CALLBACK BalticWindowProc(HWND wnd, UINT msg, WPARAM wParam, LPARAM lParam)
+LRESULT CALLBACK MsgQueueWindowProc(HWND wnd, UINT msg, WPARAM wParam, LPARAM lParam)
 {
     try {
         if (msg == WM_NCCREATE) {

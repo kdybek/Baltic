@@ -137,15 +137,11 @@ INT WINAPI wWinMain(
             ComPtr<ID3D12PipelineState> pipelineState;
             dxContext.GetDeviceComPtr()->CreateGraphicsPipelineState(&pipelineStateDesc, IID_PPV_ARGS(&pipelineState));
 
-            WindowClass balticWndClass(instance, TEXT("BalticWndClass"), BalticWindowProc);
-            WindowClass guiWndClass(instance, TEXT("GUIWndClass"), GUIWindowProc);
+            WindowClass balticWndClass(instance, TEXT("BalticWndClass"), GUIMsgQueueWindowProc);
 
             DXWindow mainWindow(instance, balticWndClass.GetAtom(), TEXT("Baltic"), 1920, 1080, dxContext);
-            GUI gui(
-                DXWindow(instance, guiWndClass.GetAtom(), TEXT("Control Panel"), 600, 800, dxContext),
-                dxContext.GetDeviceComPtr().Get()
-            );
             mainWindow.SetFullscreen(TRUE);
+            GUI gui(mainWindow.GetWindowHandle(), dxContext.GetDeviceComPtr().Get());
 
             D3D12_DESCRIPTOR_HEAP_DESC dsvDescriptorHeapDesc{
                 .Type = D3D12_DESCRIPTOR_HEAP_TYPE_DSV,
@@ -185,13 +181,13 @@ INT WINAPI wWinMain(
             auto prevFrameAbsTime = std::chrono::steady_clock::now();
             FLOAT absTimeMod2Pi = 0.f;
             BOOL close = FALSE;
-            BOOL pause = FALSE;
+            BOOL controlPanel = FALSE;
             BOOL focus = FALSE;
 
             while (!close) {
                 FLOAT deltaTime = 0.f;
                 auto currentFrameAbsTime = std::chrono::steady_clock::now();
-                if (!pause) {
+                if (!controlPanel) {
                     deltaTime = std::chrono::duration<FLOAT>(currentFrameAbsTime - prevFrameAbsTime).count();
                     prevFrameAbsTime = currentFrameAbsTime;
                     absTimeMod2Pi += deltaTime;
@@ -201,7 +197,6 @@ INT WINAPI wWinMain(
                     prevFrameAbsTime = currentFrameAbsTime;
                 }
 
-                gui.GetWindow().Update();
                 mainWindow.Update();
 
                 POINT mouseMovementVec = {.x = 0, .y = 0};
@@ -223,7 +218,7 @@ INT WINAPI wWinMain(
                         );
                         dxContext.GetDeviceComPtr().Get()->CreateDepthStencilView(dsBuffer.Get(), &dsvDesc, dsvHandle);
 
-                        if (!pause && focus) {
+                        if (!controlPanel && focus) {
                             mainWindow.ConfineCursor();
                             mainWindow.CenterCursor();
                             lastCursorPos = mainWindow.GetCursorPosition();
@@ -231,7 +226,7 @@ INT WINAPI wWinMain(
                     }
                     else if (winMsg.msg == WM_SETFOCUS) {
                         focus = TRUE;
-                        if (!pause) {
+                        if (!controlPanel) {
                             mainWindow.SetCursorVisibility(FALSE);
                             mainWindow.ConfineCursor();
                             mainWindow.CenterCursor();
@@ -245,7 +240,7 @@ INT WINAPI wWinMain(
                         ResetKeyStates(keyStates);
                     }
                     else if (winMsg.msg == WM_MOVE) {
-                        if (!pause && focus) {
+                        if (!controlPanel && focus) {
                             mainWindow.ConfineCursor();
                             mainWindow.CenterCursor();
                             lastCursorPos = mainWindow.GetCursorPosition();
@@ -254,15 +249,15 @@ INT WINAPI wWinMain(
                     else if (winMsg.msg == WM_KEYDOWN) {
                         if (winMsg.wParam == VK_F11) {
                             mainWindow.SetFullscreen(!mainWindow.isFullscreen());
-                            if (!pause) {
+                            if (!controlPanel) {
                                 mainWindow.ConfineCursor();
                                 mainWindow.CenterCursor();
                                 lastCursorPos = mainWindow.GetCursorPosition();
                             }
                         }
                         else if (winMsg.wParam == VK_ESCAPE) {
-                            pause = !pause;
-                            if (!pause) {
+                            controlPanel = !controlPanel;
+                            if (!controlPanel) {
                                 mainWindow.SetCursorVisibility(FALSE);
                                 mainWindow.ConfineCursor();
                                 mainWindow.CenterCursor();
@@ -274,7 +269,7 @@ INT WINAPI wWinMain(
                                 ResetKeyStates(keyStates);
                             }
                         }
-                        else if (!pause && focus && keyStates.contains(winMsg.wParam)) {
+                        else if (!controlPanel && focus && keyStates.contains(winMsg.wParam)) {
                             keyStates[winMsg.wParam] = TRUE;
                         }
                     }
@@ -282,7 +277,7 @@ INT WINAPI wWinMain(
                         keyStates[winMsg.wParam] = FALSE;
                     }
                     else if (winMsg.msg == WM_MOUSEMOVE) {
-                        if (!pause && focus) {
+                        if (!controlPanel && focus) {
                             POINT mouseMovementVecAux = {
                                 .x = LOWORD(winMsg.lParam) - lastCursorPos.x,
                                 .y = HIWORD(winMsg.lParam) - lastCursorPos.y
@@ -340,6 +335,17 @@ INT WINAPI wWinMain(
 
                 cmdList->DrawIndexedInstanced(plane.mesh.indices.size(), 1, 0, 0, 0);
 
+                if (controlPanel) {
+                    gui.BeginFrame();
+
+                    cmdList->OMSetRenderTargets(1, mainWindow.GetBackBufferRTVHandlePtr(), FALSE, nullptr);
+
+                    ID3D12DescriptorHeap* descriptorHeaps[] = {gui.GetSRVHeapComPtr().Get()};
+                    cmdList->SetDescriptorHeaps(1, descriptorHeaps);
+
+                    gui.QueueDrawData(cmdList.Get());
+                }
+
                 mainWindow.QueuePostRenderingTransitions(barriers);
                 cmdList->ResourceBarrier(barriers.size(), barriers.data());
                 barriers.clear();
@@ -347,32 +353,6 @@ INT WINAPI wWinMain(
                 dxContext.ExecuteCmdList();
 
                 mainWindow.Present();
-
-                dxContext.Flush(FRAME_COUNT);
-
-                gui.BeginFrame();
-                dxContext.ResetCmdList();
-
-                gui.GetWindow().QueuePreRenderingTransitions(barriers);
-                cmdList->ResourceBarrier(barriers.size(), barriers.data());
-                barriers.clear();
-
-                cmdList->ClearRenderTargetView(*gui.GetWindow().GetBackBufferRTVHandlePtr(), clearColor, 0, nullptr);
-
-                cmdList->OMSetRenderTargets(1, gui.GetWindow().GetBackBufferRTVHandlePtr(), FALSE, nullptr);
-
-                ID3D12DescriptorHeap* descriptorHeaps[] = {gui.GetSRVHeapComPtr().Get()};
-                cmdList->SetDescriptorHeaps(1, descriptorHeaps);
-
-                gui.QueueDrawData(cmdList.Get());
-
-                gui.GetWindow().QueuePostRenderingTransitions(barriers);
-                cmdList->ResourceBarrier(barriers.size(), barriers.data());
-                barriers.clear();
-
-                dxContext.ExecuteCmdList();
-
-                gui.GetWindow().Present();
 
                 dxContext.Flush(FRAME_COUNT);
             }

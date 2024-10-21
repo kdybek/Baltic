@@ -11,7 +11,7 @@ Graphical sea simulator.
 - `Shift` - Move down
 - `Space` - Move up
 - `Mouse` - Look around
-- `Escape` - Pause/Resume
+- `Escape` - Toggle control panel
 - `F11` - Toggle fullscreen
 
 ## Build

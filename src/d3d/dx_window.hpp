@@ -62,7 +62,7 @@ public:
     void QueuePostRenderingTransitions(std::vector<D3D12_RESOURCE_BARRIER>& barriers) const;
 
 private:
-    friend LRESULT CALLBACK BalticWindowProc(HWND wnd, UINT msg, WPARAM wParam, LPARAM lParam);
+    friend LRESULT CALLBACK MsgQueueWindowProc(HWND wnd, UINT msg, WPARAM wParam, LPARAM lParam);
 
     void GetBuffers(ID3D12Device10* device);
     void ReleaseBuffers();
@@ -85,4 +85,4 @@ private:
     D3D12_CPU_DESCRIPTOR_HANDLE m_rtvHandles[FRAME_COUNT];
 };
 
-LRESULT CALLBACK BalticWindowProc(HWND wnd, UINT msg, WPARAM wParam, LPARAM lParam);
+LRESULT CALLBACK MsgQueueWindowProc(HWND wnd, UINT msg, WPARAM wParam, LPARAM lParam);
