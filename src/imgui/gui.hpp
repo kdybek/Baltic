@@ -4,7 +4,7 @@
 #include "auxiliary/pch.hpp"
 // clang-format on
 
-#include "d3d/dx_window.hpp"
+#include "auxiliary/types.hpp"
 
 class GUI
 {
@@ -15,9 +15,7 @@ public:
     GUI(const GUI&) = delete;
     GUI& operator=(const GUI&) = delete;
 
-    void BeginFrame();
-    void QueueDrawData(ID3D12GraphicsCommandList* commandList);
-    [[nodiscard]] inline const ComPtr<ID3D12DescriptorHeap>& GetSRVHeapComPtr() { return m_srvHeap; }
+    void QueueDraw(ID3D12GraphicsCommandList* cmdList);
 
 private:
     ComPtr<ID3D12DescriptorHeap> m_srvHeap;

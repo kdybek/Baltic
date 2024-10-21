@@ -187,15 +187,10 @@ INT WINAPI wWinMain(
             while (!close) {
                 FLOAT deltaTime = 0.f;
                 auto currentFrameAbsTime = std::chrono::steady_clock::now();
-                if (!controlPanel) {
-                    deltaTime = std::chrono::duration<FLOAT>(currentFrameAbsTime - prevFrameAbsTime).count();
-                    prevFrameAbsTime = currentFrameAbsTime;
-                    absTimeMod2Pi += deltaTime;
-                    absTimeMod2Pi = std::fmod(absTimeMod2Pi, DirectX::XM_2PI);
-                }
-                else {
-                    prevFrameAbsTime = currentFrameAbsTime;
-                }
+                deltaTime = std::chrono::duration<FLOAT>(currentFrameAbsTime - prevFrameAbsTime).count();
+                prevFrameAbsTime = currentFrameAbsTime;
+                absTimeMod2Pi += deltaTime;
+                absTimeMod2Pi = std::fmod(absTimeMod2Pi, DirectX::XM_2PI);
 
                 mainWindow.Update();
 
@@ -336,14 +331,7 @@ INT WINAPI wWinMain(
                 cmdList->DrawIndexedInstanced(plane.mesh.indices.size(), 1, 0, 0, 0);
 
                 if (controlPanel) {
-                    gui.BeginFrame();
-
-                    cmdList->OMSetRenderTargets(1, mainWindow.GetBackBufferRTVHandlePtr(), FALSE, nullptr);
-
-                    ID3D12DescriptorHeap* descriptorHeaps[] = {gui.GetSRVHeapComPtr().Get()};
-                    cmdList->SetDescriptorHeaps(1, descriptorHeaps);
-
-                    gui.QueueDrawData(cmdList.Get());
+                    gui.QueueDraw(cmdList.Get());
                 }
 
                 mainWindow.QueuePostRenderingTransitions(barriers);

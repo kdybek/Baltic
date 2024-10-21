@@ -1,8 +1,10 @@
 #include "imgui/gui.hpp"
 
 #include "auxiliary/baltic_exception.hpp"
+#include "auxiliary/constants.hpp"
 #include "backends/imgui_impl_dx12.h"
 #include "backends/imgui_impl_win32.h"
+#include "d3d/dx_window.hpp"
 #include "imgui.h"
 
 GUI::GUI(HWND windowHandle, ID3D12Device10* device)
@@ -36,7 +38,7 @@ GUI::~GUI()
     ImGui::DestroyContext();
 }
 
-void GUI::BeginFrame()
+void GUI::QueueDraw(ID3D12GraphicsCommandList* cmdList)
 {
     ImGui_ImplDX12_NewFrame();
     ImGui_ImplWin32_NewFrame();
@@ -47,11 +49,11 @@ void GUI::BeginFrame()
     ImGui::End();
 
     ImGui::Render();
-}
 
-void GUI::QueueDrawData(ID3D12GraphicsCommandList* commandList)
-{
-    ImGui_ImplDX12_RenderDrawData(ImGui::GetDrawData(), commandList);
+    ID3D12DescriptorHeap* descriptorHeaps[] = {m_srvHeap.Get()};
+    cmdList->SetDescriptorHeaps(1, descriptorHeaps);
+
+    ImGui_ImplDX12_RenderDrawData(ImGui::GetDrawData(), cmdList);
 }
 
 extern IMGUI_IMPL_API LRESULT ImGui_ImplWin32_WndProcHandler(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
