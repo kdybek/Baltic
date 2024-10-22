@@ -17,8 +17,8 @@ public:
     GUI& operator=(const GUI&) = delete;
 
     UINT AddWindow(const CHAR* name);
-    void AddSlider(UINT windowIdx, const CHAR* name, FLOAT* varPtr, FLOAT minVal, FLOAT maxVal);
-    void AddCheckbox(UINT windowIdx, const CHAR* name, BOOL* varPtr);
+    void AddSlider(UINT guiWindowHandle, const CHAR* name, FLOAT* varPtr, FLOAT minVal, FLOAT maxVal);
+    void AddCheckbox(UINT guiWindowHandle, const CHAR* name, BOOL* varPtr);
     void QueueDraw(ID3D12GraphicsCommandList* cmdList);
 
 private:

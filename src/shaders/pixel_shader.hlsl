@@ -21,37 +21,37 @@ struct LightSource
 
 cbuffer lightBuffer : register(b0)
 {
-    LightSource lightSources[15];
-    uint numLights;
+    float3 sunlightDirection;
+    float3 sunlightColor;
+    float sunlightIntensity;
     float3 viewDirection;
 };
 
-cbuffer modelColorRootConst : register(b1)
+cbuffer ModelBuffer : register(b1)
 {
-    float3 modelColor;
+    float4x4 worldMatrix;
+    float3 color;
+    float ambientIntensity;
+    float diffuseIntensity;
+    float specularIntensity;
+    float specularPower;
+    float padding;
+
 };
 
 cbuffer absTimeRootConst : register(b2)
 {
     float absTimeMod2Pi;
-}
+};
 
 [RootSignature(ROOTSIG)]
 void main(in PS_Input input, out PS_Output output)
 {
-    output.color = float4(0.f, 0.f, 0.f, 1.f);
     float3 normal = normalize(float3(-cos(absTimeMod2Pi + input.worldPosition.x), 1.f, 0.f));
 
-    for (uint i = 0; i < numLights; i++)
-    {
-        float3 lightDirection = normalize(lightSources[i].position - input.worldPosition);
-        float lightIntensity = 1 / pow(distance(lightSources[i].position, input.worldPosition), 2);
-        float ambient = .1f;
-        float diffuse = max(0, dot(normal, lightDirection)) * .8f;
-        float specular = pow(max(0, dot(normal, normalize(lightDirection + viewDirection))), 3) * 1.5f;
+    float ambient = ambientIntensity;
+    float diffuse = max(0, dot(normal, -sunlightDirection)) * diffuseIntensity;
+    float specular = pow(max(0, dot(normal, normalize(-sunlightDirection + -viewDirection))), specularPower) * specularIntensity;
 
-        output.color += float4(lightSources[i].color * lightIntensity * (ambient + diffuse + specular), 0.f) * lightSources[i].intensity;
-    }
-
-    output.color = smoothstep(0.f, 1.f, output.color) * float4(modelColor, 1.f);
+    output.color = float4(color * sunlightColor * sunlightIntensity * (ambient + diffuse + specular), 0.f);
 }

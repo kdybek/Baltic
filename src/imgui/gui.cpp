@@ -45,16 +45,16 @@ UINT GUI::AddWindow(const CHAR* name)
     return m_windows.size() - 1;
 }
 
-void GUI::AddSlider(UINT windowIdx, const CHAR* name, FLOAT* varPtr, FLOAT minVal, FLOAT maxVal)
+void GUI::AddSlider(UINT guiWindowHandle, const CHAR* name, FLOAT* varPtr, FLOAT minVal, FLOAT maxVal)
 {
-    m_windows[windowIdx].elements.push_back(
+    m_windows[guiWindowHandle].elements.push_back(
         SliderData{.name = name, .varPtr = varPtr, .minVal = minVal, .maxVal = maxVal}
     );
 }
 
-void GUI::AddCheckbox(UINT windowIdx, const CHAR* name, BOOL* varPtr)
+void GUI::AddCheckbox(UINT guiWindowHandle, const CHAR* name, BOOL* varPtr)
 {
-    m_windows[windowIdx].elements.push_back(CheckboxData{.name = name, .varPtr = varPtr});
+    m_windows[guiWindowHandle].elements.push_back(CheckboxData{.name = name, .varPtr = varPtr});
 }
 
 namespace

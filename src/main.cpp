@@ -19,6 +19,7 @@ Mesh CreateXZPlane(FLOAT xSize, FLOAT zSize, UINT32 xSegments, UINT32 zSegments)
 void ResetKeyStates(std::unordered_map<WPARAM, BOOL>& keyStates);
 template <typename T>
 SIZE_T VecDataSize(const std::vector<T>& vec);
+void AddModelControls(GUI& gui, UINT guiWindowHandle, Model& model);
 
 // Entry point
 INT WINAPI wWinMain(
@@ -37,15 +38,23 @@ INT WINAPI wWinMain(
             std::vector<D3D12_RESOURCE_BARRIER> barriers;
 
             Model plane = {
+                .name = "Plane",
                 .mesh = CreateXZPlane(10.f, 10.f, 20, 20),
-                .worldMatrix = DirectX::XMMatrixTranslation(0.f, -4.f, 0.f),
-                .color{0.f, .3f, .8f}
+                .modelBuffer{
+                    .worldMatrix = DirectX::XMMatrixTranslation(0.f, -4.f, 0.f),
+                    .color{0.f, .3f, .8f},
+                    .ambientIntensity = .1f,
+                    .diffuseIntensity = .3f,
+                    .specularIntensity = .3f,
+                    .specularPower = 3.f
+                }
             };
 
-            LightSource lightSource1{.position{5.f, 10.f, 5.f}, .color{1.f, 1.f, 1.f}, .intensity = 80.f};
-            LightSource lightSource2{.position{3.f, 2.f, 2.f}, .color{1.f, .4f, 0.f}, .intensity = 40.f};
             LightBuffer lightBufferData{
-                .lightSources{lightSource1, lightSource2}, .numLights = 2, .viewDirection{0.f, 0.f, 1.f}
+                .sunlightDirection{0.f, -1.f, 0.f},
+                .sunlightColor{1.f, 1.f, 1.f},
+                .sunlightIntensity = 1.f,
+                .viewDirection{0.f, 0.f, 1.f}
             };
 
             SIZE_T vertexBufferSize = AlignUp(VecDataSize(plane.mesh.vertices), 256);
@@ -53,6 +62,7 @@ INT WINAPI wWinMain(
             SIZE_T uploadBufferSize = vertexBufferSize + indexBufferSize;
             SIZE_T constantBufferSize = AlignUp(sizeof(ConstantBuffer), 256);
             SIZE_T lightBufferSize = AlignUp(sizeof(LightBuffer), 256);
+            SIZE_T modelBufferSize = AlignUp(sizeof(ModelBuffer), 256);
 
             ComPtr<ID3D12Resource2> vertexBuffer =
                 CreateGPUBuffer(vertexBufferSize, D3D12_RESOURCE_STATE_COMMON, dxContext.GetDeviceComPtr().Get());
@@ -64,12 +74,15 @@ INT WINAPI wWinMain(
                 CreateUploadBuffer(constantBufferSize, dxContext.GetDeviceComPtr().Get());
             ComPtr<ID3D12Resource2> lightBuffer =
                 CreateUploadBuffer(lightBufferSize, dxContext.GetDeviceComPtr().Get());
+            ComPtr<ID3D12Resource2> modelBuffer =
+                CreateUploadBuffer(modelBufferSize, dxContext.GetDeviceComPtr().Get());
 
             CopyDataToResource(uploadBuffer.Get(), plane.mesh.vertices.data(), VecDataSize(plane.mesh.vertices));
             CopyDataToResource(
                 uploadBuffer.Get(), plane.mesh.indices.data(), VecDataSize(plane.mesh.indices), vertexBufferSize
             );
             CopyDataToResource(lightBuffer.Get(), &lightBufferData, sizeof(LightBuffer));
+            CopyDataToResource(modelBuffer.Get(), &plane.modelBuffer, sizeof(ModelBuffer));
 
             dxContext.ResetCmdList();
             QueueTransition(vertexBuffer.Get(), D3D12_RESOURCE_STATE_COMMON, D3D12_RESOURCE_STATE_COPY_DEST, barriers);
@@ -144,8 +157,8 @@ INT WINAPI wWinMain(
             mainWindow.SetFullscreen(TRUE);
 
             GUI gui(mainWindow.GetWindowHandle(), dxContext.GetDeviceComPtr().Get());
-            UINT controlPanelIdx = gui.AddWindow("Control Panel");
-            gui.AddSlider(controlPanelIdx, "Plane Color R", &plane.color.x, 0.f, 1.f);
+            UINT controlPanelHandle = gui.AddWindow("Control Panel");
+            AddModelControls(gui, controlPanelHandle, plane);
 
             std::unordered_map<WPARAM, BOOL> keyStates{
                 {'W', FALSE}, {'A', FALSE}, {'S', FALSE}, {'D', FALSE}, {VK_SPACE, FALSE}, {VK_SHIFT, FALSE},
@@ -285,20 +298,18 @@ INT WINAPI wWinMain(
                 cmdList->RSSetScissorRects(1, mainWindow.GetScissorRectPtr());
 
                 ConstantBuffer constantBufferData{
-                    .worldMatrix = plane.worldMatrix,
-                    .viewMatrix = camera.GetViewMatrix(),
-                    .projectionMatrix = mainWindow.GetProjectionMatrix()
+                    .viewMatrix = camera.GetViewMatrix(), .projectionMatrix = mainWindow.GetProjectionMatrix()
                 };
-
-                CopyDataToResource(constantBuffer.Get(), &constantBufferData, sizeof(ConstantBuffer));
 
                 lightBufferData.viewDirection = camera.GetViewDirection();
 
+                CopyDataToResource(constantBuffer.Get(), &constantBufferData, sizeof(ConstantBuffer));
                 CopyDataToResource(lightBuffer.Get(), &lightBufferData, sizeof(LightBuffer));
+                CopyDataToResource(modelBuffer.Get(), &plane.modelBuffer, sizeof(ModelBuffer));
 
                 cmdList->SetGraphicsRootConstantBufferView(0, constantBuffer->GetGPUVirtualAddress());
                 cmdList->SetGraphicsRootConstantBufferView(1, lightBuffer->GetGPUVirtualAddress());
-                cmdList->SetGraphicsRoot32BitConstants(2, 3, &plane.color, 0);
+                cmdList->SetGraphicsRootConstantBufferView(2, modelBuffer->GetGPUVirtualAddress());
                 cmdList->SetGraphicsRoot32BitConstant(3, std::bit_cast<UINT>(absTimeMod2Pi), 0);
 
                 cmdList->DrawIndexedInstanced(plane.mesh.indices.size(), 1, 0, 0, 0);
@@ -376,4 +387,15 @@ template <typename T>
 SIZE_T VecDataSize(const std::vector<T>& vec)
 {
     return vec.size() * sizeof(T);
+}
+
+void AddModelControls(GUI& gui, UINT guiWindowHandle, Model& model)
+{
+    gui.AddSlider(guiWindowHandle, "Model Color R", &model.modelBuffer.color.x, 0.f, 1.f);
+    gui.AddSlider(guiWindowHandle, "Model Color G", &model.modelBuffer.color.y, 0.f, 1.f);
+    gui.AddSlider(guiWindowHandle, "Model Color B", &model.modelBuffer.color.z, 0.f, 1.f);
+    gui.AddSlider(guiWindowHandle, "Model Ambient Intensity", &model.modelBuffer.ambientIntensity, 0.f, 1.f);
+    gui.AddSlider(guiWindowHandle, "Model Diffuse Intensity", &model.modelBuffer.diffuseIntensity, 0.f, 1.f);
+    gui.AddSlider(guiWindowHandle, "Model Specular Intensity", &model.modelBuffer.specularIntensity, 0.f, 1.f);
+    gui.AddSlider(guiWindowHandle, "Model Specular Power", &model.modelBuffer.specularPower, 0.f, 100.f);
 }

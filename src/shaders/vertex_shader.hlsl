@@ -13,15 +13,25 @@ struct VS_Output
 
 cbuffer constantBuffer : register(b0)
 {
-    float4x4 worldMatrix;
     float4x4 viewMatrix;
     float4x4 projectionMatrix;
-}
+};
+
+cbuffer ModelBuffer : register(b1)
+{
+    float4x4 worldMatrix;
+    float3 color;
+    float ambientIntensity;
+    float diffuseIntensity;
+    float specularIntensity;
+    float specularPower;
+    float padding;
+};
 
 cbuffer absTimeRootConst : register(b2)
 {
     float absTimeMod2Pi;
-}
+};
 
 [RootSignature(ROOTSIG)]
 void main(in VS_Input input, out VS_Output output)

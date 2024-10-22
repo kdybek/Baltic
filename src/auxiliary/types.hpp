@@ -15,7 +15,6 @@ struct VertexBufferElement
 
 struct ConstantBuffer
 {
-    DirectX::XMMATRIX worldMatrix;
     DirectX::XMMATRIX viewMatrix;
     DirectX::XMMATRIX projectionMatrix;
     DirectX::XMFLOAT3 color;
@@ -34,9 +33,24 @@ struct LightSource
 
 struct LightBuffer
 {
-    LightSource lightSources[MAX_LIGHTS];
-    UINT32 numLights;
+    DirectX::XMFLOAT3 sunlightDirection;
+    FLOAT padding;
+    DirectX::XMFLOAT3 sunlightColor;
+    FLOAT sunlightIntensity;
     DirectX::XMFLOAT3 viewDirection;
+    FLOAT padding2;
+
+} __attribute__((packed));
+
+struct ModelBuffer
+{
+    DirectX::XMMATRIX worldMatrix;
+    DirectX::XMFLOAT3 color;
+    FLOAT ambientIntensity;
+    FLOAT diffuseIntensity;
+    FLOAT specularIntensity;
+    FLOAT specularPower;
+    FLOAT padding;
 
 } __attribute__((packed));
 
@@ -48,9 +62,9 @@ struct Mesh
 
 struct Model
 {
+    const CHAR* name;
     Mesh mesh;
-    DirectX::XMMATRIX worldMatrix;
-    DirectX::XMFLOAT3 color;
+    ModelBuffer modelBuffer;
 };
 
 struct WindowsMessage
