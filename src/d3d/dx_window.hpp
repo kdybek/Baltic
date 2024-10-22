@@ -18,7 +18,7 @@ public:
     WindowClass& operator=(const WindowClass&) = delete;
 
     [[nodiscard]] inline ATOM GetAtom() const { return m_atom; }
-    
+
 private:
     ATOM m_atom;
     HINSTANCE m_instance;
@@ -32,9 +32,6 @@ public:
 
     DXWindow(const DXWindow&) = delete;
     DXWindow& operator=(const DXWindow&) = delete;
-
-    DXWindow(DXWindow&& other) noexcept;
-    DXWindow& operator=(DXWindow&& other) noexcept;
 
     void Update();
     void Present();
@@ -56,6 +53,7 @@ public:
     {
         return &m_rtvHandles[m_swapChain->GetCurrentBackBufferIndex()];
     }
+    [[nodiscard]] inline const D3D12_CPU_DESCRIPTOR_HANDLE* GetDSVHandlePtr() const { return &m_dsvHandle; }
     [[nodiscard]] inline HWND GetWindowHandle() const { return m_windowHandle; }
     [[nodiscard]] POINT GetCursorPosition() const;
     void QueuePreRenderingTransitions(std::vector<D3D12_RESOURCE_BARRIER>& barriers) const;
@@ -79,10 +77,12 @@ private:
     std::queue<WindowsMessage> m_messageQueue;
 
     ComPtr<IDXGISwapChain4> m_swapChain;
-
-    ComPtr<ID3D12Resource2> m_rtBuffers[FRAME_COUNT];
     ComPtr<ID3D12DescriptorHeap> m_rtvDescHeap;
     D3D12_CPU_DESCRIPTOR_HANDLE m_rtvHandles[FRAME_COUNT];
+    ComPtr<ID3D12Resource2> m_rtBuffers[FRAME_COUNT];
+    ComPtr<ID3D12DescriptorHeap> m_dsvDescHeap;
+    D3D12_CPU_DESCRIPTOR_HANDLE m_dsvHandle;
+    ComPtr<ID3D12Resource2> m_dsBuffer;
 };
 
 LRESULT CALLBACK MsgQueueWindowProc(HWND wnd, UINT msg, WPARAM wParam, LPARAM lParam);

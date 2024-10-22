@@ -12,11 +12,13 @@
 #include <chrono>
 #include <filesystem>
 #include <fstream>
+#include <map>
 #include <mutex>
 #include <queue>
 #include <string>
 #include <string_view>
 #include <unordered_map>
+#include <variant>
 #include <vector>
 
 #ifdef UNICODE

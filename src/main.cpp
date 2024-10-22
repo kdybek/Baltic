@@ -142,31 +142,8 @@ INT WINAPI wWinMain(
             DXWindow mainWindow(instance, balticWndClass.GetAtom(), TEXT("Baltic"), 1920, 1080, dxContext);
             mainWindow.SetFullscreen(TRUE);
             GUI gui(mainWindow.GetWindowHandle(), dxContext.GetDeviceComPtr().Get());
-
-            D3D12_DESCRIPTOR_HEAP_DESC dsvDescriptorHeapDesc{
-                .Type = D3D12_DESCRIPTOR_HEAP_TYPE_DSV,
-                .NumDescriptors = 1,
-                .Flags = D3D12_DESCRIPTOR_HEAP_FLAG_NONE,
-                .NodeMask = 0
-            };
-
-            ComPtr<ID3D12DescriptorHeap> dsvHeapDesc;
-            DXThrowIfFailed(
-                dxContext.GetDeviceComPtr()->CreateDescriptorHeap(&dsvDescriptorHeapDesc, IID_PPV_ARGS(&dsvHeapDesc))
-            );
-
-            D3D12_CPU_DESCRIPTOR_HANDLE dsvHandle = dsvHeapDesc->GetCPUDescriptorHandleForHeapStart();
-
-            ComPtr<ID3D12Resource2> dsBuffer = CreateDepthStencilBuffer(
-                mainWindow.GetWidth(), mainWindow.GetHeight(), DSV_FORMAT, D3D12_RESOURCE_STATE_DEPTH_WRITE,
-                dxContext.GetDeviceComPtr().Get()
-            );
-
-            D3D12_DEPTH_STENCIL_VIEW_DESC dsvDesc{
-                .Format = DSV_FORMAT, .ViewDimension = D3D12_DSV_DIMENSION_TEXTURE2D, .Flags = D3D12_DSV_FLAG_NONE
-            };
-
-            dxContext.GetDeviceComPtr().Get()->CreateDepthStencilView(dsBuffer.Get(), &dsvDesc, dsvHandle);
+            UINT controlPanelIdx = gui.AddWindow("Control Panel");
+            gui.AddSlider(controlPanelIdx, "Plane Color R", &plane.color.x, 0.f, 1.f);
 
             std::unordered_map<WPARAM, BOOL> keyStates{
                 {'W', FALSE}, {'A', FALSE}, {'S', FALSE}, {'D', FALSE}, {VK_SPACE, FALSE}, {VK_SHIFT, FALSE},
@@ -206,12 +183,6 @@ INT WINAPI wWinMain(
                              (LOWORD(winMsg.lParam) != mainWindow.GetWidth() ||
                               HIWORD(winMsg.lParam) != mainWindow.GetHeight())) {
                         mainWindow.Resize(dxContext.GetDeviceComPtr().Get());
-
-                        dsBuffer = CreateDepthStencilBuffer(
-                            mainWindow.GetWidth(), mainWindow.GetHeight(), DSV_FORMAT, D3D12_RESOURCE_STATE_DEPTH_WRITE,
-                            dxContext.GetDeviceComPtr().Get()
-                        );
-                        dxContext.GetDeviceComPtr().Get()->CreateDepthStencilView(dsBuffer.Get(), &dsvDesc, dsvHandle);
 
                         if (!controlPanel && focus) {
                             mainWindow.ConfineCursor();
@@ -297,9 +268,9 @@ INT WINAPI wWinMain(
 
                 FLOAT clearColor[]{.1f, .1f, .1f, 1.f};
                 cmdList->ClearRenderTargetView(*mainWindow.GetBackBufferRTVHandlePtr(), clearColor, 0, nullptr);
-                cmdList->ClearDepthStencilView(dsvHandle, D3D12_CLEAR_FLAG_DEPTH, 1.f, 0, 0, nullptr);
+                cmdList->ClearDepthStencilView(*mainWindow.GetDSVHandlePtr(), D3D12_CLEAR_FLAG_DEPTH, 1.f, 0, 0, nullptr);
 
-                cmdList->OMSetRenderTargets(1, mainWindow.GetBackBufferRTVHandlePtr(), FALSE, &dsvHandle);
+                cmdList->OMSetRenderTargets(1, mainWindow.GetBackBufferRTVHandlePtr(), FALSE, mainWindow.GetDSVHandlePtr());
 
                 cmdList->SetPipelineState(pipelineState.Get());
                 cmdList->SetGraphicsRootSignature(rootSignature.GetComPtr().Get());

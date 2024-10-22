@@ -94,8 +94,19 @@ DXWindow::DXWindow(
         .NodeMask = 0
     };
 
+    D3D12_DESCRIPTOR_HEAP_DESC dsvDescriptorHeapDesc{
+        .Type = D3D12_DESCRIPTOR_HEAP_TYPE_DSV,
+        .NumDescriptors = 1,
+        .Flags = D3D12_DESCRIPTOR_HEAP_FLAG_NONE,
+        .NodeMask = 0
+    };
+
     DXThrowIfFailed(
         dxContext.GetDeviceComPtr()->CreateDescriptorHeap(&rtvDescriptorHeapDesc, IID_PPV_ARGS(&m_rtvDescHeap))
+    );
+
+    DXThrowIfFailed(
+        dxContext.GetDeviceComPtr()->CreateDescriptorHeap(&dsvDescriptorHeapDesc, IID_PPV_ARGS(&m_dsvDescHeap))
     );
 
     D3D12_CPU_DESCRIPTOR_HANDLE firstHandle = m_rtvDescHeap->GetCPUDescriptorHandleForHeapStart();
@@ -106,6 +117,8 @@ DXWindow::DXWindow(
         m_rtvHandles[i].ptr += handleInc * i;
     }
 
+    m_dsvHandle = m_dsvDescHeap->GetCPUDescriptorHandleForHeapStart();
+
     GetBuffers(dxContext.GetDeviceComPtr().Get());
 }
 
@@ -114,58 +127,6 @@ DXWindow::~DXWindow()
     if (m_windowHandle) {
         DestroyWindow(m_windowHandle);
     }
-}
-
-DXWindow::DXWindow(DXWindow&& other) noexcept
-    : m_windowHandle(other.m_windowHandle),
-      m_width(other.m_width),
-      m_height(other.m_height),
-      m_viewport(other.m_viewport),
-      m_scissorRect(other.m_scissorRect),
-      m_isFullscreen(other.m_isFullscreen),
-      m_cursorVisible(other.m_cursorVisible),
-      m_messageQueue(std::move(other.m_messageQueue)),
-      m_swapChain(other.m_swapChain),
-      m_rtvDescHeap(other.m_rtvDescHeap)
-{
-    for (UINT i = 0; i < FRAME_COUNT; i++) {
-        m_rtBuffers[i] = std::move(other.m_rtBuffers[i]);
-        other.m_rtBuffers[i] = nullptr;
-        m_rtvHandles[i] = other.m_rtvHandles[i];
-    }
-
-    other.m_windowHandle = nullptr;
-
-    SetWindowLongPtr(m_windowHandle, GWLP_USERDATA, reinterpret_cast<LONG_PTR>(this));
-}
-
-DXWindow& DXWindow::operator=(DXWindow&& other) noexcept
-{
-    if (this != &other) {
-        if (m_windowHandle) {
-            DestroyWindow(m_windowHandle);
-        }
-
-        m_windowHandle = other.m_windowHandle;
-        m_width = other.m_width;
-        m_height = other.m_height;
-        m_viewport = other.m_viewport;
-        m_scissorRect = other.m_scissorRect;
-        m_isFullscreen = other.m_isFullscreen;
-        m_cursorVisible = other.m_cursorVisible;
-        m_messageQueue = std::move(other.m_messageQueue);
-        m_swapChain = std::move(other.m_swapChain);
-        m_rtvDescHeap = std::move(other.m_rtvDescHeap);
-
-        for (UINT i = 0; i < FRAME_COUNT; i++) {
-            m_rtBuffers[i] = std::move(other.m_rtBuffers[i]);
-            m_rtvHandles[i] = other.m_rtvHandles[i];
-        }
-    }
-
-    SetWindowLongPtr(m_windowHandle, GWLP_USERDATA, reinterpret_cast<LONG_PTR>(this));
-
-    return *this;
 }
 
 void DXWindow::Update()
@@ -355,6 +316,14 @@ void DXWindow::GetBuffers(ID3D12Device10* device)
 
         device->CreateRenderTargetView(m_rtBuffers[i].Get(), &rtvDesc, m_rtvHandles[i]);
     }
+
+    m_dsBuffer = CreateDepthStencilBuffer(m_width, m_height, DSV_FORMAT, D3D12_RESOURCE_STATE_DEPTH_WRITE, device);
+
+    D3D12_DEPTH_STENCIL_VIEW_DESC dsvDesc{
+        .Format = DSV_FORMAT, .ViewDimension = D3D12_DSV_DIMENSION_TEXTURE2D, .Flags = D3D12_DSV_FLAG_NONE
+    };
+
+    device->CreateDepthStencilView(m_dsBuffer.Get(), &dsvDesc, m_dsvHandle);
 }
 
 void DXWindow::ReleaseBuffers()
@@ -362,6 +331,8 @@ void DXWindow::ReleaseBuffers()
     for (auto& buffer : m_rtBuffers) {
         buffer.Reset();
     }
+
+    m_dsBuffer.Reset();
 }
 
 LRESULT CALLBACK MsgQueueWindowProc(HWND wnd, UINT msg, WPARAM wParam, LPARAM lParam)
@@ -371,7 +342,7 @@ LRESULT CALLBACK MsgQueueWindowProc(HWND wnd, UINT msg, WPARAM wParam, LPARAM lP
             auto* createPtr = reinterpret_cast<CREATESTRUCT*>(lParam);
             auto* windowPtr = reinterpret_cast<DXWindow*>(createPtr->lpCreateParams);
             SetWindowLongPtr(wnd, GWLP_USERDATA, reinterpret_cast<LONG_PTR>(windowPtr));
-            
+
             return TRUE;
         }
         // TODO: Replace with binary search

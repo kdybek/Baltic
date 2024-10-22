@@ -5,12 +5,11 @@
 #include "backends/imgui_impl_dx12.h"
 #include "backends/imgui_impl_win32.h"
 #include "d3d/dx_window.hpp"
-#include "imgui.h"
 
 GUI::GUI(HWND windowHandle, ID3D12Device10* device)
 {
     IMGUI_CHECKVERSION();
-    ImGui::CreateContext();
+    m_imguiContext = ImGui::CreateContext();
     ImGuiIO& io = ImGui::GetIO();
     io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;
     ImGui::StyleColorsDark();
@@ -33,20 +32,68 @@ GUI::GUI(HWND windowHandle, ID3D12Device10* device)
 
 GUI::~GUI()
 {
+    ImGui::SetCurrentContext(m_imguiContext);
+
     ImGui_ImplDX12_Shutdown();
     ImGui_ImplWin32_Shutdown();
-    ImGui::DestroyContext();
+    ImGui::DestroyContext(m_imguiContext);
 }
+
+UINT GUI::AddWindow(const CHAR* name)
+{
+    m_windows.push_back({.name = name});
+    return m_windows.size() - 1;
+}
+
+void GUI::AddSlider(UINT windowIdx, const CHAR* name, FLOAT* varPtr, FLOAT minVal, FLOAT maxVal)
+{
+    m_windows[windowIdx].elements.push_back(
+        SliderData{.name = name, .varPtr = varPtr, .minVal = minVal, .maxVal = maxVal}
+    );
+}
+
+void GUI::AddCheckbox(UINT windowIdx, const CHAR* name, BOOL* varPtr)
+{
+    m_windows[windowIdx].elements.push_back(CheckboxData{.name = name, .varPtr = varPtr});
+}
+
+namespace
+{
+    template <typename... Callable>
+    struct Visitor : Callable...
+    {
+        using Callable::operator()...;
+    };
+
+} // namespace
 
 void GUI::QueueDraw(ID3D12GraphicsCommandList* cmdList)
 {
+    ImGui::SetCurrentContext(m_imguiContext);
+
     ImGui_ImplDX12_NewFrame();
     ImGui_ImplWin32_NewFrame();
     ImGui::NewFrame();
 
-    ImGui::Begin("Control Panel");
-    ImGui::Text("Hello, world!");
-    ImGui::End();
+    for (const auto& window : m_windows) {
+        ImGui::Begin(window.name);
+
+        for (const auto& element : window.elements) {
+            std::visit(
+                Visitor{
+                    [this](const SliderData& data) {
+                        ImGui::SliderFloat(data.name, data.varPtr, data.minVal, data.maxVal);
+                    },
+                    [this](const CheckboxData& data) {
+                        ImGui::Checkbox(data.name, reinterpret_cast<bool*>(data.varPtr));
+                    }
+                },
+                element
+            );
+        }
+
+        ImGui::End();
+    }
 
     ImGui::Render();
 
