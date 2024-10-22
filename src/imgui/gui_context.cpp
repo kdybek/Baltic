@@ -1,4 +1,4 @@
-#include "imgui/gui.hpp"
+#include "imgui/gui_context.hpp"
 
 #include "auxiliary/baltic_exception.hpp"
 #include "auxiliary/constants.hpp"
@@ -6,7 +6,7 @@
 #include "backends/imgui_impl_win32.h"
 #include "d3d/dx_window.hpp"
 
-GUI::GUI(HWND windowHandle, ID3D12Device10* device)
+GUIContext::GUIContext(HWND windowHandle, ID3D12Device10* device)
 {
     IMGUI_CHECKVERSION();
     m_imguiContext = ImGui::CreateContext();
@@ -30,7 +30,7 @@ GUI::GUI(HWND windowHandle, ID3D12Device10* device)
     );
 }
 
-GUI::~GUI()
+GUIContext::~GUIContext()
 {
     ImGui::SetCurrentContext(m_imguiContext);
 
@@ -39,62 +39,17 @@ GUI::~GUI()
     ImGui::DestroyContext(m_imguiContext);
 }
 
-UINT GUI::AddWindow(const CHAR* name)
-{
-    m_windows.push_back({.name = name});
-    return m_windows.size() - 1;
-}
-
-void GUI::AddSlider(UINT guiWindowHandle, const CHAR* name, FLOAT* varPtr, FLOAT minVal, FLOAT maxVal)
-{
-    m_windows[guiWindowHandle].elements.push_back(
-        SliderData{.name = name, .varPtr = varPtr, .minVal = minVal, .maxVal = maxVal}
-    );
-}
-
-void GUI::AddCheckbox(UINT guiWindowHandle, const CHAR* name, BOOL* varPtr)
-{
-    m_windows[guiWindowHandle].elements.push_back(CheckboxData{.name = name, .varPtr = varPtr});
-}
-
-namespace
-{
-    template <typename... Callable>
-    struct Visitor : Callable...
-    {
-        using Callable::operator()...;
-    };
-
-} // namespace
-
-void GUI::QueueDraw(ID3D12GraphicsCommandList* cmdList)
+void GUIContext::BeginFrame()
 {
     ImGui::SetCurrentContext(m_imguiContext);
 
     ImGui_ImplDX12_NewFrame();
     ImGui_ImplWin32_NewFrame();
     ImGui::NewFrame();
+}
 
-    for (const auto& window : m_windows) {
-        ImGui::Begin(window.name);
-
-        for (const auto& element : window.elements) {
-            std::visit(
-                Visitor{
-                    [this](const SliderData& data) {
-                        ImGui::SliderFloat(data.name, data.varPtr, data.minVal, data.maxVal);
-                    },
-                    [this](const CheckboxData& data) {
-                        ImGui::Checkbox(data.name, reinterpret_cast<bool*>(data.varPtr));
-                    }
-                },
-                element
-            );
-        }
-
-        ImGui::End();
-    }
-
+void GUIContext::QueueDraw(ID3D12GraphicsCommandList* cmdList)
+{
     ImGui::Render();
 
     ID3D12DescriptorHeap* descriptorHeaps[] = {m_srvHeap.Get()};

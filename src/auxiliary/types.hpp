@@ -13,25 +13,25 @@ struct VertexBufferElement
     DirectX::XMFLOAT3 position;
 };
 
-struct ConstantBuffer
+struct alignas(16) ConstantBuffer
 {
     DirectX::XMMATRIX viewMatrix;
     DirectX::XMMATRIX projectionMatrix;
     DirectX::XMFLOAT3 color;
     FLOAT padding;
 
-} __attribute__((packed));
+};
 
-struct LightSource
+struct alignas(16) LightSource
 {
     DirectX::XMFLOAT3 position;
     FLOAT padding;
     DirectX::XMFLOAT3 color;
     FLOAT intensity;
 
-} __attribute__((packed));
+};
 
-struct LightBuffer
+struct alignas(16) LightBuffer
 {
     DirectX::XMFLOAT3 sunlightDirection;
     FLOAT padding;
@@ -40,9 +40,9 @@ struct LightBuffer
     DirectX::XMFLOAT3 viewDirection;
     FLOAT padding2;
 
-} __attribute__((packed));
+};
 
-struct ModelBuffer
+struct alignas(16) ModelBuffer
 {
     DirectX::XMMATRIX worldMatrix;
     DirectX::XMFLOAT3 color;
@@ -52,7 +52,7 @@ struct ModelBuffer
     FLOAT specularPower;
     FLOAT padding;
 
-} __attribute__((packed));
+};
 
 struct Mesh
 {

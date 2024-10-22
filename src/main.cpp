@@ -11,7 +11,7 @@
 #include "d3d/dx_window.hpp"
 #include "d3d/shader.hpp"
 #include "debug/dx_debug_layer.hpp"
-#include "imgui/gui.hpp"
+#include "imgui/gui_context.hpp"
 
 // Forward declarations of auxiliary functions
 SIZE_T AlignUp(SIZE_T size, SIZE_T alignment);
@@ -19,7 +19,7 @@ Mesh CreateXZPlane(FLOAT xSize, FLOAT zSize, UINT32 xSegments, UINT32 zSegments)
 void ResetKeyStates(std::unordered_map<WPARAM, BOOL>& keyStates);
 template <typename T>
 SIZE_T VecDataSize(const std::vector<T>& vec);
-void AddModelControls(GUI& gui, UINT guiWindowHandle, Model& model);
+void RotateSun(DirectX::XMFLOAT3& sunlightDirection, FLOAT deltaTime);
 
 // Entry point
 INT WINAPI wWinMain(
@@ -156,9 +156,7 @@ INT WINAPI wWinMain(
             DXWindow mainWindow(instance, balticWndClass.GetAtom(), TEXT("Baltic"), 1920, 1080, dxContext);
             mainWindow.SetFullscreen(TRUE);
 
-            GUI gui(mainWindow.GetWindowHandle(), dxContext.GetDeviceComPtr().Get());
-            UINT controlPanelHandle = gui.AddWindow("Control Panel");
-            AddModelControls(gui, controlPanelHandle, plane);
+            GUIContext guiContext(mainWindow.GetWindowHandle(), dxContext.GetDeviceComPtr().Get());
 
             std::unordered_map<WPARAM, BOOL> keyStates{
                 {'W', FALSE}, {'A', FALSE}, {'S', FALSE}, {'D', FALSE}, {VK_SPACE, FALSE}, {VK_SHIFT, FALSE},
@@ -269,6 +267,8 @@ INT WINAPI wWinMain(
 
                 camera.HandleInput(mouseMovementVec, keyStates, deltaTime);
 
+                RotateSun(lightBufferData.sunlightDirection, deltaTime);
+
                 dxContext.ResetCmdList();
 
                 const auto& cmdList = dxContext.GetCmdListComPtr();
@@ -315,7 +315,21 @@ INT WINAPI wWinMain(
                 cmdList->DrawIndexedInstanced(plane.mesh.indices.size(), 1, 0, 0, 0);
 
                 if (controlPanel) {
-                    gui.QueueDraw(cmdList.Get());
+                    guiContext.BeginFrame();
+                    ImGui::Begin("Control Panel");
+                    if (ImGui::CollapsingHeader("Sunlight")) {
+                        ImGui::ColorEdit3("Sunlight Color", reinterpret_cast<float*>(&lightBufferData.sunlightColor));
+                        ImGui::SliderFloat("Sunlight Intensity", &lightBufferData.sunlightIntensity, 0.f, 1.f);
+                    }
+                    if (ImGui::CollapsingHeader("Plane")) {
+                        ImGui::ColorEdit3("Plane Color", reinterpret_cast<float*>(&plane.modelBuffer.color));
+                        ImGui::SliderFloat("Ambient Intensity", &plane.modelBuffer.ambientIntensity, 0.f, 1.f);
+                        ImGui::SliderFloat("Diffuse Intensity", &plane.modelBuffer.diffuseIntensity, 0.f, 1.f);
+                        ImGui::SliderFloat("Specular Intensity", &plane.modelBuffer.specularIntensity, 0.f, 1.f);
+                        ImGui::SliderFloat("Specular Power", &plane.modelBuffer.specularPower, 0.f, 100.f);
+                    }
+                    ImGui::End();
+                    guiContext.QueueDraw(cmdList.Get());
                 }
 
                 mainWindow.QueuePostRenderingTransitions(barriers);
@@ -389,13 +403,9 @@ SIZE_T VecDataSize(const std::vector<T>& vec)
     return vec.size() * sizeof(T);
 }
 
-void AddModelControls(GUI& gui, UINT guiWindowHandle, Model& model)
+void RotateSun(DirectX::XMFLOAT3& sunlightDirection, FLOAT deltaTime)
 {
-    gui.AddSlider(guiWindowHandle, "Model Color R", &model.modelBuffer.color.x, 0.f, 1.f);
-    gui.AddSlider(guiWindowHandle, "Model Color G", &model.modelBuffer.color.y, 0.f, 1.f);
-    gui.AddSlider(guiWindowHandle, "Model Color B", &model.modelBuffer.color.z, 0.f, 1.f);
-    gui.AddSlider(guiWindowHandle, "Model Ambient Intensity", &model.modelBuffer.ambientIntensity, 0.f, 1.f);
-    gui.AddSlider(guiWindowHandle, "Model Diffuse Intensity", &model.modelBuffer.diffuseIntensity, 0.f, 1.f);
-    gui.AddSlider(guiWindowHandle, "Model Specular Intensity", &model.modelBuffer.specularIntensity, 0.f, 1.f);
-    gui.AddSlider(guiWindowHandle, "Model Specular Power", &model.modelBuffer.specularPower, 0.f, 100.f);
+    DirectX::XMMATRIX rotationMatrix = DirectX::XMMatrixRotationZ(deltaTime);
+    DirectX::XMVECTOR sunlightDirectionVec = DirectX::XMLoadFloat3(&sunlightDirection);
+    DirectX::XMStoreFloat3(&sunlightDirection, DirectX::XMVector3Transform(sunlightDirectionVec, rotationMatrix));
 }
