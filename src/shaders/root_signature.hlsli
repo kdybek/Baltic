@@ -2,7 +2,7 @@
  * Root signature layout
  * slot 0: b0 - Vertex shader constant buffer
  * slot 1: b0 - Pixel shader light buffer
- * slot 2: b1 - Model Buffer
+ * slot 2: b1 - Model buffer
  * slot 3: b2 - Absolute time modulo 2pi
  */
 

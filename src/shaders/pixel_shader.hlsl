@@ -25,7 +25,7 @@ cbuffer lightBuffer : register(b0)
     float3 sunlightColor;
     float sunlightIntensity;
     float3 viewDirection;
-};
+}
 
 cbuffer ModelBuffer : register(b1)
 {
@@ -37,12 +37,12 @@ cbuffer ModelBuffer : register(b1)
     float specularPower;
     float padding;
 
-};
+}
 
 cbuffer absTimeRootConst : register(b2)
 {
     float absTimeMod2Pi;
-};
+}
 
 [RootSignature(ROOTSIG)]
 void main(in PS_Input input, out PS_Output output)
