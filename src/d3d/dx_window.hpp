@@ -55,6 +55,10 @@ public:
     }
     [[nodiscard]] inline const D3D12_CPU_DESCRIPTOR_HANDLE* GetDSVHandlePtr() const { return &m_dsvHandle; }
     [[nodiscard]] inline HWND GetWindowHandle() const { return m_windowHandle; }
+    [[nodiscard]] inline DirectX::XMMATRIX GetProjectionMatrix() const
+    {
+        return DirectX::XMMatrixPerspectiveFovLH(DirectX::XMConvertToRadians(m_fov), GetAspectRatio(), m_nearZ, m_farZ);
+    }
     [[nodiscard]] POINT GetCursorPosition() const;
     void QueuePreRenderingTransitions(std::vector<D3D12_RESOURCE_BARRIER>& barriers) const;
     void QueuePostRenderingTransitions(std::vector<D3D12_RESOURCE_BARRIER>& barriers) const;
@@ -73,6 +77,9 @@ private:
     D3D12_RECT m_scissorRect;
     BOOL m_isFullscreen;
     BOOL m_cursorVisible;
+    FLOAT m_fov;
+    FLOAT m_nearZ;
+    FLOAT m_farZ;
 
     std::queue<WindowsMessage> m_messageQueue;
 

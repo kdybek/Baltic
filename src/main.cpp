@@ -134,6 +134,7 @@ INT WINAPI wWinMain(
             pipelineStateDesc.PS = {pixelShader.GetData(), pixelShader.GetSize()};
             pipelineStateDesc.DepthStencilState = depthStencilDesc;
             pipelineStateDesc.InputLayout = VB_INPUT_LAYOUT_DESC;
+
             ComPtr<ID3D12PipelineState> pipelineState;
             dxContext.GetDeviceComPtr()->CreateGraphicsPipelineState(&pipelineStateDesc, IID_PPV_ARGS(&pipelineState));
 
@@ -141,6 +142,7 @@ INT WINAPI wWinMain(
 
             DXWindow mainWindow(instance, balticWndClass.GetAtom(), TEXT("Baltic"), 1920, 1080, dxContext);
             mainWindow.SetFullscreen(TRUE);
+
             GUI gui(mainWindow.GetWindowHandle(), dxContext.GetDeviceComPtr().Get());
             UINT controlPanelIdx = gui.AddWindow("Control Panel");
             gui.AddSlider(controlPanelIdx, "Plane Color R", &plane.color.x, 0.f, 1.f);
@@ -150,11 +152,7 @@ INT WINAPI wWinMain(
             };
 
             POINT lastCursorPos = mainWindow.GetCursorPosition();
-            FLOAT xzPlaneAngle = 0.f;
             Camera camera(DirectX::XMMatrixIdentity());
-            DirectX::XMMATRIX projectionMatrix = DirectX::XMMatrixPerspectiveFovLH(
-                DirectX::XMConvertToRadians(60.f), mainWindow.GetAspectRatio(), .1f, 100.f
-            );
             auto prevFrameAbsTime = std::chrono::steady_clock::now();
             FLOAT absTimeMod2Pi = 0.f;
             BOOL close = FALSE;
@@ -268,12 +266,16 @@ INT WINAPI wWinMain(
 
                 FLOAT clearColor[]{.1f, .1f, .1f, 1.f};
                 cmdList->ClearRenderTargetView(*mainWindow.GetBackBufferRTVHandlePtr(), clearColor, 0, nullptr);
-                cmdList->ClearDepthStencilView(*mainWindow.GetDSVHandlePtr(), D3D12_CLEAR_FLAG_DEPTH, 1.f, 0, 0, nullptr);
+                cmdList->ClearDepthStencilView(
+                    *mainWindow.GetDSVHandlePtr(), D3D12_CLEAR_FLAG_DEPTH, 1.f, 0, 0, nullptr
+                );
 
-                cmdList->OMSetRenderTargets(1, mainWindow.GetBackBufferRTVHandlePtr(), FALSE, mainWindow.GetDSVHandlePtr());
+                cmdList->OMSetRenderTargets(
+                    1, mainWindow.GetBackBufferRTVHandlePtr(), FALSE, mainWindow.GetDSVHandlePtr()
+                );
 
                 cmdList->SetPipelineState(pipelineState.Get());
-                cmdList->SetGraphicsRootSignature(rootSignature.GetComPtr().Get());
+                cmdList->SetGraphicsRootSignature(pipelineStateDesc.pRootSignature);
 
                 cmdList->IASetVertexBuffers(0, 1, &vertexBufferView);
                 cmdList->IASetIndexBuffer(&indexBufferView);
@@ -285,7 +287,7 @@ INT WINAPI wWinMain(
                 ConstantBuffer constantBufferData{
                     .worldMatrix = plane.worldMatrix,
                     .viewMatrix = camera.GetViewMatrix(),
-                    .projectionMatrix = projectionMatrix
+                    .projectionMatrix = mainWindow.GetProjectionMatrix()
                 };
 
                 CopyDataToResource(constantBuffer.Get(), &constantBufferData, sizeof(ConstantBuffer));

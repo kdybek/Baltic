@@ -4,8 +4,6 @@
 #include "auxiliary/pch.hpp"
 // clang-format on
 
-#include "auxiliary/types.hpp"
-
 class Camera
 {
 public:

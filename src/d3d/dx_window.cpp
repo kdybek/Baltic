@@ -50,7 +50,10 @@ DXWindow::DXWindow(
       },
       m_scissorRect{.left = 0, .top = 0, .right = static_cast<LONG>(width), .bottom = static_cast<LONG>(height)},
       m_isFullscreen(FALSE),
-      m_cursorVisible(TRUE)
+      m_cursorVisible(TRUE),
+      m_fov(60.f),
+      m_nearZ(.1f),
+      m_farZ(100.f)
 {
     if (!(m_windowHandle = CreateWindowEx(
               WS_EX_OVERLAPPEDWINDOW | WS_EX_APPWINDOW, MAKEINTATOM(wndClass), wndName,
