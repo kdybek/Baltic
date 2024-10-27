@@ -1,9 +1,9 @@
 cmake_minimum_required(VERSION 3.28)
 project(Baltic LANGUAGES CXX)
 
-if(NOT WIN32)
+if (NOT WIN32)
     message(FATAL_ERROR "Baltic can only be built on Windows.")
-endif()
+endif ()
 
 option(UNICODE "Use Unicode" ON)
 
@@ -44,7 +44,7 @@ set_source_files_properties(${ROOT_SIGNATURES} PROPERTIES SHADER_MODEL "1_1")
 set_source_files_properties(${VERTEX_SHADERS} ${PIXEL_SHADERS} PROPERTIES SHADER_ENTRY "main")
 set_source_files_properties(${ROOT_SIGNATURES} PROPERTIES SHADER_ENTRY "ROOTSIG")
 
-foreach(SHADER ${SHADERS})
+foreach (SHADER ${SHADERS})
     get_filename_component(SHADER_NAME ${SHADER} NAME_WE)
     get_source_file_property(SHADER_TYPE ${SHADER} SHADER_TYPE)
     get_source_file_property(SHADER_MODEL ${SHADER} SHADER_MODEL)
@@ -59,7 +59,7 @@ foreach(SHADER ${SHADERS})
     )
 
     list(APPEND COMPILED_SHADERS ${COMPILED_SHADER})
-endforeach()
+endforeach ()
 
 add_custom_target(shaders ALL DEPENDS ${COMPILED_SHADERS})
 
@@ -89,9 +89,9 @@ target_precompile_headers(baltic PRIVATE ${SOURCE_DIR}/auxiliary/pch.hpp)
 
 target_compile_definitions(baltic PRIVATE $<$<CONFIG:Debug>:BALTIC_DEBUG>)
 
-if(UNICODE)
+if (UNICODE)
     target_compile_definitions(baltic PRIVATE UNICODE _UNICODE)
     message(STATUS "Unicode is enabled")
-else()
+else ()
     message(STATUS "Unicode is disabled")
-endif()
+endif ()
