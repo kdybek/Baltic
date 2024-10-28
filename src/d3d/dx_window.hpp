@@ -18,6 +18,7 @@ public:
     WindowClass& operator=(const WindowClass&) = delete;
 
     [[nodiscard]] inline ATOM GetAtom() const { return m_atom; }
+    [[nodiscard]] inline HINSTANCE GetInstance() const { return m_instance; }
 
 private:
     ATOM m_atom;
@@ -27,7 +28,7 @@ private:
 class DXWindow
 {
 public:
-    DXWindow(HINSTANCE instance, ATOM wndClass, const TCHAR* wndName, UINT width, UINT height, DXContext& context);
+    DXWindow(const WindowClass& wndClass, const TCHAR* wndName, UINT width, UINT height, DXContext& context);
     ~DXWindow();
 
     DXWindow(const DXWindow&) = delete;

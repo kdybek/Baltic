@@ -35,7 +35,7 @@ WindowClass::~WindowClass()
 }
 
 DXWindow::DXWindow(
-    HINSTANCE instance, ATOM wndClass, const TCHAR* wndName, UINT width, UINT height, DXContext& dxContext
+    const WindowClass& wndClass, const TCHAR* wndName, UINT width, UINT height, DXContext& dxContext
 )
     : m_windowHandle(nullptr),
       m_width(width),
@@ -56,9 +56,9 @@ DXWindow::DXWindow(
       m_farZ(100.f)
 {
     if (!(m_windowHandle = CreateWindowEx(
-              WS_EX_OVERLAPPEDWINDOW | WS_EX_APPWINDOW, MAKEINTATOM(wndClass), wndName,
+              WS_EX_OVERLAPPEDWINDOW | WS_EX_APPWINDOW, MAKEINTATOM(wndClass.GetAtom()), wndName,
               WS_OVERLAPPEDWINDOW | WS_VISIBLE, CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, nullptr,
-              nullptr, instance, this
+              nullptr, wndClass.GetInstance(), this
           ))) {
         throw GenericException(TEXT("CreateWindowEx"));
     }

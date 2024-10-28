@@ -153,7 +153,7 @@ INT WINAPI wWinMain(
 
             WindowClass balticWndClass(instance, TEXT("BalticWndClass"), GUIMsgQueueWindowProc);
 
-            DXWindow mainWindow(instance, balticWndClass.GetAtom(), TEXT("Baltic"), 1920, 1080, dxContext);
+            DXWindow mainWindow(balticWndClass, TEXT("Baltic"), 1920, 1080, dxContext);
             mainWindow.SetFullscreen(TRUE);
 
             GUIContext guiContext(mainWindow.GetWindowHandle(), dxContext.GetDeviceComPtr().Get());
@@ -172,9 +172,9 @@ INT WINAPI wWinMain(
 
             while (!close) {
                 FLOAT deltaTime = 0.f;
-                auto currentFrameAbsTime = std::chrono::steady_clock::now();
-                deltaTime = std::chrono::duration<FLOAT>(currentFrameAbsTime - prevFrameAbsTime).count();
-                prevFrameAbsTime = currentFrameAbsTime;
+                auto currFrameAbsTime = std::chrono::steady_clock::now();
+                deltaTime = std::chrono::duration<FLOAT>(currFrameAbsTime - prevFrameAbsTime).count();
+                prevFrameAbsTime = currFrameAbsTime;
                 absTimeMod2Pi += deltaTime;
                 absTimeMod2Pi = std::fmod(absTimeMod2Pi, DirectX::XM_2PI);
 
